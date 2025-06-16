@@ -1,0 +1,253 @@
+---
+title: "BS 1515 Lecture 5: Constrained Optimization"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: slidy_presentation
+css: cardiff.css
+
+header-includes:
+  - \usepackage{nicefrac}
+  - \usepackage{tikz}
+  - \usetikzlibrary{patterns}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Last Time
+
+-   Maxima, minima, inflection points
+-   interior and corner solution
+
+Today: constrained optimization
+
+Why do we care about constrained optimization:
+
+-   We model behaviour by the choice of the best option
+
+-   In economics, frequently choices are limited
+
+-   Unconstrained optimization in economics is not very interesting
+
+## Optimal Time Allocation Choice
+
+You can spend time on Leisure $L\geq 0$ and Study $S\geq 0$, both make you happier: $u'_L(L,S)>0$, $u'_S(L,S)>0$. You have the budget of 8 hours a day. How do you choose?
+
+Economists: you have the utility function $u(L,S)$, maximize it.
+
+$\max_{L,S} u(L,S)$
+
+No interior solution: $u'_L(L,S)>0$, $u'_S(L,S)>0$. Must be a boundary solution!
+
+$L=8-S$ so $\max_S u(8-S,S)$. Take derivative: $$-u'_L(8-S,S)+u_S(8-S,S)=0 \Leftrightarrow u'_L(8-S,S)=u'_S(8-S,S).$$
+
+-   $u(L,S) = L +S^2$
+-   $u(L,S) = L^{2/3} S^{1/3}$
+-   $u(L,S) = \sqrt{L}+2\sqrt{S}$.
+
+## Generic Problem: Border Constraint
+
+\[\max_{x,y} u(x,y)\text{ s.t. }f(x,y)=C\]
+
+What if you cannot solve for $y$ as a function of $x$?
+
+Lagrange multiplier theorem: if $(x,y)$ is a solution, there is $\lambda$ such that $u'_x(x,y)=\lambda f'_x(x,y)$ and $u'_y(x,y)=\lambda f'_y(x,y)$.
+
+Instead of maximizing $u(x,y)$, look for extrema of
+
+\[L(x,y,\lambda)=u(x,y)-\lambda [f(x,y)-C]\]
+
+choosing $x,y,\lambda$ - we are looking for max wrt $x,y$ and min wrt $\lambda$. First order conditions are
+
+\[L'_x=0: u'_x(x,y)-\lambda f'_x(x,y)=0\]
+\[L'_y=0: u'_y(x,y)-\lambda f'_y(x,y)=0\]
+\[L'_\lambda=0: f(x,y)-C=0\]
+
+## Envelope Theorem
+
+\[\mathbb{L}(x,y,\lambda)=u(x,y)-\lambda [f(x,y)-C]\]
+
+Imagine we have solutions $x(C),y(C),\lambda(C)$, then we can obtain a utility function of $C$
+
+\[u(C)=u(x(C),y(C))=\mathbb{L}(x(C),y(C),\lambda(C))=\]\[\quad =u(x(C),y(C))-\lambda(C) \overbrace{[f(x(C),y(C))-C]}^{=0}\]
+
+Take a derivative with respect to $C$:
+
+\[u'_C=u'_x\cdot x'_C+u'_y\cdot y'_C-\lambda'_C \overbrace{[f(x(C),y(C))-C]}^{=0}-\lambda[f'_x \cdot x'_C+f'_y \cdot y'_C-1]\]
+
+Group:
+
+\[u'_C=[u'_x-\lambda f'_x]\cdot x'_C+[u'_y-\lambda f'_y]\cdot y'_C-\lambda[-1]=\lambda.\]
+
+Interpretation: $\lambda$, the Lagrange multiplier, is the ``price'' of an extra unit of $u(\cdot,\cdot)$ if the constraint is relaxed ($C$ increases). Zero means constraint does not matter locally.
+
+Lesson: When taking derivatives with respect to parameters, just take derivative of the Lagrange function.
+
+## Example
+
+Consider a *cost function* problem. We are choosing between labour $L$ and capital $K$. We want to produce $Q$ units. Capital costs $r$ per unit, labour costs $w$ per unit.
+
+\[\min_{L,K} rK+wL \text{ s.t. } F(K,L)=Q.\]
+
+The Lagrange function is
+
+\[\mathbb{L}(L,K,\lambda)=rK+wL-\lambda(F(K,L)-Q).\]
+
+Imagine we have the solution (will depend on the shape of $F(\cdot)$)
+
+- Example: $F(K,L)=a \sqrt{K}+b\sqrt{L}$, $a,b>0$.
+
+Prove: cost function is $rK(w,r,Q)+wL(w,r,Q)$.
+
+Prove: marginal cost function is $\lambda(w,r,Q)$.
+
+Prove: Derivative of the cost function with respect to the factor price is the factor quantity.
+
+## Generic Problem: Inequality Constraint
+
+\[\max_{x,y} u(x,y)\text{ s.t. }f(x,y)\leq C\]
+
+Lagrange multiplier theorem: if $(x,y)$ is a solution, there is $\lambda$ such that $f'_x(x,y)=\lambda g'_x(x,y)$ and $f'_y(x,y)=\lambda g'_y(x,y)$.
+
+Inequality: $\lambda$ cannot be negative! Zero if constraint does not bind, or positive.
+
+Prove: if constraint is $f(x,y)\geq С$, $\lambda$ must be zero or negative.
+
+Example: $\max_{x,y} -(x-5)^2-(y-x)^2 \text{ s.t. } x+y\leq 7$.
+
+Why can't we study $f(x,y)<C$ constraints?
+
+## Multiple Constraints
+
+If you have two variables and two constraints, and they both bind:
+
+- Equality constraints: $(x,y)$ that satisfy both could be unique
+- Inequality constraints:
+  - Both matter, then we back to Equality
+  - Only one matters
+  - Neither matters
+  
+Different Lagrange multiplier for different (in)equalities!
+
+## Example
+
+People have utility over consumption $C$ and kids $K$: $u(C,K)$
+
+They are constrained by income $p C+m K\leq wL$, where $L$ is how much time you work,
+
+They are constrained by time $T(L,K) \leq 24$. How to pick $K$ and $C$?
+
+\[\mathbb{L}(C,K,L,\lambda,\mu)=u(C,K)-\lambda(pC+mK-wL)-\mu(T(L,K)-24).\]
+
+First-order conditions:
+\[\mathbb{L}'_C=u'_C(C,K)-\lambda p=0.\]
+\[\mathbb{L}'_L=\lambda w-\mu T'_L(L,K)=0.\]
+\[\mathbb{L}'_K=u'_K(C,K)-\lambda m-\mu T'_K(L,K)=0.\]
+
+## Solving
+
+First-order conditions:
+\[\mathbb{L}'_C=u'_C(C,K)-\lambda p=0 \Rightarrow \lambda=\frac{u'_C(C,K)}{p}.\]
+\[\mathbb{L}'_L=\lambda w-\mu T'_L(L,K)=0 \Rightarrow \mu=\frac{\lambda w}{T'_L(L,K)}=\frac{w u'_C(C,K)}{pT'_L(L,K)}.\]
+\[\mathbb{L}'_K=u'_K(C,K)-\lambda m-\mu T'_K(L,K)=0.\Rightarrow\]\[\Rightarrow \frac{u'_K(C,K)}{u'_C(C,K)}=\frac{m}{p}+\frac{w}{p}\frac{T'_K(L,K)}{T'_L(L,K)}.\]
+
+What would you do if you had two consumable goods, $x_1$ an $x_2$?
+
+## Sufficient Conditions
+
+To warrant maximum/minimum, need to check convexity/concavity.
+
+For one dimension: check second derivative
+
+For two dimensions: check second derivatives and cross-derivatives.
+
+For three dimensions: same + check if going in all 3 variables away from the extremum leads to opposite sign.
+
+## Quadratic Forms
+
+Imagine we are dealing with
+$f(x)=C+wx+\frac{1}{2}x^TAx$.
+If it was one-dimensional, we'd have $f'(x)=w+ax$ and $f''(x)=a$. If we knew that $a>0$, we could say that $x^*=-\frac{w}{a}$ is a local minimum.
+
+For a matrix of second derivatives, we'd need a way of saying that $A$ makes any deviation from $x^*$ higher.
+
+Or $(x-x^*)^TA(x-x^*)>0$. This is called *positive definite* --- see Lecture 2. 
+
+For maximum of $f(x,y)$, need to check if $A$ is *negative definite*.
+
+## Using Second Derivative Matrix
+
+Without constraints, need to $\min f(x_1,x_2...x_N)$: write out the *Hessian matrix*
+
+\[H=\begin{bmatrix}
+    f_{11}'' & f_{12}''& \cdots & f_{N1}''\\
+    f_{21}'' & f_{22}''& \cdots & f_{N2}''\\
+    \vdots & \vdots &                             & \ddots & \vdots\\
+    f_{1N}'' & f_{2N}''& \cdots & f_{NN}''
+\end{bmatrix}\]
+
+Minimum is unique if this matrix is *positive (semi)definite*.
+
+Maximum is unique if this matrix is *negative (semi)definite*.
+
+## Example
+
+I want to maximize $u(x,y)=A \ln x+B\ln y$ subject to $p_x x+p_y y=m$. The Lagrangean is
+\[\mathbb{L}(x,y,\lambda)=u(x,y)-\lambda(p_x x+p_y y-m)\]
+First order conditions are
+\[\mathbb{L}'_x=\frac{A}{x}-\lambda p_x=0 \Rightarrow \lambda=\frac{x p_x}{A}.\]
+\[\mathbb{L}'_x=\frac{B}{y}-\lambda p_y=0 \Rightarrow \lambda=\frac{y p_y}{B}.\]
+
+Therefore $\frac{x p_x}{A}=\frac{y p_y}{B}$. Substitute to the budget constraint:
+\[p_x x+\frac{B}{A} p_x x = m \Rightarrow x=\frac{1}{1+B/A}\frac{m}{p_x}=\frac{A}{A+B}\frac{m}{p_x}.\]
+
+Similarly $y=\frac{B}{A+B} \frac{m}{p}$.
+
+## Example - Concavity
+
+The Lagrangean is
+\[\mathbb{L}(x,y,\lambda)=u(x,y)-\lambda(p_x x+p_y y-m)\]
+
+The Hessian is 
+\[H=\begin{bmatrix}
+    -\frac{A}{x^2} & 0 &  p_x\\
+    0 & -\frac{B}{y^2}&  p_y\\
+    p_x & p_y & 0
+\end{bmatrix}\]
+
+Remember we maximize with respect to $x$ and $y$ and minimize with respect to $\lambda$, so we multiply row and column for the constraint by $-1$ (so called *bordered Hessian*).
+
+## Checking for Negative Semidefiniteness
+
+- Diagonal elements are negative where nonzero? Yes!
+- Second minors are positive where nonzero? Yes!
+- Determinant of the whole thing is zero? This is ok!
+
+So yes, we found the maximum.
+
+## For now
+
+Solve for demand
+
+- $u(x_1,x_2,x_3..x_N)=a_1\ln(x_1)+a_2 \ln(x_2)+...+a_n \ln(x_n)$
+- $u(x_1,x_2,x_3..x_N)=(a_1x_1^\rho+a_2 x_2^\rho+...+a_n x_n^\rho)^{1/\rho}$, $\rho<1$
+- $u(x_1,x_2,x_3..x_N)=a_1 x_1+a_2x_2+...+a_nx_n$
+- $u(x_1,x_2,x_3..x_N)=\min(a_1x_1,a_2x_2,...,a_nx_n)$ (hint: minimum does not have a derivative in a lot of places)
+- $u(x_1,x_2,x_3..x_N)=\max(a_1x_1,a_2x_2,...,a_nx_n)$ (hint: maximum does not have a derivative in a lot of places)
+
+where $a_i>0$ for $i\in \{1,..n\}$, and the budget constraint is
+\[p_1 x_1+p_2 x_2+..+p_n x_n=m.\]
+
+After you're done:
+
+- think why $\rho<1$
+- replace $a_ix_i$ with $a_i x_i +b_i$.
+
+## Today
+
+We learned
+- Lagrange approach to optimization
+- How to check for optimum (almost: need to know how to find the determinant of the matrix)
+
+Next time: Implicit Function Theorem

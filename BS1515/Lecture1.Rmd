@@ -1,0 +1,384 @@
+---
+title: "BS 1515 Lecture 1: Sets"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+
+output: slidy_presentation
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Economics
+
+We as economists:
+
+- Describe what people do with allocation of resources (empirics)
+
+- Developing stories about why they behave (theory)
+
+Both of these require math:
+
+- why data methods applied to data produce meaningful results (empirics)
+
+- why assumptions about individual behavior lead to predictions (theory)
+
+Math is how economists argue.
+
+## Math
+
+Math studies logic applied to things.
+
+- Agents behaving optimally: What's an agent? How do they choose? What's the difference between optimal and not optimal? How do agents interact?
+- Things being random: what things? If one thing happened, can another thing happen at the same time? If one thing happened, do we know if another might happen more likely?
+- Countries developing: what resources they use? how do they combine? why different countries use similar resources with drastically different results?
+
+Things we study today will apply to other parts of this course, and will be useful for other courses as well.
+
+## Example: Liberation Day
+
+April 2, 2025: Trump imposed tariffs on all other countries
+
+- minimum 10%
+- more at countries with trade deficit in goods but not services
+- planning to abolish income tax, use tariff income instead
+
+Questions:
+
+- How is it supposed to work?
+- Need to think about foreign producers and consumers
+- Need to think about domestic producers and consumers
+- Where does the tax formula come from
+
+Need to argue precisely! (or cause markets to collapse)
+
+## Sets
+
+The fundamental of calculus is a *set*, containing *elements*.
+
+- Set of students $\{\text{John},\text{Megan},\text{Dylan},\text{Susie}...\}$.
+- Set of students in this classroom.
+- Set of students who is supposed in this classroom.
+
+An object can be *in* a set ($a \in A$) or *not in* ($a \not \in A$).
+
+If all elements of set $B$ are in set $A$, $B$ is a *subset* of $A$: $B \subseteq A$; $A$ is a *superset* of $B$.
+
+If there are elements in $A$ that are not in $B$, $B$ is a *proper subset* of $A$: $B \subset A$, and $A$ is a *proper superset* of $B$.
+
+*Empty set* containing no elements is $\emptyset=\{\}$. *Singleton* set contains one element.
+
+## Example
+
+When shopping, people have *budgets* (say £100/week) and decide on a shopping basket
+
+- set of all shopping baskets
+
+When choosing where to study, pupils choose
+
+- the set of university to apply - rules restrict
+- school to attend
+
+When deciding on the stock/bond portfolio
+
+- proportions of assets
+- amount of money to invest
+
+## Operations on sets
+
+We can manipulate sets:
+
+- A *complement* of $A$ denoted as $\neg A= \{a: a \not \in A\}$
+- *union* of $A$ and $B$ denoted as $A \cup B=\{a \in A: a \in B\}$. 
+- *intersection* of $A$ and $B$ denoted as $A \cap B= \{a\in A: a \in B\}$. 
+- *subtraction* of $B$ from $A$ denoted as $A \setminus B=\{a \in A : a \not \in B\}$.
+
+$\land$ means AND. $\lor$ means OR. $\Rightarrow$ means part on the left implies part on the right. $\Leftrightarrow$ means when left part holds, right part holds, and vice versa.
+
+Prove: $A \setminus B = A \cap \neg B$.
+
+Prove: $A \cap B \subseteq A \cup B$. When can we claim that $A \cup B \subset A \cap B$?
+
+Prove: $A \cup B = (A \cap B) \cup (A \setminus B) \cup (B \setminus A)$.
+
+## Euler-Venn diagram
+
+```{r,engine='tikz',fig.alt="Two overlapping sets to illustrate the operations with sets"}
+\begin{tikzpicture}
+ \draw[fill=red!40!white, draw=black, fill opacity=0.3] (0,0) circle (0.6cm) node[yshift=-1cm, color=red!40!white, fill opacity=1] {$A$};
+ \draw[fill=green!40!black, draw=black, fill opacity=0.3] (1,0) circle (0.6cm) node[yshift=-1cm, color=green!40!black, fill opacity=1] {$B$};
+\end{tikzpicture}
+```
+
+*Space* is important!
+
+## Exercises for Sets
+
+Consider a 52-cards standard deck. A poker hand is 5 cards drawn from this deck at random. Verify claims:
+
+- The set of poker hands featuring three of a kind is a subset of a set of poker hands featuring a pair.
+
+- The set of poker hands featuring two pairs is a subset of a set of poker hands featuring a pair.
+
+- The set of poker hands featuring a straight (cards in sequence of rank ignoring suites) and the set of poker hands featuring a pair do not overlap.
+
+- The set of poker hands featuring a flush (5 cards of the same suit) and the set of poker hands containing a straight do not overlap.
+
+- The set of poker hands containing full house is an intersection of hands containing three of a kind and hands that contain a pair.
+
+## Functions
+
+*Function* $f:A\rightarrow B$ is a rule that gives an element of $B$ for every element of $A$.
+
+$f(x)=2x+3$ is an example of $f:\mathbb{R}\rightarrow \mathbb{R}$.
+
+$F(x,y)=0$ is an *implicit function*.
+
+- Not always a "true" function that gives you $y$ of $x$!
+- $F(x,y)=y-2x-3=0$ gives you a function $y=2x+3$.
+- $F(x,y)=y^2-x=0$ gives you two values of $y$ for each value of $x\geq 0$.
+- We'll come back to these later.
+
+*One-to-one* function: for each element of $A$ you get a *unique* element of $B$.
+
+*Onto* function: for each $b\in B$ there is an  $a\in A$ that gives $f(a)=b$.
+
+If both, function is *invertible*. $f(x)=x^2$ is invertible when defined on $\mathbb{R}_+\rightarrow \mathbb{R}_+$ but not if defined on $\mathbb{R}\rightarrow \mathbb{R}$.
+
+## Examples of Functions
+
+- $f(x)=x^2$ is invertible for $x \in [0,+\infty)$ but not for $x\in(-\infty,+\infty)$.
+
+- $f(x)=e^x$ is invertible, $g(y)=ln(y)$ is the inverse.
+
+- $f(x)=a+bx$ is invertible if $b\not =0$.
+
+Why invertibility matters?
+
+- If we have a function from unobservables to data, we want to infer unobservables from data
+
+## Real numbers
+*Naturals* $\mathbb{N}=\{1,2,3,..\}$
+
+*Integers* $\mathbb{Z}=\mathbb{N}\cup\{0\}\cup(-\mathbb{N})$
+
+*Rationals* $\mathbb{Q}=\{a/b: a, b\in \mathbb{N}\}$
+
+*Reals* $\mathbb{R}$ are different: includes $\mathbb{Q}$ and *irrationals* such as $\sqrt{2}$. Reals have a property that  $\forall X,Y \text{ such that }\forall x \in X \text{ and }\forall y \in Y x<y \Rightarrow \exists z:x<z<y$.
+
+Notice that $\mathbb{Q}$ does not have this property: $X=\{t:t^2<2\}$ and $Y=\{t:t^2>2\}$ are not separated by any $z \in \mathbb{Q}$!
+
+*Metric*: way of measuring distance in space, a function $d(x,y)$. For reals, could be $d(x,y)=|x-y|$. Metric is a feature of the space.
+
+Metrics must be 
+
+(a) positive: $d(x,y)\geq 0$;
+
+(b) symmetric: $d(x,y)=d(y,x)$; and
+
+(c) $d(x,y)\leq d(x,z)+d(z,y)$ - triangular inequality.
+
+## Countable Sets
+
+Set is *countable* if there is an invertible function from the set to $\mathbb{N}$.
+
+Set is *finite* if there is no onto function from $\mathbb{N}$ to the set.
+
+Set is *uncountable* otherwise.
+
+Prove: $\mathbb{Q}$ is countable. (hard!)
+
+Prove: $\mathbb{R}$ is uncountable. (hard!)
+
+## Open and Closed
+
+Open $\varepsilon$-ball around $x$: $B_\varepsilon(x)=\{t:d(x,t)<\varepsilon\}$.
+
+A set $A$ is *open* in space *S* with metric $d(x,y)$ if $\forall x \in A \exists \varepsilon>0: B_{\varepsilon}(x) \subset A$.
+
+A set $A$ is *closed* if complement of $A$, $\neg A=S\setminus A$, is open.
+
+Prove: A union of open sets is open.
+
+Prove: An intersection of closed sets is closed.
+
+Prove: A space $S$ is both closed and open in $S$.
+
+Prove: An empty set $\emptyset$ is both closed and open in $S$.
+
+
+## Order and Intervals
+
+Some spaces are *ordered*: there is a function $R(x,y)$ such that $R(x,y)=TRUE$ or $R(x,y)=FALSE$ for $x,y \in S$.
+
+- $\mathbb{R}$ is ordered with respect to ``bigger than'' order $>$
+- $\mathbb{R^2}$ is partially ordered with respect to $>(x,y)=TRUE$ if $x_1>y_1\land x_2>y_2$.
+- If you have a *utility function* over your *consumption bundles*, your preference relation is ordered.
+
+Interval $(a,b) \subseteq S$ is $\{x:a<x<b\}$. Interval $[a,b] \subseteq S$ is $\{x:a\leq x \leq b\}$.
+
+Prove: Interval $(a,b)$ in $\mathbb{R}$ is open.
+
+Prove: Interval $[a,b]$ in $\mathbb{R}$ is closed.
+
+Prove: Interval $(a,b]$ in $\mathbb{R}$ is neither open nor closed.
+
+## Convex set
+
+Take two points in a set $A$, $a$ and $b$. Take $c(\lambda)=\lambda a+(1-\lambda)b$ for $\lambda\in(0,1)$.
+
+- Can you always do this? What do you need to take a point like this?
+
+If for every $a,b, \lambda$ point $c(\lambda)$ is in set $A$, this set is *convex*.
+
+Prove: an intersection of two convex sets is convex.
+
+Prove: empty set is convex.
+
+Prove: any single element set is convex.
+
+Prove: the space set is convex.
+
+## Equalities and Inequalities
+
+Consider a set
+
+\[\left\{(x,y)\in\mathbb{R}^2:x+2y<3\right\}\]
+
+Plot it:
+
+```{r,engine='tikz',fig.alt="Illustrating an inequality"}
+\usetikzlibrary{patterns}
+\centering \begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (-4.1,0)--(4.1,0) node[right] {$x$};
+\draw[->] (0,-2.1)--(0,2.1) node[right] {$y$};
+\foreach \x in {-4,...,-1,1,...,4}
+\draw[] (\x,0.1)--(\x,-0.1) node[below] {$\x$};
+\foreach \x in {-2,...,-1,1,...,2}
+\draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
+\begin{scope}
+\clip (-4,-2) rectangle (4,2);
+ \draw[pattern=north west lines, pattern color=red!40!white, draw=red!40!white, thick, dashed] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
+ \end{scope}
+\end{tikzpicture}
+```
+
+Is that an open set? Now do the same with equality.
+
+## System of Inequalities
+
+Now we have two inequalities:
+
+\[\left\{(x,y)\in\mathbb{R}^2:x+2y<3,x+y>2\right\}\]
+
+Plot it:
+
+```{r,engine='tikz',fig.alt="Illustrating two inequalities in two dimensional space"}
+\usetikzlibrary{patterns}
+\centering \begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (-4.1,0)--(4.1,0) node[right] {$x$};
+\draw[->] (0,-2.1)--(0,2.1) node[right] {$y$};
+\foreach \x in {-4,...,-1,1,...,4}
+\draw[] (\x,0.1)--(\x,-0.1) node[below] {$\x$};
+\foreach \x in {-2,...,-1,1,...,2}
+\draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
+\begin{scope}
+\clip (-4,-2) rectangle (4,2);
+ \draw[pattern=north west lines, pattern color=red!40!white, draw=red!40!white, thick, dashed] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
+ \draw[pattern=north east lines, pattern color=green!40!white, draw=green!40!white, thick, dashed] (-3,5)--(5,-3)--(4,4);
+ \end{scope}
+\end{tikzpicture}
+```
+
+Is that an open set? 
+
+## Equation
+
+Consider a set
+
+\[\left\{(x,y)\in\mathbb{R}^2:x+2y=3\right\}\]
+
+Plot it:
+
+```{r,engine='tikz',fig.alt="Illustrating an equation"}
+\usetikzlibrary{patterns}
+\centering \begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (-4.1,0)--(4.1,0) node[right] {$x$};
+\draw[->] (0,-2.1)--(0,2.1) node[right] {$y$};
+\foreach \x in {-4,...,-1,1,...,4}
+\draw[] (\x,0.1)--(\x,-0.1) node[below] {$\x$};
+\foreach \x in {-2,...,-1,1,...,2}
+\draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
+\begin{scope}
+\clip (-4,-2) rectangle (4,2);
+ \draw[draw=red!40!white, thick, dashed] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
+ \end{scope}
+\end{tikzpicture}
+```
+
+Is that an open set?
+
+## System of Equations
+
+Now we have two equations:
+
+\[\left\{(x,y)\in\mathbb{R}^2:x+2y=3,x+y=2\right\}\]
+
+Plot it:
+
+```{r,engine='tikz',fig.alt="Illustrating two equations in two dimensional space"}
+\usetikzlibrary{patterns}
+\centering \begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (-4.1,0)--(4.1,0) node[right] {$x$};
+\draw[->] (0,-2.1)--(0,2.1) node[right] {$y$};
+\foreach \x in {-4,...,-1,1,...,4}
+\draw[] (\x,0.1)--(\x,-0.1) node[below] {$\x$};
+\foreach \x in {-2,...,-1,1,...,2}
+\draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
+\begin{scope}
+\clip (-4,-2) rectangle (4,2);
+ \draw[draw=red!40!white, thick, dashed] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
+ \draw[draw=green!40!white, thick, dashed] (-3,5)--(5,-3)--(4,4);
+ \end{scope}
+\end{tikzpicture}
+```
+
+Generically - do you have to have one intersection? What if equations are not linear?
+
+## Example: Supply and Demand
+
+Let Supply be $Q=3p-20$ and Demand be $Q=60-p$. What is the equilibrium price?
+
+Answer 1: $3p-20=60-p$ so $4p=80$ and $p=20$ and $Q=60-20=40$.
+
+Answer 2: solve a system of $Q=60-p$ and $Q=3p-20$.
+
+Now you know: how do we know there is a solution?..
+
+## Continuous Functions
+
+A function $f:D\rightarrow E$ is *continuous* at $x$ if for every $\varepsilon>0$ there is a $\delta>0$ such that for all $x'\in B_\varepsilon(x)$ it holds that $f(x') \in B_\delta (f(x))$.
+
+*Intermediary Value Theorem*: For continuous function $f(\cdot)$, if $f(a)=f_1$ and $f(b)=f_2$, there is $x$ in $[a,b]$ such that $f(x)=f$ for every $f$ in $[f_1,f_2]$.
+
+Important part: $f(\cdot)$ is *continuous*: no jumps!
+
+Automatic for linear functions, but not generic.
+
+Good news for us: can establish that an equation/system of equations has a solution, but not necessarily unique.
+
+## Maximum Theorem
+
+Let $f(x,y)$ be continuous function on a compact set. Then $max_x f(x,y)$ exists and is continuous in $y$.
+
+Extends to multiple dimensions and constraints.
+
+*Compact* means contains all limits. Closed and bounded in $\mathbb{R}^N$, but not enough for $\mathbb{R}^\infty$!
+
+Good news for us: people maximizing utility will choose something as long as their constraints make sense.
+
+## Plan for next week
+
+We will talk more about derivatives and how do we use them for optimization. We will use the notions of functions and sets from this lecture.

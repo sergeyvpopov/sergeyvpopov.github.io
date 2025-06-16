@@ -1,0 +1,483 @@
+---
+title: "BS 1515 Lecture 2: Linear Algebra"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: slidy_presentation
+css: cardiff.css
+
+header-includes:
+  - \usepackage{nicefrac}
+  - \usepackage{tikz}
+  - \usetikzlibrary{patterns}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+```
+
+## Last Time
+
+-   Sets and equations
+
+Today: matrices
+
+Why do we care about matrices
+
+-   Data is matrices
+
+-   Matrix operations are faster on the computer, all algo trading and LLM stuff is a bunch of linear algebra
+
+-   All smooth functions can be approximated by a linear (or quadratic) function locally
+
+## Vectors
+
+Vector space: space where elements can be added and multiplied by a *scalar*.
+
+Vector axioms:
+
+- Associativity: $\mathbb{u}+(\mathbb{v}+\mathbb{w})=(\mathbb{u}+\mathbb{v})+\mathbb{w}$.
+- Commutativity: $\mathbb{u}+\mathbb{v}=\mathbb{v}+\mathbb{u}$.
+- There is a zero element: $\mathbb{u}+\mathbb{0}=\mathbb{u}$.
+- $\forall \mathbb{v}$ there is an additive inverse $\mathbb{-v}$: $\mathbb{v}+(\mathbb{-v})=0$.
+- Scalar multiplication is associative: $a(b\mathbb{v})=(ab)\mathbb{v}$.
+- Multiplying by 1 does not change anything: $1\mathbb{v}=\mathbb{v}$.
+- Distributivity wrt to vector addition: $a(\mathbb{v}+\mathbb{w})=a\mathbb{v}+a\mathbb{w}$.
+- Distributivity wrt to scalar multiplication: $(a+b)\mathbb{v}=a\mathbb{v}+b\mathbb{v}$.
+
+## Vectors
+
+Prove: $\mathbb{R}$ is a vector space.
+
+Prove: $0\mathbb{v}=\mathbb{0}$.
+
+Prove: $s\mathbb{0}=\mathbb{0}$.
+
+Prove: $-1\mathbb{v}=\mathbb{-v}$.
+
+Prove: $s\mathbb{v}=\mathbb{0}$ means either $s=0$ or $\mathbb{v}=\mathbb{0}$.
+
+## Linear Algebra
+
+Most of the times vectors we are going to be working with are based on real numbers:
+
+\[V=\begin{bmatrix}
+    v_1 \\
+    v_2 \\
+    \vdots \\
+    v_N 
+\end{bmatrix} \quad W=\begin{bmatrix}
+    w_1 & w_2 & \cdots & w_M
+\end{bmatrix}\]
+
+$V$ is a column vector of length $N$, $W$ is a row vector of length $M$.
+
+## What can you do with vectors
+
+Add them: if $V$ and $W$ are the same shape and size (say $N$-long row),
+
+\[V+W=\begin{bmatrix}
+    v_1+w_1 & v_2+w_2 & \cdots & v_N+w_N
+\end{bmatrix}\]
+
+Multiply by a scalar: if $a\in \mathbb{R}$ and $V$ is a row vector of length $N$,
+\[aV=\begin{bmatrix}
+    av_1 & av_2 & \cdots & av_N
+\end{bmatrix}\]
+
+Transpose: if $V$ is a row vector of length $N$,
+\[V^T=\begin{bmatrix}
+    v_1 \\ v_2 \\ \vdots \\ v_N
+\end{bmatrix}\]
+
+Vector multiply: if $W$ is a row and $V$ is a column
+\[WV=w_1v_1+w_2v_2+...+w_Nv_N.\]
+
+## Matrices
+
+\[A=\begin{bmatrix}
+    a_{11} & a_{12} & \cdots & a_{1N} \\
+    a_{21} & a_{22} & \cdots & a_{2N} \\
+    \vdots & \vdots  & \ddots & \vdots\\
+    a_{M1} & a_{M2} & \cdots & a_{MN} 
+\end{bmatrix}\]
+
+$A$ is a $M\times N$ matrix. Square matrices are $N\times N$.
+
+- Row vectors are $1\times M$ matrices.
+- Column vectors are $N\times 1$ matrices.
+- Identity matrix $I_N$ is a $N\times N$ matrix with 1s on the diagonal and 0s outside:
+
+\[I_N=\begin{bmatrix}
+    1 & 0 & \cdots & 0 \\
+    0 & 1 & \cdots & 0 \\
+    \vdots & \vdots  & \ddots & \vdots\\
+    0 & 0 & \cdots & 1 
+\end{bmatrix}.\]
+
+## Matrix Multiplication
+
+If $A$ is an $M\times N$ matrix,
+
+- can multiply by a $N$-long column vector $v$ on the right:
+\[Av=\begin{bmatrix}
+    a_{11} & a_{12} & \cdots & a_{1N} \\
+    a_{21} & a_{22} & \cdots & a_{2N} \\
+    \vdots & \vdots  & \ddots & \vdots\\
+    a_{M1} & a_{M2} & \cdots & a_{MN} 
+\end{bmatrix}\begin{bmatrix}
+    v_{1} \\
+    v_{2} \\
+    \vdots\\
+    v_{N}  
+\end{bmatrix}=\begin{bmatrix}
+    a_{11}v_{1}+a_{12}v_2+...+a_{1N}v_N \\
+    a_{21}v_{1}+a_{22}v_2+...+a_{2N}v_N \\
+    \vdots\\
+    a_{M1}v_{1}+a_{M2}v_2+...+a_{MN}v_N \\  
+\end{bmatrix}.\]
+- can multiply by a $M$-long column vector $w$ on the left:
+\[wA=\begin{bmatrix}
+    w_{1} &  w_{2} & \cdots    w_{M}  
+\end{bmatrix}\begin{bmatrix}
+    a_{11} & a_{12} & \cdots & a_{1N} \\
+    a_{21} & a_{22} & \cdots & a_{2N} \\
+    \vdots & \vdots  & \ddots & \vdots\\
+    a_{M1} & a_{M2} & \cdots & a_{MN} 
+\end{bmatrix}=\begin{bmatrix}
+    a_{11}w_{1}+a_{21}w_2+...+a_{M1}w_M \\
+    a_{12}w_{1}+a_{22}w_2+...+a_{M2}w_M \\
+    \vdots\\
+    a_{1N}w_{1}+a_{2N}w_2+...+a_{MN}w_M \\  
+\end{bmatrix}^T.\]
+- Can multiply by $N\times P$ matrix on the right (getting a $M\times P$ matrix) or by $L \times M$ matrix on the left (getting a $L\times N$ matrix).
+
+## Example
+
+\[A=\begin{bmatrix}
+    2 & 1 & 3 & -1 \\
+    0 & 1 & -2 & 2 \\
+    -1 & -1 & -1 & -1 
+\end{bmatrix}.\]
+
+- Multiply $A$ by $v=\begin{bmatrix}
+    2 \\
+    1 \\
+    3\\
+    1  
+\end{bmatrix}$ on the right.
+- Multiply $A$ by $w=\begin{bmatrix}
+    2 & 3 & 1  
+\end{bmatrix}$ on the left.
+- Find $wAv$.
+
+## Check yourself in R
+
+```{r,echo=TRUE}
+ A <- matrix(c(2,1,3,-1,0,1,-2,2,-1,-1,-1,-1), nrow = 3, ncol = 4, byrow = TRUE);
+ v <- cbind(c(2,1,3,1));
+ w <- c(2,3,1);
+ printmatrix<-function(m){write.table(format(m, justify="right"),row.names=F, col.names=F, quote=F)};
+ printmatrix(w%*%A)
+ printmatrix(A%*%v)
+ printmatrix(w%*%A%*%v)
+ 
+```
+
+
+## Systems of Linear Equations
+
+Imagine we have a system of equations
+\[2x+4y=5, 5x-2y=1.\]
+Observe we can write it as
+\[\begin{bmatrix}
+    2 & 4  \\
+    5 & -2  
+\end{bmatrix}\begin{bmatrix}
+    x  \\
+    y  
+\end{bmatrix}=\begin{bmatrix}
+    5  \\
+    1  
+\end{bmatrix}.\]
+If we had a matrix $B$ such that $B\begin{bmatrix}
+    2 & 4  \\
+    5 & -2  
+\end{bmatrix}=I_2$, we could
+\[\underbrace{B\begin{bmatrix}
+    2 & 4  \\
+    5 & -2  
+\end{bmatrix}\begin{bmatrix}
+    x  \\
+    y  
+\end{bmatrix}}_{=I_2 \begin{bmatrix}
+    x  \\
+    y  
+\end{bmatrix}=\begin{bmatrix}
+    x  \\
+    y  
+\end{bmatrix}}=B\begin{bmatrix}
+    5  \\
+    1  
+\end{bmatrix}.\]
+Can we find such a $B$? Maybe!
+
+## Inverting Matrices
+
+For a square $N \times N$ matrix $A$, a square matrix $B$ is an *inverse* if $BA=I_N$.
+- Prove: if $B$ is the inverse of $A$, $A$ is the inverse of $B$.
+
+Is it possible that there is no inverse? Yes. Consider $A=\begin{bmatrix}
+    0 & 0 \\
+    0 & 0
+\end{bmatrix}$ - no matter what matrix you multiply it by, you won't get $I_2$.
+
+- Prove: any matrix that has a zero row or a zero column cannot be *invertible*.
+- Prove: any matrix that has two identical rows or columns cannot be invertible.
+- Prove: any matrix that has two rows (or columns) such as one is a scale multiple of another cannot be invertible.
+- Prove: any matrix that has a row (or columns) which is the sum of two other rows (or columns) cannot be invertible.
+
+*Rank* of the matrix is the number of linearly independent rows (or columns). $N\times N$ matrices with rank $N$ are *full rank*. Only they are invertible.
+
+## Gaussian Elimination
+Imagine you want to invert matrix $A$. Write two matrices, $A$ and $I$, together
+\[\begin{bmatrix}
+    a_{11} & a_{12} & a_{13} \\
+    a_{21} & a_{22} & a_{23} \\
+    a_{31} & a_{32} & a_{33} 
+\end{bmatrix}\begin{bmatrix}
+    1 & 0 & 0 \\
+    0 & 1 & 0 \\
+    0 & 0 & 1 
+\end{bmatrix}\]
+Multiply by scalars, add subtract rows of both matrices at the same time to obtain an $I$ matrix on the left
+\[\begin{bmatrix}
+    1 & \frac{a_{12}}{a_{11}} & \frac{a_{13}}{a_{11}} \\
+    a_{21} & a_{22} & a_{23} \\
+    a_{31} & a_{32} & a_{33} 
+\end{bmatrix}\begin{bmatrix}
+    \frac{1}{a_{11}} & 0 & 0 \\
+    0 & 1 & 0 \\
+    0 & 0 & 1 
+\end{bmatrix}\]
+\[\begin{bmatrix}
+    1 & \frac{a_{12}}{a_{11}} & \frac{a_{13}}{a_{11}} \\
+    0 & a_{22}-\frac{a_{21}a_{12}}{a_{11}} & a_{23}-\frac{a_{21} a_{13}}{a_{11}} \\
+    0 & a_{32}-\frac{a_{31}a_{13}}{a_{11}} & a_{33}-\frac{a_{31} a_{13}}{a_{11}} 
+\end{bmatrix}\begin{bmatrix}
+    \frac{1}{a_{11}} & 0 & 0 \\
+    -\frac{a_{21}}{a_{11}} & 1 & 0 \\
+    -\frac{a_{31}}{a_{11}} & 0 & 1 
+\end{bmatrix}\]
+Computers are very good at this.
+
+## $2\times 2$ and $3\times3$ Matrices
+Let $A=\begin{bmatrix}
+    a & b  \\
+    c & d 
+\end{bmatrix}$. Then
+\[A^{-1}=\frac{1}{ad-bc}\begin{bmatrix}
+    d & -b  \\
+    -c & a 
+\end{bmatrix}.\]
+Let $A=\begin{bmatrix}
+    a & b & c \\
+    d & e & f \\
+    g & h & i 
+\end{bmatrix}$. Then
+\[A^{-1}=\frac{1}{aei+bfg+ghc-ceg-fha-bdi}\begin{bmatrix}
+    ei-fh & -(d-ifg) & dh-eg  \\
+    -(bi-ch) & ai-cg & -(ah-bg)\\
+    bf-ce & -(af-cd) & ae-bd
+\end{bmatrix}^T.\]
+
+Generically, depends on the notion of the *determinant*.
+
+## Determinant
+
+A *permutation* is a (finite) set of numbers where order matters. For a $N \times N$ matrix, take all permutations of $\{1,2,3,..N\}$, denote them $S_N$. Let $sgn(\sigma)$ denote the sign of permutation $\sigma\in S_N$: 
+
+* $+1$ is you can go from $\{1,2,..N\}$ to $\sigma$ in even number of steps, 
+* and $-1$ otherwise.
+
+Then determinant of matrix $A$ is
+\[\det A=\sum_{\sigma\in S_N} sgn(\sigma) a_{1,\sigma_1} \cdot a_{2,\sigma_2} \cdot a_{3,\sigma_3} \cdot...\cdot a_{N,\sigma_N}.\]
+For a $2\times 2$ matrix,
+\[\det \begin{bmatrix}
+    a & b  \\
+    c & d 
+\end{bmatrix} = ad-bc.\]
+If determinant is zero, matrix is not invertible.
+
+- Prove: \[\det \begin{bmatrix}
+    a & b & c \\
+    d & e & f \\
+    g & h & i
+\end{bmatrix}= aei+bfg+ghc-ceg-fha-bdi.\]
+
+## Quadratic Forms
+
+Let $x$ be the column vector of $[x_1,x_2,..x_N]$. Consider a $N$-long row vector $w$. then
+\[wx=w_1x_1+w_2x_2+..+w_Nx_N\]
+is a *linear form*.
+
+Consider a *symmetric* square matrix $N\times N$ matrix $A$. Then
+\[x^TAx=a_{11} x_1^2+2a_{12}x_1x_2+2a_{13}x_1x_3+...+a_{NN}x^2_N\]
+is a *quadratic form*. 
+
+If your $A$ is not symmetric, then
+\[x^TAx=a_{11} x_1^2+(a_{21}+a_{12})x_1x_2+(a_{31}+a_{13})x_1x_3+...+a_{NN}x^2_N\]
+
+<!-- Observe that the derivative with respect to $x_i$ is a linear form -->
+<!-- \[2a_{1i}x_1+2a_{2i}x_2+...+2a_{ii}x_i+...+2a_{ii}x_N\] -->
+<!-- based on $A$'s $i$th column, and the second derivative with respect to $x_j$ is just $2a_{ij}$. -->
+
+## Positive Definite
+
+Any $A$ such that for all $x$ $x^TAx>0$ is called *positive definite*.
+
+To accomplish that:
+- need to have $e_i^TAe_i>0$ so all diagonal elements positive
+- need to have $(a e_i+be_j)^TA(ae_i+be_j)>0$ so all $2 \times 2$ submatrices positive definite
+- need to have $(a e_i+be_j+ce_k)^TA(ae_i+be_j+ce_k)>0$ so all $3 \times 3$ submatrices positive definite
+
+These submatrices are called *minors*.
+
+For positive definiteness, need to check $det()>0$ of principal minors. For semidefiniteness, need to check $det()\geq 0$ for all minors.
+
+For negative definiteness, signs need to alter, from -1 to 1 etc.
+
+Why?
+
+## Matrix is a Transformation of a Vector
+
+Consider matrix
+\[A=\begin{bmatrix}
+    2 & 0  \\
+    0 & 1  
+\end{bmatrix}.\]
+What does it do to a vector?
+```{r,engine='tikz',fig.alt="Applying Matrix to a Vector"}
+\centering
+\usetikzlibrary{patterns}
+\centering \begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (-4.1,0)--(4.1,0) node[right] {$x$};
+\draw[->] (0,-2.1)--(0,2.1) node[right] {$y$};
+\foreach \x in {-4,...,-1,1,...,4}
+\draw[] (\x,0.1)--(\x,-0.1) node[below] {$\x$};
+\foreach \x in {-2,...,-1,1,...,2}
+\draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
+\begin{scope}
+\clip (-4,-2) rectangle (4,2);
+ \draw[->,color=blue, ultra thick] (0,0)--(1,1.6) node[right] {$v$};
+ \draw[->,color=blue, ultra thick, dashed] (0,0)--(2,1.6) node[right] {$Av$};
+ \draw[->,color=green!40!black, ultra thick] (0,0)--(0,1) node[left] {$(0,1)=A(0,1)$};
+ \draw[->,color=green!40!black, ultra thick] (0,0)--(1,0) node[below] {$(1,0)$};
+ \draw[->,color=green!40!black, ultra thick, dashed] (0,0)--(2,0) node[below right] {$A(1,0)$};
+\end{scope}
+\end{tikzpicture}
+```
+
+## Matrix is a Transformation of a Vector 2
+
+Consider matrix
+\[A=\begin{bmatrix}
+    0 & 1  \\
+    1 & 0  
+\end{bmatrix}.\]
+What does it do to a vector?
+```{r,engine='tikz',fig.alt="Applying Matrix to a Vector"}
+\centering
+\usetikzlibrary{patterns}
+\centering \begin{tikzpicture}[x=1cm,y=1cm]
+\draw[->] (-4.1,0)--(4.1,0) node[right] {$x$};
+\draw[->] (0,-2.1)--(0,2.1) node[right] {$y$};
+\foreach \x in {-4,...,-1,1,...,4}
+\draw[] (\x,0.1)--(\x,-0.1) node[below] {$\x$};
+\foreach \x in {-2,...,-1,1,...,2}
+\draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
+\begin{scope}
+\clip (-4,-2) rectangle (4,2);
+ \draw[->,color=blue, ultra thick] (0,0)--(1,1.6) node[right] {$v$};
+ \draw[->,color=blue, ultra thick, dashed] (0,0)--(1.6,1) node[below right] {$Av$};
+ %\draw[->,color=green!40!black, ultra thick] (0,0)--(0,1) node[left] {$(0,1)=A(0,1)$};
+ \draw[->,color=green!40!black, ultra thick] (0,0)--(1,1) node[right] {$(1,1)$};
+ \draw[->,color=green!40!black, ultra thick, dashed] (0,0)--(-1,-1) node[left] {$A(1,1)$};
+ \draw[->,color=green!40!black, ultra thick] (0,0)--(-1,1) node[left] {$(-1,1)$};
+ \draw[->,color=green!40!black, ultra thick, dashed] (0,0)--(1,-1) node[right] {$A(-1,1)$};
+\end{scope}
+\end{tikzpicture}
+```
+
+## Matrices Change Vectors
+They
+
+- stretch them
+- change direction
+
+A vector $v\not =0_N$ that does not change direction (ok to go in the opposite direction) if changed by $A$ is an *eigenvector* of the matrix $A$:
+\[Av=\lambda v,\]
+and $\lambda$ is the *eigenvalue*.
+
+Claim: $det (A)=\lambda_1\lambda_2\lambda_3\cdot...\cdot \lambda_N$.
+
+So all minor determinants being positive checks that all $\lambda$ are positive, while switching signs verifies that $\lambda_i<0$ but $\lambda_i\lambda_j>0$ and $\lambda_i\lambda_j\lambda_k<0$ or that all $\lambda$s are negative.
+
+How to find $\lambda$: observe that $(A-\lambda I_N)v=0_N$ which means that $\det(A-\lambda I_N)=0$ - this is a polynom in $\lambda$.
+
+## Example
+
+Let $A=\begin{bmatrix}
+    2 & 3  \\
+    1 & 2  
+\end{bmatrix}
+
+Then your characteristic equation is \[\det \begin{bmatrix}
+    2-\lambda & 3  \\
+    1 & 2-\lambda  
+\end{bmatrix}=(2-\lambda)^2-3=0 \Rightarrow \lambda_1=2-\sqrt{3},\lambda_2=2+\sqrt{3}.\]
+
+This matrix is \emph{neither} positive nor negative semidefinite: its eigenvalues have different signs. For the negative eigenvalue $\lambda_2=2+\sqrt{3}$:
+\[\begin{bmatrix}
+    2-\lambda_2 & 3\end{bmatrix}\begin{bmatrix}
+    1 \\ a\end{bmatrix}=-1\sqrt{3}+3a=0\Rightarrow a=\frac{\sqrt{3}}{3}.\]
+So any vector proportional to $\begin{bmatrix}
+    1 \\ \sqrt{3}/3 \end{bmatrix}$ is an eigenvector.
+
+## Orthonormal Eigenvector
+    
+To find a length $1$ eigenvector, (1) find the length of the one we have $\left(1^2+\left(\sqrt{3}/3\right)^2\right)=12/9$ and (2) then *normalize*:
+\[\frac{1}{\sqrt{\frac{12}{9}}}\begin{bmatrix}
+    1 \\ \sqrt{3}/3 \end{bmatrix} \rightarrow \begin{bmatrix}
+    3/\sqrt{12} \\ \sqrt{3}/\sqrt{12}=\frac{1}{2} \end{bmatrix}=:v_2.\]
+
+The other eigenvector is found using the other eigenvalue:
+\[\begin{bmatrix}
+    2-\lambda_1 & 3\end{bmatrix}\begin{bmatrix}
+    1 \\ a\end{bmatrix}=1\sqrt{3}+3a=0\Rightarrow a=\frac{-\sqrt{3}}{3}.\]
+So the eigenvector is $v_1:=\begin{bmatrix}
+    3/\sqrt{12} \\ -\sqrt{3}/\sqrt{12}=-\frac{1}{2}\end{bmatrix}.$ 
+    Observe that $v_1^Tv_2=\frac{9}{12}-\frac{1}{4}=1/2$ - they are not orthogonal, but if the matrix is symmetric, they must be.
+    
+- Verify: for $A=\begin{bmatrix}
+    2 & 3  \\
+    3 & 2  
+\end{bmatrix}, eigenvalues have opposite signs, and eigenvectors are orthogonal.
+    
+## Spectral Theorem and Matrix Inversion
+
+If $A$ is symmetric, $\Lambda$ is a diagonal matrix of real eigenvalues, and $Q$ is a matrix where column $i$ is the eigenvector for eigenvalue $i$,
+\[A=Q\Lambda Q^T.\]
+
+This is a very strong result: it says that every quadratic form of a full rank symmetric matrix is a sum of $N$ parabolas. If all of them are convex, the result must be convex; if all of them are concave, the result must be concave.
+
+Observe that it is very easy to invert $\Lambda$: $\Lambda^{-1}$ is a diagonal matrix of $1/\lambda_i$. Observe also that $QQ^T=I$, so $Q$ is an inverse of $Q^T$, and vice versa. Therefore:
+\[Q^TA=\underbrace{Q^TQ}_{I_N}\Lambda Q^T \Rightarrow \Lambda^{-1} Q^T A = Q^T\Rightarrow \underbrace{Q \Lambda^{-1} Q^T}_{A^{-1}} A =I_N.\]
+
+## Learned Today
+
+- Vectors and Matrices
+- Vector Multiplication
+- Eigenvalues and determinants: will be useful next lecture and in the future
+- Matrix Transposition and Inversion: will be useful when you start data analysis
+
+Next time: optimization!
