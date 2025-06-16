@@ -1,0 +1,105 @@
+---
+#output: 
+#  stevetemplates::syllabus:
+#    latex_engine: xelatex
+#    dev: cairo_pdf
+geometry: margin=1in
+
+title: "BS1515: Maths & Stats"
+author: Sergey V. Popov
+date: "Fall 2025"
+
+# coteaching: TRUE
+email: "popovs@cardiff.ac.uk"
+officehours: "By appointment"
+office: "Aberconway E02a"
+
+email2: "ArvanitopoulosT@cardiff.ac.uk"
+officehours2: "\\shrug"
+office2: "\\shrug"
+
+web: "Learning Central"
+classroom: "\\shrug"
+classhours: "\\shrug"
+
+fontfamily: mathpazo
+fontsize: 11pt
+header-includes:
+   - \linespread{1.05}
+---
+ <!--
+```{r setup, include=FALSE}
+# knitr::opts_chunk$set(cache=FALSE, dev='pdf')
+knitr::opts_chunk$set(cache=F,
+                      fig.path = 'figs/',
+                      cache.path='cache/',
+                      warning=F,
+                      message=F)
+
+knitr::opts_chunk$set(
+                  fig.process = function(x) {
+                      x2 = sub('-\\d+([.][a-z]+)$', '\\1', x)
+                      if (file.rename(x, x2)) x2 else x
+                      }
+                  )
+
+
+options(scipen=999)
+library(tidyverse)
+library(stevemisc)
+library(lubridate)
+```
+-->
+
+Contact: PopovS@cardiff.ac.uk
+
+Office: Aberconway E02a, office hours by appointment
+
+# Course Description
+
+This module provides students with a basic knowledge of mathematics and statistical tools that are required to understand economics, business, and econometrics taught in Years 1, 2 and 3. This module builds upon and reinforces the knowledge from A-level mathematics and introduces new mathematical and statistical tools to students. Teaching of these tools is combined with practical applications to economics and business.
+
+# Course Objectives
+
+1. 	Explain mathematical and statistical methods.
+2.	Formulate problems using appropriate mathematical and statistical methods.
+3.	Solve problems related to the topics in the module.
+4.	Apply the techniques of mathematics and statistics to economics and business examples.
+
+
+# Required Readings
+
+Jacques, I. (2006). Mathematics for economics and business. Pearson Education. Available online via the Cardiff University library. Other editions are acceptable too.
+
+
+## Grading Policy
+
+This course consists of two parts, one is taught by me and one taught by Dr Theodoros Arvanitopoulos (separate syllabus governs his part).
+
+- **15%** of your grade will be determined by a homework designed by me with a deadline on Week 7.
+
+- **15%** of your grade will be determined by a homework designed by Dr Arvanitopoulos with a deadline on Week 11.
+
+- **70%** of your grade will be determined by a final exam designed by us both.
+
+The marking criteria are provided on Learning Central in a separate document.
+
+## E-mail Policy
+
+Please do not hesitate to contact me with any questions or suggestions. If I did not reply, I probably missed it, please write again.
+
+If you have problems, please write, sometimes I can do/suggest things. The earlier I know about a problem, the more I can do.
+
+## Class Schedule
+
+We meet for 4 hours every week for 3 hours of lectures and 1 hour of Q&A session. Prepare your questions!
+
+Approximate weekly schedule (live document available on Learning Central):
+
+1. Sets, inequalities and equations
+2. Linear Algebra
+3. Univariate calculus, differentiation and integration
+4. Multivariate calculus 
+5. Constrained and unconstrained optimization
+6. Reading week
+7. Homework 1 due
