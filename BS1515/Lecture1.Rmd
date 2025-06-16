@@ -1,5 +1,5 @@
 ---
-title: "BS 1515 Lecture 1: Sets"
+title: "BS 1515 Lecture 1: Sets, Inequalities, and Equations"
 author: "Sergey V. Popov"
 date: "`r Sys.Date()`"
 

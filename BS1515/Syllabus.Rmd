@@ -22,10 +22,12 @@ web: "Learning Central"
 classroom: "\\shrug"
 classhours: "\\shrug"
 
-fontfamily: mathpazo
-fontsize: 11pt
-header-includes:
-   - \linespread{1.05}
+css: cardiff.css
+
+# fontfamily: mathpazo
+# fontsize: 11pt
+# header-includes:
+#    - \linespread{1.05}
 ---
  <!--
 ```{r setup, include=FALSE}
@@ -99,7 +101,7 @@ Approximate weekly schedule (live document available on Learning Central):
 1. Sets, inequalities and equations
 2. Linear Algebra
 3. Univariate calculus, differentiation and integration
-4. Multivariate calculus 
-5. Constrained and unconstrained optimization
+4. Optimization
+5. Constrained optimization
 6. Reading week
 7. Homework 1 due

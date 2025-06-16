@@ -1,5 +1,5 @@
 ---
-title: "BS 1515 Lecture 3: Derivatives and Integrals"
+title: "BS 1515 Lecture 3: Univariate Calculus, Differentiation, and Integration"
 author: "Sergey V. Popov"
 date: "`r Sys.Date()`"
 output: slidy_presentation

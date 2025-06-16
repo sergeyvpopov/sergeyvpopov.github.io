@@ -1,0 +1,35 @@
+/* === Font-face declarations === */
+
+@font-face {
+  font-family: 'Franklin Gothic Heavy';
+  src: url('fonts/FranklinGothicHeavy.woff2') format('woff2'),
+       url('fonts/FranklinGothicHeavy.woff') format('woff');
+  font-weight: bold;
+  font-style: normal;
+}
+
+@font-face {
+  font-family: 'Franklin Gothic Book';
+  src: url('fonts/FranklinGothicBook.woff2') format('woff2'),
+       url('fonts/FranklinGothicBook.woff') format('woff');
+  font-weight: normal;
+  font-style: normal;
+}
+
+
+/* === Apply fonts === */
+
+/* Headings: Franklin Gothic Heavy */
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Franklin Gothic Heavy', sans-serif;
+}
+
+/* Body text: Franklin Gothic Book */
+body, p, li, div {
+  font-family: 'Franklin Gothic Book', sans-serif;
+}
+
+/* Math (MathJax or KaTeX rendered) */
+.math, .katex, .MathJax, .MathJax_Display, .mjx-math {
+  font-family: 'Franklin Gothic Book', sans-serif;
+}
