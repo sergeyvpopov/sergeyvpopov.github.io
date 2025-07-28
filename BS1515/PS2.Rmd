@@ -1,0 +1,60 @@
+---
+title: "Problem Set 2: Linear Algebra"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Systems of Equations using Matrix Inversion
+Solve Systems of Equations problem in PS1 by inverting matrices where possible, and explain why some matrices cannot be inverted.
+
+## Range and Null Space
+Let $A=\begin{bmatrix}2 & 3 & 5 \\ -4 & 2 & 3 \end{bmatrix}.$
+
+- Verify that $v=\begin{bmatrix}−1/16 \\ −13/8 \\ 1\end{bmatrix}$ is an element of the null space of this matrix. Are there any others?
+- Verify that only zero vector is in $A$'s left null space (such a sapce that consists only of null vector is known as a *trivial* space).
+- What does this imply about this matrix' rank, column space, and row space?
+
+##Matrix Operations
+
+\[A=\begin{bmatrix}
+1 & 2 & 3 \\
+4 & 5 & 6 \\
+0 & 1 & 0
+\end{bmatrix} \quad 
+B=\begin{bmatrix}
+1 & 0 & 0 \\
+0 & 2 & 0 \\
+0 & 0 & 3
+\end{bmatrix}
+\quad 
+C=\begin{bmatrix}
+1 & 2 & 0 \\
+1 & 2 & 0 \\
+1 & 2 & 0
+\end{bmatrix}
+\quad 
+D=\begin{bmatrix}
+1 & -1 & 0 \\
+-1 & 3 & -1 \\
+0 & -1 & 1
+\end{bmatrix}
+\quad 
+E=\begin{bmatrix}
+-2 & 1 & 0 \\
+1 & -1 & 0 \\
+0 & 0 & -3
+\end{bmatrix}\]
+
+- Solve for $AB,BA,AC,CA,AD,DA,AE,EA,BC,CB,BD,DB,BE,EB,CD,DC,CE,EC,DE,ED$
+- Is it true that $PQ$=$QP$ for a pair of square matrices $P$ and $Q$?
+- Verify that $P^TQ^T=(QP)^T$
+- Calculate determinants of all these matrices.
+- Which matrices have inverses? Find them using Gaussian Elimination.
+- Calculate these matrices’ eigenvalues and eigenvectors.
+- Which matrices are positive definite? Negative definite?

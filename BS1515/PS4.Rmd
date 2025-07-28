@@ -1,0 +1,49 @@
+---
+title: "Problem Set 4: Optimization"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Optimization
+
+Model these problems as single-function optimization problems and solve:
+
+- You have 50 meters of fence. What rectangle shape maximizes the area that can be fenced with that fence?
+- We are designing a can to hold 1 liter of liquid. It must be cylindrical. What shape minimizes the amount of material spent?
+- You have a rectangle of size $A$ by $B$. You want to cut out 4 $x \times x$ squares from the corners to have a cutout for a box without a top. what $x$ maximizes the volume?
+    + might help first establish that $(A+B)^2\geq 3AB$.
+    + would you have a corner solution?
+    + how do you pick out of two candidates for the maximum?
+
+## Convexity
+
+Taking the second derivative, find out where these functions are convex or concave:
+
+- $f(x)=ax^3+bx^2+cx+d$
+- $f(x)=\ln(ax^2+bx+c)$ (might first need to establish where is it well defined)
+- $f(x)=e^{ax^2+bx+c}$
+
+## Deeper Derivatives
+
+Take $f(x)=-(x-4)^4$. The only extremum point is $x^*=4$. using derivatives (second one would not be enough!) verify this is a maximum.
+
+## Integrals
+
+For functions (you will recognize them as *densities* in the second half of BS1515)
+
+a. $f(x)=1/a$ for $x\in[0,a]$ and $0$ otherwise;
+b. $f(x)=6x(1-x)$ for $x \in [0,1]$ and $0$ otherwise;
+c. $f(x)=2x/a^2$ for $x \in [0,a]$ and $0$ otherwise;
+d. $f(x)=\alpha e^{-\alpha x}$ for $x \in \mathbb{R}_+$ and $0$ otherwise;
+
+plot them and calculate
+
+- definite integral: $\int_{-\infty}^{+\infty} f(x) dx$ (note that space where $f(x)=0$ can be dropped) (should be 1 for each function)
+- $Ex=\int_{-\infty}^{+\infty} x f(x) dx$ (you will recognize them as *expectations* in the second half of BS1515)
+- $Ex^2=\int_{-\infty}^{+\infty} x^2 f(x) dx$

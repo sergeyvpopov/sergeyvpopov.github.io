@@ -151,7 +151,7 @@ If both, function is *invertible*. $f(x)=x^2$ is invertible when defined on $\ma
 
 - $f(x)=x^2$ is invertible for $x \in [0,+\infty)$ but not for $x\in(-\infty,+\infty)$.
 
-- $f(x)=e^x$ is invertible, $g(y)=ln(y)$ is the inverse.
+- $f(x)=e^x$ is invertible, $g(y)=\ln(y)$ is the inverse.
 
 - $f(x)=a+bx$ is invertible if $b\not =0$.
 
@@ -170,6 +170,8 @@ Why invertibility matters?
 
 Notice that $\mathbb{Q}$ does not have this property: $X=\{t:t^2<2\}$ and $Y=\{t:t^2>2\}$ are not separated by any $z \in \mathbb{Q}$!
 
+*Euclidean space* $\mathbb{R}^N$ for $N\in \mathbb{N}$.
+
 *Metric*: way of measuring distance in space, a function $d(x,y)$. For reals, could be $d(x,y)=|x-y|$. Metric is a feature of the space.
 
 Metrics must be 
@@ -179,6 +181,14 @@ Metrics must be
 (b) symmetric: $d(x,y)=d(y,x)$; and
 
 (c) $d(x,y)\leq d(x,z)+d(z,y)$ - triangular inequality.
+
+## Important Reals
+
+$\pi=3.14159...$ is not rational.
+
+$e=2.7182828...$ is not rational.
+
+Neither can be represented as a solution to a polynomial equation with integer coefficients, or *transcendental*.
 
 ## Countable Sets
 
@@ -367,7 +377,7 @@ Important part: $f(\cdot)$ is *continuous*: no jumps!
 
 Automatic for linear functions, but not generic.
 
-Good news for us: can establish that an equation/system of equations has a solution, but not necessarily unique.
+Good news for us: can establish that an equation/system of equations has a solution, but not necessarily uniqueness.
 
 ## Maximum Theorem
 

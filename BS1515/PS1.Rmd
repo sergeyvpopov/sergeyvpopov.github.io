@@ -1,0 +1,64 @@
+---
+title: "Problem Set 1: Sets"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Plot Sets
+
+On axis $(x,y)\in \mathbb{R}^2_{+}$ space, plot:
+
+- $\{(x,y)|x^2<a\}$
+- $\{(x,y)|y^2>a\}$
+- $\{(x,y)|x>2y\}$
+- $\{(x,y)|u(x,y)>u(2,3)\}$ where $u(x,y)$ is
+
+    + $u(x,y)=\sqrt{x}+\sqrt{y}$
+    + $u(x,y)=x^{0.3}y^{0.5}$
+    + $u(x,y)=x+ \ln(y)$
+    + $u(x,y)=x^2+y^2$
+Note: subscript $+$ on $\mathbb{R}^2_{+}$ means considering only positive values. $++$ would mean that $0$ is not included.
+
+## Open and Closed
+
+Take sets you plotted above and explain whether they are open in $\mathbb{R}^2$. Are their complements closed?
+
+Draw a set in $\mathbb{R}^2_{+}$ that is neither open nor closed.
+
+Draw a set that is open in $\mathbb{R}^2_{+}$ but closed in $\mathbb{R}^2$ .
+
+## Convex
+
+Among sets that you just plotted, and their complements, which ones are convex?
+
+## Solve Systems of Equations
+
+Plot these systems of equations on $\mathbb{R}^2$ space and solve.
+
+\[
+\begin{cases}
+2x + 3y = 5, \\
+3x + 4y = 7. \\
+\end{cases}
+ \quad
+\begin{cases}
+6x + 8y = 5, \\
+3x + 4y = 7. \\
+\end{cases}\quad
+\begin{cases}
+2x - 3y = 5, \\
+3x + 4y = 7. \\
+\end{cases}
+ \quad
+\begin{cases}
+2x + 8y = 0, \\
+3x + 4y = 0. \\
+\end{cases}\]
+
+Some of the systems have a solution, some have multiple, and some have none.

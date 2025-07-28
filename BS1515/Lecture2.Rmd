@@ -114,6 +114,33 @@ $A$ is a $M\times N$ matrix. Square matrices are $N\times N$.
     0 & 0 & \cdots & 1 
 \end{bmatrix}.\]
 
+## Matrix as a Set of Vectors
+
+Let $A=\begin{bmatrix}
+    a_{11} & a_{12} & \cdots & a_{1N} \\
+    a_{21} & a_{22} & \cdots & a_{2N} \\
+    \vdots & \vdots  & \ddots & \vdots\\
+    a_{M1} & a_{M2} & \cdots & a_{MN} 
+\end{bmatrix}$. Then:
+
+- *column space*, or *range*, is everything that can be obtained as a linear combination of $\begin{bmatrix}
+    a_{11}  \\
+    a_{21}  \\
+    \vdots \\
+    a_{M1}  
+\end{bmatrix}$, $\begin{bmatrix}
+    a_{21}  \\
+    a_{22}  \\
+    \vdots \\
+    a_{M2}  
+\end{bmatrix}$, ... $\begin{bmatrix}
+    a_{1N}  \\
+    a_{2N}  \\
+    \vdots \\
+    a_{MN}  
+\end{bmatrix}$.
+- *row space* is everything you can get with linear combinations of rows.
+
 ## Matrix Multiplication
 
 If $A$ is an $M\times N$ matrix,
@@ -183,6 +210,14 @@ If $A$ is an $M\times N$ matrix,
  
 ```
 
+## Back to Range
+
+Take $A$ - $M \times N$ matrix.
+
+- Column space, or range, of $A$ is the set of vectors $A x$ for $x$ being $N\times 1$-dimenstional vector; this is a subspace of a $M$-dimensional vector space.
+- Row space of $A$ is the set of vectors $wA$ for $w$ being $1\times M$-dimenstional vector; this is a subspace of a $N$-dimensional row vector space.
+- Null space of $A$, or *kernel*, is the set of $N\times 1$-dimensional vectors $z$ such that $Az=0$. Observe that every $z$ multiplied by anything from the column space is zero.
+- Left null space of $A$ is the set of $1\times M$-dimensional vectors $y$ such that $yA=0$. Observe that $y$ multiplied by anything from the row space is zero.
 
 ## Systems of Linear Equations
 

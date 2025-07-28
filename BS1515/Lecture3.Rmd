@@ -170,13 +170,13 @@ Remember: $g(y)$ is an inverse of $y=f(x)$ if $g(f(x))=x$.
 
 Prove: $g'(y)=\frac{1}{f'(g(y))}$.
 
-Prove: $(\sqrt{x})'=\frac{1}{2}\frac{1}{\sqrt{x}}$.
+Prove: $(\sqrt{x})'=\frac{1}{2}\frac{1}{\sqrt{x}}$ using the inverse function derivative formula.
 
 Prove: $(e^x)'=e^x$ knowing $e=\lim_{t\rightarrow 0} \left(1+t\right)^{1/t}$.
 
 Prove: $(a^x)'=\ln a\cdot a^x$.
 
-Prove: $(\ln x)'=1/x$.
+Prove: $(\ln x)'=1/x$ using the inverse function derivative formula..
 
 ## Example
 
@@ -227,7 +227,7 @@ Example: if $MC(q)=a+bq$, $TC(q)=aq+b/2 q^2+c$ --- fixed costs are impossible to
 
 \[ \int e^x \sqrt{3e^x+2} dx \]
 
-looks scary? but note $(3e^x+2)'=3e^x$. So let $y=3e^x+2$ then $dy=3e^x dx$ and the integral can be rewritten as
+Looks scary? but note $(3e^x+2)'=3e^x$. So let $y=3e^x+2$ then $dy=3e^x dx$ and the integral can be rewritten as
 
 \[\int \frac{1}{3} \sqrt{y} dy\]
 

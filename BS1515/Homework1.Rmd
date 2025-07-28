@@ -1,0 +1,35 @@
+---
+title: "Homework 1: Maths"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Solve both problems. Each problem may yield 50 marks.
+
+## Quadratic Form
+
+Let
+\[f(x,y,z)=14+2x-3y+2x^2-4xy+5y^2-4yz+2xz+\frac{1}{2}z^2.\]
+
+- Find the first order conditions and extremum point(s).
+- Find the Hessian matrix $H$. The extremum points that you found - are they maxima? Minima?
+- Find eigenvalues of this matrix (hint: one of them is $2$). What is the rank of this matrix?
+- Invert matrix $H$.
+- Can you rewrite $f(x,y,z)$ as
+\[f(x,y,z)=a+w\begin{bmatrix} x \\ y \\ z\end{bmatrix}+\begin{bmatrix} x & y & z\end{bmatrix}A\begin{bmatrix} x \\ y \\ z\end{bmatrix}\]
+for a real $a$, row vector $w$, and symmetric matrix $A$?
+
+## Maximize a Utility function
+
+Let $u(x,y)=\ln(a+x)+b\ln(c+y)$ be the utility function of the consumer, where $a,b,c>0$ are parameters. Let $x+py=d+pe$ be the budget constraint, where $p>0$ is the relative price and $d>0$ and $e>0$ are the endowments of good $x$ and good $y$ respectively. Consumer cannot choose negative $x$ or $y$.
+
+- Verify that the utility function is increasing in $x$ and $y$. Explain why 
+- Let $a=c=0$. Maximize the utility function subject to the budget constraint. Explain why $x=0$ or $y=0$ cannot be a solution. Solve for the Lagrange multiplier. Argue that the Lagrange multiplier can be interpreted as the marginal utility of having higher $d$.
+- Let $a$ and $c$ be positive. Maximize the utility function subject to the budget constraint. Note that now optimal $x$ and $y$ can be zero. Can both of them be zero?
+- Imagine the government takes away a very small amount of $d$ and increases consumer's $a$ by the same amount. Use Envelope Theorem to argue that this intervention can at best keep the consumer at the same utility

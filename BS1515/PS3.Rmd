@@ -1,0 +1,51 @@
+---
+title: "Problem Set 3: Derivatives and Integrals"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Limits
+
+Prove:
+
+- a decreasing bounded sequence has a limit.
+- an increasing bounded sequence has a limit.
+- $\{1,0,1,0,1,0,...\}$ does not have a limit.
+- $\left\{\frac{1}{1},\frac{1}{2},\frac{1}{3},..\right\}$ has a limit.
+- if $f(\cdot)$ is continuous, $\lim f(a_n)=f(\lim a_n)$: continuous functions preserve convergence.
+
+## Derivatives
+
+Prove:
+
+- $\left(f(x)+g(x)\right)'=f'(x)+g'(x)$
+- $\left(f(x)g(x)\right)'=f'(x)g(x)+g'(x)f(x)$
+- $\left(f(g(x))\right)'=f'(g(x))g'(x)$
+
+Establish that:
+
+- $f(x)=x^{N}$, $N \in \mathbb{N}$ $\Rightarrow$ $f'(x)=Nx^{N-1}$.
+- $f(x)=x^{1/2}$ $\Rightarrow$ $f'(x)=\frac{1}{2}x^{-1/2}$.
+- $(1/f(x))'=-f'(x)/(f(x))^2$.
+- $(\ln x)'=1/x$ knowing that $(e^x)'=e^x$.
+
+## Indefinite Integrals
+
+Integrate by using derivative formulas, by substitution, or by parts:
+
+- $\int x^{\alpha} dx$, $\alpha \not = -1$
+- $\int x^{-1} dx$
+- $\int (ax^2+bx+c) dx$
+- $\int 5(x-4)\sqrt{x^2-8} dx$
+- $\int (7y-2y^3)e^{y^4-7y^2} dy$
+- $\int \frac{3x}{(1+9x^2)^4} dx$
+- $\int (bx+c)e^{-2x} dx$
+- $\int (ax^2+bx+c)e^{-2x} dx$
+
+##
