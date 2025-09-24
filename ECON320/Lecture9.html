@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Sergey V. Popov" />
-  <meta name="date" content="2025-09-12" />
+  <meta name="date" content="2025-09-22" />
   <title>Lecture 9: Dynamic Games and Bargaining</title>
   <style type="text/css">
 code{white-space: pre-wrap;}
@@ -2661,7 +2661,7 @@ color: #333333;
   <p class="author">
 Sergey V. Popov
   </p>
-  <p class="date">2025-09-12</p>
+  <p class="date">2025-09-22</p>
 </div>
 <div id="last-time" class="slide section level2">
 <h1>Last time</h1>
@@ -2823,8 +2823,8 @@ in?</li>
 </div>
 <div id="strengthening-the-weak-pbe" class="slide section level2">
 <h1>Strengthening the weak PBE</h1>
-<div class="grViz html-widget html-fill-item" id="htmlwidget-dbe6c99f1abb9394600a" style="width:768px;height:576px;"></div>
-<script type="application/json" data-for="htmlwidget-dbe6c99f1abb9394600a">{"x":{"diagram":"\ndigraph game_tree {\n\n  graph [layout = dot, rankdir = LR]\n\n  node [shape = circle, style = filled, fillcolor = lightblue]\n\n  N [label=\"Nature\"]\n\n  ZLx [label = \"(2,10)\", shape = plaintext, fillcolor = white]\n  P1L [label = \"[0.5]\"]\n  P1R [label = \"[0.5]\"]\n  ZRx [label = \"(2,10)\", shape = plaintext, fillcolor = white]\n  P2a [label = \"[0.9]\"]\n  P2b [label = \"[0.1]\"]\n\n  Z1 [label = \"(0,5)\", shape = plaintext, fillcolor = white]\n  Z2 [label = \"(5,2)\", shape = plaintext, fillcolor = white]\n  Z3 [label = \"(0,5)\", shape = plaintext, fillcolor = white]\n  Z4 [label = \"(5,10)\", shape = plaintext, fillcolor = white]\n\n  N -> P1L [label=\"0.5\"]\n  N -> P1R [label=\"0.5\"]\n  \n  P1L -> ZLx [label = \"x\"]\n  P1L -> P2a [label = \"y\"]\n  P1R -> P2b [label = \"y\"]\n  P1R -> ZRx [label = \"x\"]\n\n  P2a -> Z1 [label = \"l\"]\n  P2a -> Z2 [label = \"r\"]\n\n  P2b -> Z3 [label = \"l\"]\n  P2b -> Z4 [label = \"r\"]\n\n  subgraph cluster_infoset1 {\n    style = dashed\n    color = purple\n    label = \"Player 2\"\n    P2a\n    P2b\n  }\n  \n    subgraph cluster_infoset2 {\n    style = dashed\n    color = purple\n    label = \"Player 1\"\n    P1L\n    P1R\n  }\n  \n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
+<div class="grViz html-widget html-fill-item" id="htmlwidget-be43ecd926889ecca91d" style="width:768px;height:576px;"></div>
+<script type="application/json" data-for="htmlwidget-be43ecd926889ecca91d">{"x":{"diagram":"\ndigraph game_tree {\n\n  graph [layout = dot, rankdir = LR]\n\n  node [shape = circle, style = filled, fillcolor = lightblue]\n\n  N [label=\"Nature\"]\n\n  ZLx [label = \"(2,10)\", shape = plaintext, fillcolor = white]\n  P1L [label = \"[0.5]\"]\n  P1R [label = \"[0.5]\"]\n  ZRx [label = \"(2,10)\", shape = plaintext, fillcolor = white]\n  P2a [label = \"[0.9]\"]\n  P2b [label = \"[0.1]\"]\n\n  Z1 [label = \"(0,5)\", shape = plaintext, fillcolor = white]\n  Z2 [label = \"(5,2)\", shape = plaintext, fillcolor = white]\n  Z3 [label = \"(0,5)\", shape = plaintext, fillcolor = white]\n  Z4 [label = \"(5,10)\", shape = plaintext, fillcolor = white]\n\n  N -> P1L [label=\"0.5\"]\n  N -> P1R [label=\"0.5\"]\n  \n  P1L -> ZLx [label = \"x\"]\n  P1L -> P2a [label = \"y\"]\n  P1R -> P2b [label = \"y\"]\n  P1R -> ZRx [label = \"x\"]\n\n  P2a -> Z1 [label = \"l\"]\n  P2a -> Z2 [label = \"r\"]\n\n  P2b -> Z3 [label = \"l\"]\n  P2b -> Z4 [label = \"r\"]\n\n  subgraph cluster_infoset1 {\n    style = dashed\n    color = purple\n    label = \"Player 2\"\n    P2a\n    P2b\n  }\n  \n    subgraph cluster_infoset2 {\n    style = dashed\n    color = purple\n    label = \"Player 1\"\n    P1L\n    P1R\n  }\n  \n}\n","config":{"engine":"dot","options":null}},"evals":[],"jsHooks":[]}</script>
 </div>
 <div id="sequential-equilibrium" class="slide section level2">
 <h1>Sequential equilibrium</h1>
@@ -2869,7 +2869,7 @@ refinements</li>
 </ul>
 <p>Next time:</p>
 <ul>
-<li>Principal Agent</li>
+<li>Signaling, Screening, and Principal Agent</li>
 </ul>
 </div>
 
