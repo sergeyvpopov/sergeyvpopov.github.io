@@ -259,6 +259,7 @@ Can we find such a $B$? Maybe!
 ## Inverting Matrices
 
 For a square $N \times N$ matrix $A$, a square matrix $B$ is an *inverse* if $BA=I_N$.
+
 - Prove: if $B$ is the inverse of $A$, $A$ is the inverse of $B$.
 
 Is it possible that there is no inverse? Yes. Consider $A=\begin{bmatrix}
@@ -320,7 +321,7 @@ Let $A=\begin{bmatrix}
     g & h & i 
 \end{bmatrix}$. Then
 \[A^{-1}=\frac{1}{aei+bfg+ghc-ceg-fha-bdi}\begin{bmatrix}
-    ei-fh & -(d-ifg) & dh-eg  \\
+    ei-fh & -(di-fg) & dh-eg  \\
     -(bi-ch) & ai-cg & -(ah-bg)\\
     bf-ce & -(af-cd) & ae-bd
 \end{bmatrix}^T.\]
@@ -436,7 +437,7 @@ What does it do to a vector?
  \draw[->,color=blue, ultra thick, dashed] (0,0)--(1.6,1) node[below right] {$Av$};
  %\draw[->,color=green!40!black, ultra thick] (0,0)--(0,1) node[left] {$(0,1)=A(0,1)$};
  \draw[->,color=green!40!black, ultra thick] (0,0)--(1,1) node[right] {$(1,1)$};
- \draw[->,color=green!40!black, ultra thick, dashed] (0,0)--(-1,-1) node[left] {$A(1,1)$};
+ %\draw[->,color=green!40!black, ultra thick, dashed] (0,0)--(-1,-1) node[left] {$A(1,1)$};
  \draw[->,color=green!40!black, ultra thick] (0,0)--(-1,1) node[left] {$(-1,1)$};
  \draw[->,color=green!40!black, ultra thick, dashed] (0,0)--(1,-1) node[right] {$A(-1,1)$};
 \end{scope}
@@ -461,7 +462,7 @@ How to find $\lambda$: observe that $(A-\lambda I_N)v=0_N$ which means that $\de
 
 ## Example
 
-Let $A=\begin{bmatrix}
+Let $A=$\begin{bmatrix}
     2 & 3  \\
     1 & 2  
 \end{bmatrix}
@@ -493,10 +494,10 @@ So the eigenvector is $v_1:=\begin{bmatrix}
     3/\sqrt{12} \\ -\sqrt{3}/\sqrt{12}=-\frac{1}{2}\end{bmatrix}.$ 
     Observe that $v_1^Tv_2=\frac{9}{12}-\frac{1}{4}=1/2$ - they are not orthogonal, but if the matrix is symmetric, they must be.
     
-- Verify: for $A=\begin{bmatrix}
+- Verify: for $A=$\begin{bmatrix}
     2 & 3  \\
     3 & 2  
-\end{bmatrix}, eigenvalues have opposite signs, and eigenvectors are orthogonal.
+\end{bmatrix}eigenvalues have opposite signs, and eigenvectors are orthogonal.
     
 ## Spectral Theorem and Matrix Inversion
 
