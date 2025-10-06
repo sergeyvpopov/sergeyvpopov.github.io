@@ -20,7 +20,7 @@ Let $A=\begin{bmatrix}2 & 3 & 5 \\ -4 & 2 & 3 \end{bmatrix}.$
 - Verify that only zero vector is in $A$'s left null space (such a space that consists only of null vector is known as a *trivial* space).
 - What does this imply about this matrix' rank, column space, and row space?
 
-##Matrix Operations
+## Matrix Operations
 
 \[A=\begin{bmatrix}
 1 & 2 & 3 \\
