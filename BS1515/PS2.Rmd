@@ -17,7 +17,7 @@ Solve Systems of Equations problem in PS1 by inverting matrices where possible, 
 Let $A=\begin{bmatrix}2 & 3 & 5 \\ -4 & 2 & 3 \end{bmatrix}.$
 
 - Verify that $v=\begin{bmatrix}−1/16 \\ −13/8 \\ 1\end{bmatrix}$ is an element of the null space of this matrix. Are there any others?
-- Verify that only zero vector is in $A$'s left null space (such a sapce that consists only of null vector is known as a *trivial* space).
+- Verify that only zero vector is in $A$'s left null space (such a space that consists only of null vector is known as a *trivial* space).
 - What does this imply about this matrix' rank, column space, and row space?
 
 ##Matrix Operations
