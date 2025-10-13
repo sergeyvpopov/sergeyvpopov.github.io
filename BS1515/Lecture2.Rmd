@@ -371,6 +371,7 @@ If your $A$ is not symmetric, then
 
 Any $A$ such that for all $x$ $x^TAx>0$ is called *positive definite*.
 
+
 To accomplish that:
 - need to have $e_i^TAe_i>0$ so all diagonal elements positive
 - need to have $(a e_i+be_j)^TA(ae_i+be_j)>0$ so all $2 \times 2$ submatrices positive definite
@@ -472,7 +473,7 @@ Then your characteristic equation is \[\det \begin{bmatrix}
     1 & 2-\lambda  
 \end{bmatrix}=(2-\lambda)^2-3=0 \Rightarrow \lambda_1=2-\sqrt{3},\lambda_2=2+\sqrt{3}.\]
 
-This matrix is \emph{neither} positive nor negative semidefinite: its eigenvalues have different signs. For the negative eigenvalue $\lambda_2=2+\sqrt{3}$:
+This matrix is positive semidefinite: its eigenvalues are positive. For the eigenvalue $\lambda_2=2+\sqrt{3}$:
 \[\begin{bmatrix}
     2-\lambda_2 & 3\end{bmatrix}\begin{bmatrix}
     1 \\ a\end{bmatrix}=-1\sqrt{3}+3a=0\Rightarrow a=\frac{\sqrt{3}}{3}.\]
