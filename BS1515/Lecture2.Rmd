@@ -320,7 +320,7 @@ Let $A=\begin{bmatrix}
     d & e & f \\
     g & h & i 
 \end{bmatrix}$. Then
-\[A^{-1}=\frac{1}{aei+bfg+ghc-ceg-fha-bdi}\begin{bmatrix}
+\[A^{-1}=\frac{1}{aei+bfg+dhc-ceg-fha-bdi}\begin{bmatrix}
     ei-fh & -(di-fg) & dh-eg  \\
     -(bi-ch) & ai-cg & -(ah-bg)\\
     bf-ce & -(af-cd) & ae-bd
@@ -348,7 +348,7 @@ If determinant is zero, matrix is not invertible.
     a & b & c \\
     d & e & f \\
     g & h & i
-\end{bmatrix}= aei+bfg+ghc-ceg-fha-bdi.\]
+\end{bmatrix}= aei+bfg+dhc-ceg-fha-bdi.\]
 
 ## Quadratic Forms
 
