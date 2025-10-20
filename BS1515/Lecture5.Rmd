@@ -80,7 +80,7 @@ Group:
 
 \[u'_C=[u'_x-\lambda f'_x]\cdot x'_C+[u'_y-\lambda f'_y]\cdot y'_C-\lambda[-1]=\lambda.\]
 
-Interpretation: $\lambda$, the Lagrange multiplier, is the ``price'' of an extra unit of $u(\cdot,\cdot)$ if the constraint is relaxed ($C$ increases). Zero means constraint does not matter locally.
+Interpretation: $\lambda$, the Lagrange multiplier, is the "price" of an extra unit of $u(\cdot,\cdot)$ if the constraint is relaxed ($C$ increases). Zero means constraint does not matter locally.
 
 Lesson: When taking derivatives with respect to parameters, just take derivative of the Lagrange function.
 
@@ -250,4 +250,4 @@ We learned
 - Lagrange approach to optimization
 - How to check for optimum (almost: need to know how to find the determinant of the matrix)
 
-Next time: Implicit Function Theorem
+Next time: Homework!
