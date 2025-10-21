@@ -1,0 +1,46 @@
+---
+title: "Mock Homework"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Do all 4 problems. Each problem is 25%. Show your work.
+
+## Matrix Operations
+
+Consider a matrix $A=\begin{bmatrix}
+    2 & 4  \\
+    5 & 6 
+\end{bmatrix}$. Invert it. Then use it to solve the system of equations 
+
+\[\begin{cases}
+2x + 4y = 5, \\
+5x + 6y = 7. \\
+\end{cases}\]
+
+## Contest
+
+The probability that you beat a person at a game is $p$. The probability that you beat $N$ people is $p^N$. The prize is $v$. The costs of getting to the probability of $p$ is $c(p)$, which is increasing and convex, $c(0)=0$. As a function of $p$, your utility is
+\[v p^N-c(p).\]
+
+- Obtain the first order optimality condition. Explain why what you found is a maximum and not a minimum.
+
+- What does convexity of $c(p)$ imply about how the first derivative look like? Plot the optimality condition as an intersection of the *marginal benefit* of $p$ and the *marginal cost* of $p$. What happens if $N$ increases?
+
+## Homogenous Function
+
+A function is called *homogenous degree 1* if $f(\lambda x,\lambda y)=\lambda f(x,y)$: scaling arguments by the same proportion is scaling the result, doubling the inputs doubles the outputs. Take a derivative of this equation with respect to $\lambda$ at $\lambda=1$ to show that $f(x,y)$ is equal to the sum of $f'_x(x,y)\cdot x$ and $f'_y(x,y)\cdot y$.
+
+## Constrained Optimization
+
+Consider $u(x,y)=x+5\ln(y)$. Let the consumer maximize this utility function; the consumer can make $y$ out of $x$, for each spent unit of $x$ the consumer gets 1 unit of $x$, and the consumer has $10$ units of $x$ at the beginning. The consumer cannot consume negative amounts.
+
+\[\max x+5\ln(y) \text{ s.t. } y=10-x.\]
+
+Obtain the optimal solution, verify that it is a maximum. What changes if your endowment is $4$ units of $x$, not $10$?
