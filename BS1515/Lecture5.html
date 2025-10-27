@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Sergey V. Popov" />
-  <meta name="date" content="2025-10-20" />
+  <meta name="date" content="2025-10-27" />
   <title>BS 1515 Lecture 5: Constrained Optimization</title>
   <style type="text/css">
 code{white-space: pre-wrap;}
@@ -399,7 +399,7 @@ list-style-type: none;
   <p class="author">
 Sergey V. Popov
   </p>
-  <p class="date">2025-10-20</p>
+  <p class="date">2025-10-27</p>
 </div>
 <div id="last-time" class="slide section level2">
 <h1>Last Time</h1>
@@ -614,14 +614,11 @@ x=\frac{1}{1+B/A}\frac{m}{p_x}=\frac{A}{A+B}\frac{m}{p_x}.\]</span></p>
 <h1>Example - Concavity</h1>
 <p>The Lagrangean is <span class="math display">\[\mathbb{L}(x,y,\lambda)=u(x,y)-\lambda(p_x x+p_y
 y-m)\]</span></p>
-<p>The Hessian is <span class="math display">\[H=\begin{bmatrix}
-    -\frac{A}{x^2} &amp; 0 &amp;  p_x\\
-    0 &amp; -\frac{B}{y^2}&amp;  p_y\\
-    p_x &amp; p_y &amp; 0
+<p>The (bordered) Hessian is <span class="math display">\[H=\begin{bmatrix}
+    -\frac{A}{x^2} &amp; 0 &amp;  -p_x\\
+    0 &amp; -\frac{B}{y^2}&amp;  -p_y\\
+    -p_x &amp; -p_y &amp; 0
 \end{bmatrix}\]</span></p>
-<p>Remember we maximize with respect to <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span> and minimize with respect to <span class="math inline">\(\lambda\)</span>, so we multiply row and column
-for the constraint by <span class="math inline">\(-1\)</span> (so called
-<em>bordered Hessian</em>).</p>
 </div>
 <div id="checking-for-negative-semidefiniteness" class="slide section level2">
 <h1>Checking for Negative Semidefiniteness</h1>

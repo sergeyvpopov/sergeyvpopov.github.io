@@ -209,14 +209,12 @@ Similarly $y=\frac{B}{A+B} \frac{m}{p}$.
 The Lagrangean is
 \[\mathbb{L}(x,y,\lambda)=u(x,y)-\lambda(p_x x+p_y y-m)\]
 
-The Hessian is 
+The (bordered) Hessian is 
 \[H=\begin{bmatrix}
-    -\frac{A}{x^2} & 0 &  p_x\\
-    0 & -\frac{B}{y^2}&  p_y\\
-    p_x & p_y & 0
+    -\frac{A}{x^2} & 0 &  -p_x\\
+    0 & -\frac{B}{y^2}&  -p_y\\
+    -p_x & -p_y & 0
 \end{bmatrix}\]
-
-Remember we maximize with respect to $x$ and $y$ and minimize with respect to $\lambda$, so we multiply row and column for the constraint by $-1$ (so called *bordered Hessian*).
 
 ## Checking for Negative Semidefiniteness
 
