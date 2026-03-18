@@ -6,8 +6,8 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Sergey V. Popov" />
-  <meta name="date" content="2026-03-10" />
-  <title>Lecture 1: Robinson’s Economy</title>
+  <meta name="date" content="2026-03-17" />
+  <title>ECON660 Lecture 1: Games</title>
   <style type="text/css">
 code{white-space: pre-wrap;}
 span.smallcaps{font-variant: small-caps;}
@@ -391,285 +391,1623 @@ list-style-type: none;
   });
 })()
 </script>
+  <script>$(document).ready(function(){
+    if (typeof $('[data-toggle="tooltip"]').tooltip === 'function') {
+        $('[data-toggle="tooltip"]').tooltip();
+    }
+    if ($('[data-toggle="popover"]').popover === 'function') {
+        $('[data-toggle="popover"]').popover();
+    }
+});
+</script>
+  <style type="text/css">
+.lightable-minimal {
+border-collapse: separate;
+border-spacing: 16px 1px;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-minimal td {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal th {
+margin-left: 5px;
+margin-right: 5px;
+}
+.lightable-minimal thead tr:last-child th {
+border-bottom: 2px solid #00000050;
+empty-cells: hide;
+}
+.lightable-minimal tbody tr:first-child td {
+padding-top: 0.5em;
+}
+.lightable-minimal.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-minimal.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic {
+border-top: 0.16em solid #111111;
+border-bottom: 0.16em solid #111111;
+width: 100%;
+margin-bottom: 10px;
+margin: 10px 5px;
+}
+.lightable-classic tfoot tr td {
+border: 0;
+}
+.lightable-classic tfoot tr:first-child td {
+border-top: 0.14em solid #111111;
+}
+.lightable-classic caption {
+color: #222222;
+}
+.lightable-classic td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic thead tr:last-child th {
+border-bottom: 0.10em solid #111111;
+}
+.lightable-classic.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-classic-2 {
+border-top: 3px double #111111;
+border-bottom: 3px double #111111;
+width: 100%;
+margin-bottom: 10px;
+}
+.lightable-classic-2 tfoot tr td {
+border: 0;
+}
+.lightable-classic-2 tfoot tr:first-child td {
+border-top: 3px double #111111;
+}
+.lightable-classic-2 caption {
+color: #222222;
+}
+.lightable-classic-2 td {
+padding-left: 5px;
+padding-right: 5px;
+color: #222222;
+}
+.lightable-classic-2 th {
+padding-left: 5px;
+padding-right: 5px;
+font-weight: normal;
+color: #222222;
+}
+.lightable-classic-2 tbody tr:last-child td {
+border-bottom: 3px double #111111;
+}
+.lightable-classic-2 thead tr:last-child th {
+border-bottom: 1px solid #111111;
+}
+.lightable-classic-2.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-classic-2.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #EEE;
+border-collapse: collapse;
+margin-bottom: 10px;
+}
+.lightable-material tfoot tr td {
+border: 0;
+}
+.lightable-material tfoot tr:first-child td {
+border-top: 1px solid #EEE;
+}
+.lightable-material th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+}
+.lightable-material td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+border-top: 1px solid #eeeeee;
+}
+.lightable-material.lightable-hover tbody tr:hover {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody tr:nth-child(even) {
+background-color: #f5f5f5;
+}
+.lightable-material.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #ddd;
+}
+.lightable-material-dark {
+min-width: 100%;
+white-space: nowrap;
+table-layout: fixed;
+font-family: Roboto, sans-serif;
+border: 1px solid #FFFFFF12;
+border-collapse: collapse;
+margin-bottom: 10px;
+background-color: #363640;
+}
+.lightable-material-dark tfoot tr td {
+border: 0;
+}
+.lightable-material-dark tfoot tr:first-child td {
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark th {
+height: 56px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF60;
+}
+.lightable-material-dark td {
+height: 52px;
+padding-left: 16px;
+padding-right: 16px;
+color: #FFFFFF;
+border-top: 1px solid #FFFFFF12;
+}
+.lightable-material-dark.lightable-hover tbody tr:hover {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody tr:nth-child(even) {
+background-color: #FFFFFF12;
+}
+.lightable-material-dark.lightable-striped tbody td {
+border: 0;
+}
+.lightable-material-dark.lightable-striped thead tr:last-child th {
+border-bottom: 1px solid #FFFFFF12;
+}
+.lightable-paper {
+width: 100%;
+margin-bottom: 10px;
+color: #444;
+}
+.lightable-paper tfoot tr td {
+border: 0;
+}
+.lightable-paper tfoot tr:first-child td {
+border-top: 1px solid #00000020;
+}
+.lightable-paper thead tr:last-child th {
+color: #666;
+vertical-align: bottom;
+border-bottom: 1px solid #00000020;
+line-height: 1.15em;
+padding: 10px 5px;
+}
+.lightable-paper td {
+vertical-align: middle;
+border-bottom: 1px solid #00000010;
+line-height: 1.15em;
+padding: 7px 5px;
+}
+.lightable-paper.lightable-hover tbody tr:hover {
+background-color: #F9EEC1;
+}
+.lightable-paper.lightable-striped tbody tr:nth-child(even) {
+background-color: #00000008;
+}
+.lightable-paper.lightable-striped tbody td {
+border: 0;
+}
+</style>
+  <style type="text/css">
+table{border-collapse:collapse;border-spacing:0}td,th{padding:0}*{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}*:before,*:after{-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}table{background-color:transparent}caption{padding-top:8px;padding-bottom:8px;color:#777;text-align:left}th{text-align:left}.table{width:100%;max-width:100%;margin-bottom:20px}.table>thead>tr>th,.table>tbody>tr>th,.table>tfoot>tr>th,.table>thead>tr>td,.table>tbody>tr>td,.table>tfoot>tr>td{padding:8px;line-height:1.42857143;vertical-align:top;border-top:1px solid #ddd}.table>thead>tr>th{vertical-align:bottom;border-bottom:2px solid #ddd}.table>caption+thead>tr:first-child>th,.table>colgroup+thead>tr:first-child>th,.table>thead:first-child>tr:first-child>th,.table>caption+thead>tr:first-child>td,.table>colgroup+thead>tr:first-child>td,.table>thead:first-child>tr:first-child>td{border-top:0}.table>tbody+tbody{border-top:2px solid #ddd}.table .table{background-color:#fff}.table-condensed>thead>tr>th,.table-condensed>tbody>tr>th,.table-condensed>tfoot>tr>th,.table-condensed>thead>tr>td,.table-condensed>tbody>tr>td,.table-condensed>tfoot>tr>td{padding:5px}.table-bordered{border:1px solid #ddd}.table-bordered>thead>tr>th,.table-bordered>tbody>tr>th,.table-bordered>tfoot>tr>th,.table-bordered>thead>tr>td,.table-bordered>tbody>tr>td,.table-bordered>tfoot>tr>td{border:1px solid #ddd}.table-bordered>thead>tr>th,.table-bordered>thead>tr>td{border-bottom-width:2px}.table-striped>tbody>tr:nth-of-type(odd){background-color:#f9f9f9}.table-hover>tbody>tr:hover{background-color:#f5f5f5}table col[class*="col-"]{position:static;float:none;display:table-column}table td[class*="col-"],table th[class*="col-"]{position:static;float:none;display:table-cell}.table>thead>tr>td.active,.table>tbody>tr>td.active,.table>tfoot>tr>td.active,.table>thead>tr>th.active,.table>tbody>tr>th.active,.table>tfoot>tr>th.active,.table>thead>tr.active>td,.table>tbody>tr.active>td,.table>tfoot>tr.active>td,.table>thead>tr.active>th,.table>tbody>tr.active>th,.table>tfoot>tr.active>th{background-color:#f5f5f5}.table-hover>tbody>tr>td.active:hover,.table-hover>tbody>tr>th.active:hover,.table-hover>tbody>tr.active:hover>td,.table-hover>tbody>tr:hover>.active,.table-hover>tbody>tr.active:hover>th{background-color:#e8e8e8}.table>thead>tr>td.success,.table>tbody>tr>td.success,.table>tfoot>tr>td.success,.table>thead>tr>th.success,.table>tbody>tr>th.success,.table>tfoot>tr>th.success,.table>thead>tr.success>td,.table>tbody>tr.success>td,.table>tfoot>tr.success>td,.table>thead>tr.success>th,.table>tbody>tr.success>th,.table>tfoot>tr.success>th{background-color:#dff0d8}.table-hover>tbody>tr>td.success:hover,.table-hover>tbody>tr>th.success:hover,.table-hover>tbody>tr.success:hover>td,.table-hover>tbody>tr:hover>.success,.table-hover>tbody>tr.success:hover>th{background-color:#d0e9c6}.table>thead>tr>td.info,.table>tbody>tr>td.info,.table>tfoot>tr>td.info,.table>thead>tr>th.info,.table>tbody>tr>th.info,.table>tfoot>tr>th.info,.table>thead>tr.info>td,.table>tbody>tr.info>td,.table>tfoot>tr.info>td,.table>thead>tr.info>th,.table>tbody>tr.info>th,.table>tfoot>tr.info>th{background-color:#d9edf7}.table-hover>tbody>tr>td.info:hover,.table-hover>tbody>tr>th.info:hover,.table-hover>tbody>tr.info:hover>td,.table-hover>tbody>tr:hover>.info,.table-hover>tbody>tr.info:hover>th{background-color:#c4e3f3}.table>thead>tr>td.warning,.table>tbody>tr>td.warning,.table>tfoot>tr>td.warning,.table>thead>tr>th.warning,.table>tbody>tr>th.warning,.table>tfoot>tr>th.warning,.table>thead>tr.warning>td,.table>tbody>tr.warning>td,.table>tfoot>tr.warning>td,.table>thead>tr.warning>th,.table>tbody>tr.warning>th,.table>tfoot>tr.warning>th{background-color:#fcf8e3}.table-hover>tbody>tr>td.warning:hover,.table-hover>tbody>tr>th.warning:hover,.table-hover>tbody>tr.warning:hover>td,.table-hover>tbody>tr:hover>.warning,.table-hover>tbody>tr.warning:hover>th{background-color:#faf2cc}.table>thead>tr>td.danger,.table>tbody>tr>td.danger,.table>tfoot>tr>td.danger,.table>thead>tr>th.danger,.table>tbody>tr>th.danger,.table>tfoot>tr>th.danger,.table>thead>tr.danger>td,.table>tbody>tr.danger>td,.table>tfoot>tr.danger>td,.table>thead>tr.danger>th,.table>tbody>tr.danger>th,.table>tfoot>tr.danger>th{background-color:#f2dede}.table-hover>tbody>tr>td.danger:hover,.table-hover>tbody>tr>th.danger:hover,.table-hover>tbody>tr.danger:hover>td,.table-hover>tbody>tr:hover>.danger,.table-hover>tbody>tr.danger:hover>th{background-color:#ebcccc}.table-responsive{overflow-x:auto;min-height:0.01%}@media screen and (max-width:767px){.table-responsive{width:100%;margin-bottom:15px;overflow-y:hidden;-ms-overflow-style:-ms-autohiding-scrollbar;border:1px solid #ddd}.table-responsive>.table{margin-bottom:0}.table-responsive>.table>thead>tr>th,.table-responsive>.table>tbody>tr>th,.table-responsive>.table>tfoot>tr>th,.table-responsive>.table>thead>tr>td,.table-responsive>.table>tbody>tr>td,.table-responsive>.table>tfoot>tr>td{white-space:nowrap}.table-responsive>.table-bordered{border:0}.table-responsive>.table-bordered>thead>tr>th:first-child,.table-responsive>.table-bordered>tbody>tr>th:first-child,.table-responsive>.table-bordered>tfoot>tr>th:first-child,.table-responsive>.table-bordered>thead>tr>td:first-child,.table-responsive>.table-bordered>tbody>tr>td:first-child,.table-responsive>.table-bordered>tfoot>tr>td:first-child{border-left:0}.table-responsive>.table-bordered>thead>tr>th:last-child,.table-responsive>.table-bordered>tbody>tr>th:last-child,.table-responsive>.table-bordered>tfoot>tr>th:last-child,.table-responsive>.table-bordered>thead>tr>td:last-child,.table-responsive>.table-bordered>tbody>tr>td:last-child,.table-responsive>.table-bordered>tfoot>tr>td:last-child{border-right:0}.table-responsive>.table-bordered>tbody>tr:last-child>th,.table-responsive>.table-bordered>tfoot>tr:last-child>th,.table-responsive>.table-bordered>tbody>tr:last-child>td,.table-responsive>.table-bordered>tfoot>tr:last-child>td{border-bottom:0}}.tooltip{position:absolute;z-index:1070;display:block;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-style:normal;font-weight:normal;letter-spacing:normal;line-break:auto;line-height:1.42857143;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;white-space:normal;word-break:normal;word-spacing:normal;word-wrap:normal;font-size:12px;opacity:0;filter:alpha(opacity=0)}.tooltip.in{opacity:.9;filter:alpha(opacity=90)}.tooltip.top{margin-top:-3px;padding:5px 0}.tooltip.right{margin-left:3px;padding:0 5px}.tooltip.bottom{margin-top:3px;padding:5px 0}.tooltip.left{margin-left:-3px;padding:0 5px}.tooltip-inner{max-width:200px;padding:3px 8px;color:#fff;text-align:center;background-color:#000;border-radius:4px}.tooltip-arrow{position:absolute;width:0;height:0;border-color:transparent;border-style:solid}.tooltip.top .tooltip-arrow{bottom:0;left:50%;margin-left:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-left .tooltip-arrow{bottom:0;right:5px;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.top-right .tooltip-arrow{bottom:0;left:5px;margin-bottom:-5px;border-width:5px 5px 0;border-top-color:#000}.tooltip.right .tooltip-arrow{top:50%;left:0;margin-top:-5px;border-width:5px 5px 5px 0;border-right-color:#000}.tooltip.left .tooltip-arrow{top:50%;right:0;margin-top:-5px;border-width:5px 0 5px 5px;border-left-color:#000}.tooltip.bottom .tooltip-arrow{top:0;left:50%;margin-left:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-left .tooltip-arrow{top:0;right:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.tooltip.bottom-right .tooltip-arrow{top:0;left:5px;margin-top:-5px;border-width:0 5px 5px;border-bottom-color:#000}.popover{position:absolute;top:0;left:0;z-index:1060;display:none;max-width:276px;padding:1px;font-family:"Helvetica Neue",Helvetica,Arial,sans-serif;font-style:normal;font-weight:normal;letter-spacing:normal;line-break:auto;line-height:1.42857143;text-align:left;text-align:start;text-decoration:none;text-shadow:none;text-transform:none;white-space:normal;word-break:normal;word-spacing:normal;word-wrap:normal;font-size:14px;background-color:#fff;-webkit-background-clip:padding-box;background-clip:padding-box;border:1px solid #ccc;border:1px solid rgba(0,0,0,0.2);border-radius:6px;-webkit-box-shadow:0 5px 10px rgba(0,0,0,0.2);box-shadow:0 5px 10px rgba(0,0,0,0.2)}.popover.top{margin-top:-10px}.popover.right{margin-left:10px}.popover.bottom{margin-top:10px}.popover.left{margin-left:-10px}.popover-title{margin:0;padding:8px 14px;font-size:14px;background-color:#f7f7f7;border-bottom:1px solid #ebebeb;border-radius:5px 5px 0 0}.popover-content{padding:9px 14px}.popover>.arrow,.popover>.arrow:after{position:absolute;display:block;width:0;height:0;border-color:transparent;border-style:solid}.popover>.arrow{border-width:11px}.popover>.arrow:after{border-width:10px;content:""}.popover.top>.arrow{left:50%;margin-left:-11px;border-bottom-width:0;border-top-color:#999;border-top-color:rgba(0,0,0,0.25);bottom:-11px}.popover.top>.arrow:after{content:" ";bottom:1px;margin-left:-10px;border-bottom-width:0;border-top-color:#fff}.popover.right>.arrow{top:50%;left:-11px;margin-top:-11px;border-left-width:0;border-right-color:#999;border-right-color:rgba(0,0,0,0.25)}.popover.right>.arrow:after{content:" ";left:1px;bottom:-10px;border-left-width:0;border-right-color:#fff}.popover.bottom>.arrow{left:50%;margin-left:-11px;border-top-width:0;border-bottom-color:#999;border-bottom-color:rgba(0,0,0,0.25);top:-11px}.popover.bottom>.arrow:after{content:" ";top:1px;margin-left:-10px;border-top-width:0;border-bottom-color:#fff}.popover.left>.arrow{top:50%;right:-11px;margin-top:-11px;border-right-width:0;border-left-color:#999;border-left-color:rgba(0,0,0,0.25)}.popover.left>.arrow:after{content:" ";right:1px;border-right-width:0;border-left-color:#fff;bottom:-10px}.clearfix:before,.clearfix:after{content:" ";display:table}.clearfix:after{clear:both}.center-block{display:block;margin-left:auto;margin-right:auto}.pull-right{float:right !important}.pull-left{float:left !important}.hide{display:none !important}.show{display:block !important}.invisible{visibility:hidden}.text-hide{font:0/0 a;color:transparent;text-shadow:none;background-color:transparent;border:0}.hidden{display:none !important}.affix{position:fixed}
+</style>
+  <script>/* ========================================================================
+ * Bootstrap: tooltip.js v3.4.1
+ * https://getbootstrap.com/docs/3.4/javascript/#tooltip
+ * Inspired by the original jQuery.tipsy by Jason Frame
+ * ========================================================================
+ * Copyright 2011-2019 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
++function ($) {
+  'use strict';
+
+  var DISALLOWED_ATTRIBUTES = ['sanitize', 'whiteList', 'sanitizeFn']
+
+  var uriAttrs = [
+    'background',
+    'cite',
+    'href',
+    'itemtype',
+    'longdesc',
+    'poster',
+    'src',
+    'xlink:href'
+  ]
+
+  var ARIA_ATTRIBUTE_PATTERN = /^aria-[\w-]*$/i
+
+  var DefaultWhitelist = {
+    // Global attributes allowed on any supplied element below.
+    '*': ['class', 'dir', 'id', 'lang', 'role', ARIA_ATTRIBUTE_PATTERN],
+    a: ['target', 'href', 'title', 'rel'],
+    area: [],
+    b: [],
+    br: [],
+    col: [],
+    code: [],
+    div: [],
+    em: [],
+    hr: [],
+    h1: [],
+    h2: [],
+    h3: [],
+    h4: [],
+    h5: [],
+    h6: [],
+    i: [],
+    img: ['src', 'alt', 'title', 'width', 'height'],
+    li: [],
+    ol: [],
+    p: [],
+    pre: [],
+    s: [],
+    small: [],
+    span: [],
+    sub: [],
+    sup: [],
+    strong: [],
+    u: [],
+    ul: []
+  }
+
+  /**
+   * A pattern that recognizes a commonly useful subset of URLs that are safe.
+   *
+   * Shoutout to Angular 7 https://github.com/angular/angular/blob/7.2.4/packages/core/src/sanitization/url_sanitizer.ts
+   */
+  var SAFE_URL_PATTERN = /^(?:(?:https?|mailto|ftp|tel|file):|[^&:/?#]*(?:[/?#]|$))/gi
+
+  /**
+   * A pattern that matches safe data URLs. Only matches image, video and audio types.
+   *
+   * Shoutout to Angular 7 https://github.com/angular/angular/blob/7.2.4/packages/core/src/sanitization/url_sanitizer.ts
+   */
+  var DATA_URL_PATTERN = /^data:(?:image\/(?:bmp|gif|jpeg|jpg|png|tiff|webp)|video\/(?:mpeg|mp4|ogg|webm)|audio\/(?:mp3|oga|ogg|opus));base64,[a-z0-9+/]+=*$/i
+
+  function allowedAttribute(attr, allowedAttributeList) {
+    var attrName = attr.nodeName.toLowerCase()
+
+    if ($.inArray(attrName, allowedAttributeList) !== -1) {
+      if ($.inArray(attrName, uriAttrs) !== -1) {
+        return Boolean(attr.nodeValue.match(SAFE_URL_PATTERN) || attr.nodeValue.match(DATA_URL_PATTERN))
+      }
+
+      return true
+    }
+
+    var regExp = $(allowedAttributeList).filter(function (index, value) {
+      return value instanceof RegExp
+    })
+
+    // Check if a regular expression validates the attribute.
+    for (var i = 0, l = regExp.length; i < l; i++) {
+      if (attrName.match(regExp[i])) {
+        return true
+      }
+    }
+
+    return false
+  }
+
+  function sanitizeHtml(unsafeHtml, whiteList, sanitizeFn) {
+    if (unsafeHtml.length === 0) {
+      return unsafeHtml
+    }
+
+    if (sanitizeFn && typeof sanitizeFn === 'function') {
+      return sanitizeFn(unsafeHtml)
+    }
+
+    // IE 8 and below don't support createHTMLDocument
+    if (!document.implementation || !document.implementation.createHTMLDocument) {
+      return unsafeHtml
+    }
+
+    var createdDocument = document.implementation.createHTMLDocument('sanitization')
+    createdDocument.body.innerHTML = unsafeHtml
+
+    var whitelistKeys = $.map(whiteList, function (el, i) { return i })
+    var elements = $(createdDocument.body).find('*')
+
+    for (var i = 0, len = elements.length; i < len; i++) {
+      var el = elements[i]
+      var elName = el.nodeName.toLowerCase()
+
+      if ($.inArray(elName, whitelistKeys) === -1) {
+        el.parentNode.removeChild(el)
+
+        continue
+      }
+
+      var attributeList = $.map(el.attributes, function (el) { return el })
+      var whitelistedAttributes = [].concat(whiteList['*'] || [], whiteList[elName] || [])
+
+      for (var j = 0, len2 = attributeList.length; j < len2; j++) {
+        if (!allowedAttribute(attributeList[j], whitelistedAttributes)) {
+          el.removeAttribute(attributeList[j].nodeName)
+        }
+      }
+    }
+
+    return createdDocument.body.innerHTML
+  }
+
+  // TOOLTIP PUBLIC CLASS DEFINITION
+  // ===============================
+
+  var Tooltip = function (element, options) {
+    this.type       = null
+    this.options    = null
+    this.enabled    = null
+    this.timeout    = null
+    this.hoverState = null
+    this.$element   = null
+    this.inState    = null
+
+    this.init('tooltip', element, options)
+  }
+
+  Tooltip.VERSION  = '3.4.1'
+
+  Tooltip.TRANSITION_DURATION = 150
+
+  Tooltip.DEFAULTS = {
+    animation: true,
+    placement: 'top',
+    selector: false,
+    template: '<div class="tooltip" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner"></div></div>',
+    trigger: 'hover focus',
+    title: '',
+    delay: 0,
+    html: false,
+    container: false,
+    viewport: {
+      selector: 'body',
+      padding: 0
+    },
+    sanitize : true,
+    sanitizeFn : null,
+    whiteList : DefaultWhitelist
+  }
+
+  Tooltip.prototype.init = function (type, element, options) {
+    this.enabled   = true
+    this.type      = type
+    this.$element  = $(element)
+    this.options   = this.getOptions(options)
+    this.$viewport = this.options.viewport && $(document).find($.isFunction(this.options.viewport) ? this.options.viewport.call(this, this.$element) : (this.options.viewport.selector || this.options.viewport))
+    this.inState   = { click: false, hover: false, focus: false }
+
+    if (this.$element[0] instanceof document.constructor && !this.options.selector) {
+      throw new Error('`selector` option must be specified when initializing ' + this.type + ' on the window.document object!')
+    }
+
+    var triggers = this.options.trigger.split(' ')
+
+    for (var i = triggers.length; i--;) {
+      var trigger = triggers[i]
+
+      if (trigger == 'click') {
+        this.$element.on('click.' + this.type, this.options.selector, $.proxy(this.toggle, this))
+      } else if (trigger != 'manual') {
+        var eventIn  = trigger == 'hover' ? 'mouseenter' : 'focusin'
+        var eventOut = trigger == 'hover' ? 'mouseleave' : 'focusout'
+
+        this.$element.on(eventIn  + '.' + this.type, this.options.selector, $.proxy(this.enter, this))
+        this.$element.on(eventOut + '.' + this.type, this.options.selector, $.proxy(this.leave, this))
+      }
+    }
+
+    this.options.selector ?
+      (this._options = $.extend({}, this.options, { trigger: 'manual', selector: '' })) :
+      this.fixTitle()
+  }
+
+  Tooltip.prototype.getDefaults = function () {
+    return Tooltip.DEFAULTS
+  }
+
+  Tooltip.prototype.getOptions = function (options) {
+    var dataAttributes = this.$element.data()
+
+    for (var dataAttr in dataAttributes) {
+      if (dataAttributes.hasOwnProperty(dataAttr) && $.inArray(dataAttr, DISALLOWED_ATTRIBUTES) !== -1) {
+        delete dataAttributes[dataAttr]
+      }
+    }
+
+    options = $.extend({}, this.getDefaults(), dataAttributes, options)
+
+    if (options.delay && typeof options.delay == 'number') {
+      options.delay = {
+        show: options.delay,
+        hide: options.delay
+      }
+    }
+
+    if (options.sanitize) {
+      options.template = sanitizeHtml(options.template, options.whiteList, options.sanitizeFn)
+    }
+
+    return options
+  }
+
+  Tooltip.prototype.getDelegateOptions = function () {
+    var options  = {}
+    var defaults = this.getDefaults()
+
+    this._options && $.each(this._options, function (key, value) {
+      if (defaults[key] != value) options[key] = value
+    })
+
+    return options
+  }
+
+  Tooltip.prototype.enter = function (obj) {
+    var self = obj instanceof this.constructor ?
+      obj : $(obj.currentTarget).data('bs.' + this.type)
+
+    if (!self) {
+      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
+      $(obj.currentTarget).data('bs.' + this.type, self)
+    }
+
+    if (obj instanceof $.Event) {
+      self.inState[obj.type == 'focusin' ? 'focus' : 'hover'] = true
+    }
+
+    if (self.tip().hasClass('in') || self.hoverState == 'in') {
+      self.hoverState = 'in'
+      return
+    }
+
+    clearTimeout(self.timeout)
+
+    self.hoverState = 'in'
+
+    if (!self.options.delay || !self.options.delay.show) return self.show()
+
+    self.timeout = setTimeout(function () {
+      if (self.hoverState == 'in') self.show()
+    }, self.options.delay.show)
+  }
+
+  Tooltip.prototype.isInStateTrue = function () {
+    for (var key in this.inState) {
+      if (this.inState[key]) return true
+    }
+
+    return false
+  }
+
+  Tooltip.prototype.leave = function (obj) {
+    var self = obj instanceof this.constructor ?
+      obj : $(obj.currentTarget).data('bs.' + this.type)
+
+    if (!self) {
+      self = new this.constructor(obj.currentTarget, this.getDelegateOptions())
+      $(obj.currentTarget).data('bs.' + this.type, self)
+    }
+
+    if (obj instanceof $.Event) {
+      self.inState[obj.type == 'focusout' ? 'focus' : 'hover'] = false
+    }
+
+    if (self.isInStateTrue()) return
+
+    clearTimeout(self.timeout)
+
+    self.hoverState = 'out'
+
+    if (!self.options.delay || !self.options.delay.hide) return self.hide()
+
+    self.timeout = setTimeout(function () {
+      if (self.hoverState == 'out') self.hide()
+    }, self.options.delay.hide)
+  }
+
+  Tooltip.prototype.show = function () {
+    var e = $.Event('show.bs.' + this.type)
+
+    if (this.hasContent() && this.enabled) {
+      this.$element.trigger(e)
+
+      var inDom = $.contains(this.$element[0].ownerDocument.documentElement, this.$element[0])
+      if (e.isDefaultPrevented() || !inDom) return
+      var that = this
+
+      var $tip = this.tip()
+
+      var tipId = this.getUID(this.type)
+
+      this.setContent()
+      $tip.attr('id', tipId)
+      this.$element.attr('aria-describedby', tipId)
+
+      if (this.options.animation) $tip.addClass('fade')
+
+      var placement = typeof this.options.placement == 'function' ?
+        this.options.placement.call(this, $tip[0], this.$element[0]) :
+        this.options.placement
+
+      var autoToken = /\s?auto?\s?/i
+      var autoPlace = autoToken.test(placement)
+      if (autoPlace) placement = placement.replace(autoToken, '') || 'top'
+
+      $tip
+        .detach()
+        .css({ top: 0, left: 0, display: 'block' })
+        .addClass(placement)
+        .data('bs.' + this.type, this)
+
+      this.options.container ? $tip.appendTo($(document).find(this.options.container)) : $tip.insertAfter(this.$element)
+      this.$element.trigger('inserted.bs.' + this.type)
+
+      var pos          = this.getPosition()
+      var actualWidth  = $tip[0].offsetWidth
+      var actualHeight = $tip[0].offsetHeight
+
+      if (autoPlace) {
+        var orgPlacement = placement
+        var viewportDim = this.getPosition(this.$viewport)
+
+        placement = placement == 'bottom' && pos.bottom + actualHeight > viewportDim.bottom ? 'top'    :
+                    placement == 'top'    && pos.top    - actualHeight < viewportDim.top    ? 'bottom' :
+                    placement == 'right'  && pos.right  + actualWidth  > viewportDim.width  ? 'left'   :
+                    placement == 'left'   && pos.left   - actualWidth  < viewportDim.left   ? 'right'  :
+                    placement
+
+        $tip
+          .removeClass(orgPlacement)
+          .addClass(placement)
+      }
+
+      var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight)
+
+      this.applyPlacement(calculatedOffset, placement)
+
+      var complete = function () {
+        var prevHoverState = that.hoverState
+        that.$element.trigger('shown.bs.' + that.type)
+        that.hoverState = null
+
+        if (prevHoverState == 'out') that.leave(that)
+      }
+
+      $.support.transition && this.$tip.hasClass('fade') ?
+        $tip
+          .one('bsTransitionEnd', complete)
+          .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
+        complete()
+    }
+  }
+
+  Tooltip.prototype.applyPlacement = function (offset, placement) {
+    var $tip   = this.tip()
+    var width  = $tip[0].offsetWidth
+    var height = $tip[0].offsetHeight
+
+    // manually read margins because getBoundingClientRect includes difference
+    var marginTop = parseInt($tip.css('margin-top'), 10)
+    var marginLeft = parseInt($tip.css('margin-left'), 10)
+
+    // we must check for NaN for ie 8/9
+    if (isNaN(marginTop))  marginTop  = 0
+    if (isNaN(marginLeft)) marginLeft = 0
+
+    offset.top  += marginTop
+    offset.left += marginLeft
+
+    // $.fn.offset doesn't round pixel values
+    // so we use setOffset directly with our own function B-0
+    $.offset.setOffset($tip[0], $.extend({
+      using: function (props) {
+        $tip.css({
+          top: Math.round(props.top),
+          left: Math.round(props.left)
+        })
+      }
+    }, offset), 0)
+
+    $tip.addClass('in')
+
+    // check to see if placing tip in new offset caused the tip to resize itself
+    var actualWidth  = $tip[0].offsetWidth
+    var actualHeight = $tip[0].offsetHeight
+
+    if (placement == 'top' && actualHeight != height) {
+      offset.top = offset.top + height - actualHeight
+    }
+
+    var delta = this.getViewportAdjustedDelta(placement, offset, actualWidth, actualHeight)
+
+    if (delta.left) offset.left += delta.left
+    else offset.top += delta.top
+
+    var isVertical          = /top|bottom/.test(placement)
+    var arrowDelta          = isVertical ? delta.left * 2 - width + actualWidth : delta.top * 2 - height + actualHeight
+    var arrowOffsetPosition = isVertical ? 'offsetWidth' : 'offsetHeight'
+
+    $tip.offset(offset)
+    this.replaceArrow(arrowDelta, $tip[0][arrowOffsetPosition], isVertical)
+  }
+
+  Tooltip.prototype.replaceArrow = function (delta, dimension, isVertical) {
+    this.arrow()
+      .css(isVertical ? 'left' : 'top', 50 * (1 - delta / dimension) + '%')
+      .css(isVertical ? 'top' : 'left', '')
+  }
+
+  Tooltip.prototype.setContent = function () {
+    var $tip  = this.tip()
+    var title = this.getTitle()
+
+    if (this.options.html) {
+      if (this.options.sanitize) {
+        title = sanitizeHtml(title, this.options.whiteList, this.options.sanitizeFn)
+      }
+
+      $tip.find('.tooltip-inner').html(title)
+    } else {
+      $tip.find('.tooltip-inner').text(title)
+    }
+
+    $tip.removeClass('fade in top bottom left right')
+  }
+
+  Tooltip.prototype.hide = function (callback) {
+    var that = this
+    var $tip = $(this.$tip)
+    var e    = $.Event('hide.bs.' + this.type)
+
+    function complete() {
+      if (that.hoverState != 'in') $tip.detach()
+      if (that.$element) { // TODO: Check whether guarding this code with this `if` is really necessary.
+        that.$element
+          .removeAttr('aria-describedby')
+          .trigger('hidden.bs.' + that.type)
+      }
+      callback && callback()
+    }
+
+    this.$element.trigger(e)
+
+    if (e.isDefaultPrevented()) return
+
+    $tip.removeClass('in')
+
+    $.support.transition && $tip.hasClass('fade') ?
+      $tip
+        .one('bsTransitionEnd', complete)
+        .emulateTransitionEnd(Tooltip.TRANSITION_DURATION) :
+      complete()
+
+    this.hoverState = null
+
+    return this
+  }
+
+  Tooltip.prototype.fixTitle = function () {
+    var $e = this.$element
+    if ($e.attr('title') || typeof $e.attr('data-original-title') != 'string') {
+      $e.attr('data-original-title', $e.attr('title') || '').attr('title', '')
+    }
+  }
+
+  Tooltip.prototype.hasContent = function () {
+    return this.getTitle()
+  }
+
+  Tooltip.prototype.getPosition = function ($element) {
+    $element   = $element || this.$element
+
+    var el     = $element[0]
+    var isBody = el.tagName == 'BODY'
+
+    var elRect    = el.getBoundingClientRect()
+    if (elRect.width == null) {
+      // width and height are missing in IE8, so compute them manually; see https://github.com/twbs/bootstrap/issues/14093
+      elRect = $.extend({}, elRect, { width: elRect.right - elRect.left, height: elRect.bottom - elRect.top })
+    }
+    var isSvg = window.SVGElement && el instanceof window.SVGElement
+    // Avoid using $.offset() on SVGs since it gives incorrect results in jQuery 3.
+    // See https://github.com/twbs/bootstrap/issues/20280
+    var elOffset  = isBody ? { top: 0, left: 0 } : (isSvg ? null : $element.offset())
+    var scroll    = { scroll: isBody ? document.documentElement.scrollTop || document.body.scrollTop : $element.scrollTop() }
+    var outerDims = isBody ? { width: $(window).width(), height: $(window).height() } : null
+
+    return $.extend({}, elRect, scroll, outerDims, elOffset)
+  }
+
+  Tooltip.prototype.getCalculatedOffset = function (placement, pos, actualWidth, actualHeight) {
+    return placement == 'bottom' ? { top: pos.top + pos.height,   left: pos.left + pos.width / 2 - actualWidth / 2 } :
+           placement == 'top'    ? { top: pos.top - actualHeight, left: pos.left + pos.width / 2 - actualWidth / 2 } :
+           placement == 'left'   ? { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left - actualWidth } :
+        /* placement == 'right' */ { top: pos.top + pos.height / 2 - actualHeight / 2, left: pos.left + pos.width }
+
+  }
+
+  Tooltip.prototype.getViewportAdjustedDelta = function (placement, pos, actualWidth, actualHeight) {
+    var delta = { top: 0, left: 0 }
+    if (!this.$viewport) return delta
+
+    var viewportPadding = this.options.viewport && this.options.viewport.padding || 0
+    var viewportDimensions = this.getPosition(this.$viewport)
+
+    if (/right|left/.test(placement)) {
+      var topEdgeOffset    = pos.top - viewportPadding - viewportDimensions.scroll
+      var bottomEdgeOffset = pos.top + viewportPadding - viewportDimensions.scroll + actualHeight
+      if (topEdgeOffset < viewportDimensions.top) { // top overflow
+        delta.top = viewportDimensions.top - topEdgeOffset
+      } else if (bottomEdgeOffset > viewportDimensions.top + viewportDimensions.height) { // bottom overflow
+        delta.top = viewportDimensions.top + viewportDimensions.height - bottomEdgeOffset
+      }
+    } else {
+      var leftEdgeOffset  = pos.left - viewportPadding
+      var rightEdgeOffset = pos.left + viewportPadding + actualWidth
+      if (leftEdgeOffset < viewportDimensions.left) { // left overflow
+        delta.left = viewportDimensions.left - leftEdgeOffset
+      } else if (rightEdgeOffset > viewportDimensions.right) { // right overflow
+        delta.left = viewportDimensions.left + viewportDimensions.width - rightEdgeOffset
+      }
+    }
+
+    return delta
+  }
+
+  Tooltip.prototype.getTitle = function () {
+    var title
+    var $e = this.$element
+    var o  = this.options
+
+    title = $e.attr('data-original-title')
+      || (typeof o.title == 'function' ? o.title.call($e[0]) :  o.title)
+
+    return title
+  }
+
+  Tooltip.prototype.getUID = function (prefix) {
+    do prefix += ~~(Math.random() * 1000000)
+    while (document.getElementById(prefix))
+    return prefix
+  }
+
+  Tooltip.prototype.tip = function () {
+    if (!this.$tip) {
+      this.$tip = $(this.options.template)
+      if (this.$tip.length != 1) {
+        throw new Error(this.type + ' `template` option must consist of exactly 1 top-level element!')
+      }
+    }
+    return this.$tip
+  }
+
+  Tooltip.prototype.arrow = function () {
+    return (this.$arrow = this.$arrow || this.tip().find('.tooltip-arrow'))
+  }
+
+  Tooltip.prototype.enable = function () {
+    this.enabled = true
+  }
+
+  Tooltip.prototype.disable = function () {
+    this.enabled = false
+  }
+
+  Tooltip.prototype.toggleEnabled = function () {
+    this.enabled = !this.enabled
+  }
+
+  Tooltip.prototype.toggle = function (e) {
+    var self = this
+    if (e) {
+      self = $(e.currentTarget).data('bs.' + this.type)
+      if (!self) {
+        self = new this.constructor(e.currentTarget, this.getDelegateOptions())
+        $(e.currentTarget).data('bs.' + this.type, self)
+      }
+    }
+
+    if (e) {
+      self.inState.click = !self.inState.click
+      if (self.isInStateTrue()) self.enter(self)
+      else self.leave(self)
+    } else {
+      self.tip().hasClass('in') ? self.leave(self) : self.enter(self)
+    }
+  }
+
+  Tooltip.prototype.destroy = function () {
+    var that = this
+    clearTimeout(this.timeout)
+    this.hide(function () {
+      that.$element.off('.' + that.type).removeData('bs.' + that.type)
+      if (that.$tip) {
+        that.$tip.detach()
+      }
+      that.$tip = null
+      that.$arrow = null
+      that.$viewport = null
+      that.$element = null
+    })
+  }
+
+  Tooltip.prototype.sanitizeHtml = function (unsafeHtml) {
+    return sanitizeHtml(unsafeHtml, this.options.whiteList, this.options.sanitizeFn)
+  }
+
+  // TOOLTIP PLUGIN DEFINITION
+  // =========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.tooltip')
+      var options = typeof option == 'object' && option
+
+      if (!data && /destroy|hide/.test(option)) return
+      if (!data) $this.data('bs.tooltip', (data = new Tooltip(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.tooltip
+
+  $.fn.tooltip             = Plugin
+  $.fn.tooltip.Constructor = Tooltip
+
+
+  // TOOLTIP NO CONFLICT
+  // ===================
+
+  $.fn.tooltip.noConflict = function () {
+    $.fn.tooltip = old
+    return this
+  }
+
+}(jQuery);
+
+/* ========================================================================
+ * Bootstrap: popover.js v3.4.1
+ * https://getbootstrap.com/docs/3.4/javascript/#popovers
+ * ========================================================================
+ * Copyright 2011-2019 Twitter, Inc.
+ * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
+ * ======================================================================== */
+
+
++function ($) {
+  'use strict';
+
+  // POPOVER PUBLIC CLASS DEFINITION
+  // ===============================
+
+  var Popover = function (element, options) {
+    this.init('popover', element, options)
+  }
+
+  if (!$.fn.tooltip) throw new Error('Popover requires tooltip.js')
+
+  Popover.VERSION  = '3.4.1'
+
+  Popover.DEFAULTS = $.extend({}, $.fn.tooltip.Constructor.DEFAULTS, {
+    placement: 'right',
+    trigger: 'click',
+    content: '',
+    template: '<div class="popover" role="tooltip"><div class="arrow"></div><h3 class="popover-title"></h3><div class="popover-content"></div></div>'
+  })
+
+
+  // NOTE: POPOVER EXTENDS tooltip.js
+  // ================================
+
+  Popover.prototype = $.extend({}, $.fn.tooltip.Constructor.prototype)
+
+  Popover.prototype.constructor = Popover
+
+  Popover.prototype.getDefaults = function () {
+    return Popover.DEFAULTS
+  }
+
+  Popover.prototype.setContent = function () {
+    var $tip    = this.tip()
+    var title   = this.getTitle()
+    var content = this.getContent()
+
+    if (this.options.html) {
+      var typeContent = typeof content
+
+      if (this.options.sanitize) {
+        title = this.sanitizeHtml(title)
+
+        if (typeContent === 'string') {
+          content = this.sanitizeHtml(content)
+        }
+      }
+
+      $tip.find('.popover-title').html(title)
+      $tip.find('.popover-content').children().detach().end()[
+        typeContent === 'string' ? 'html' : 'append'
+      ](content)
+    } else {
+      $tip.find('.popover-title').text(title)
+      $tip.find('.popover-content').children().detach().end().text(content)
+    }
+
+    $tip.removeClass('fade top bottom left right in')
+
+    // IE8 doesn't accept hiding via the `:empty` pseudo selector, we have to do
+    // this manually by checking the contents.
+    if (!$tip.find('.popover-title').html()) $tip.find('.popover-title').hide()
+  }
+
+  Popover.prototype.hasContent = function () {
+    return this.getTitle() || this.getContent()
+  }
+
+  Popover.prototype.getContent = function () {
+    var $e = this.$element
+    var o  = this.options
+
+    return $e.attr('data-content')
+      || (typeof o.content == 'function' ?
+        o.content.call($e[0]) :
+        o.content)
+  }
+
+  Popover.prototype.arrow = function () {
+    return (this.$arrow = this.$arrow || this.tip().find('.arrow'))
+  }
+
+
+  // POPOVER PLUGIN DEFINITION
+  // =========================
+
+  function Plugin(option) {
+    return this.each(function () {
+      var $this   = $(this)
+      var data    = $this.data('bs.popover')
+      var options = typeof option == 'object' && option
+
+      if (!data && /destroy|hide/.test(option)) return
+      if (!data) $this.data('bs.popover', (data = new Popover(this, options)))
+      if (typeof option == 'string') data[option]()
+    })
+  }
+
+  var old = $.fn.popover
+
+  $.fn.popover             = Plugin
+  $.fn.popover.Constructor = Popover
+
+
+  // POPOVER NO CONFLICT
+  // ===================
+
+  $.fn.popover.noConflict = function () {
+    $.fn.popover = old
+    return this
+  }
+
+}(jQuery);
+</script>
 </head>
 <body>
 <div class="slide titlepage">
-  <h1 class="title">Lecture 1: Robinson’s Economy</h1>
+  <h1 class="title">ECON660 Lecture 1: Games</h1>
   <p class="author">
 Sergey V. Popov
   </p>
-  <p class="date">2026-03-10</p>
+  <p class="date">2026-03-17</p>
 </div>
-<div id="introduction" class="slide section level2">
-<h1>Introduction</h1>
-<p>This course is a Master level course of Microeconomics.</p>
-<p>It is intense, keep up with it, getting lost will be costly.</p>
+<div id="games" class="slide section level2">
+<h1>Games</h1>
 <ul>
-<li>Read textbooks if something is unclear</li>
-<li>Ask me: writing up a proper question is half of answering it</li>
-<li>Work with each other, explain stuff to each other, look for holes in
-explanations, mistakes live there</li>
+<li>Who are the players?</li>
+<li>The rules</li>
+<li>The outcomes</li>
+<li>The payoffs</li>
+</ul>
+<p>Examples: tic-tac-toe, matching pennies, meet in New York.</p>
+</div>
+<div id="game-representation" class="slide section level2">
+<h1>Game Representation</h1>
+<p><em>Extensive form game</em></p>
+<ul>
+<li>Nodes</li>
+<li>Branches are actions</li>
+<li>Information set</li>
+<li>No branch = outcome, needs payoffs</li>
+<li><em>Strategy</em> = all decisions in all information sets</li>
+<li><em>Mixed strategy</em> = distribution over strategies</li>
+</ul>
+<p><em>Normal form game</em></p>
+<ul>
+<li>Table of all strategies</li>
 </ul>
 </div>
-<div id="me" class="slide section level2">
-<h1>Me</h1>
-<p>I am a Senior Lecturer in Cardiff University. I did my PhD in
-Economics in University of Illinois. I work in applied
-microeconomics.</p>
+<div id="predicting-the-outcome" class="slide section level2">
+<h1>Predicting the outcome</h1>
 <ul>
-<li>Uncommon markets interact in uncommon ways, elucidating these ways
-is valuable</li>
-<li>Knowing empirical work helps you identify mysteries, even if
-empirical people dismiss them as insignficant</li>
-<li>Teaching this material for 9 years now</li>
+<li><em>Dominating strategy</em>: if no matter what another player does,
+strategy <span class="math inline">\(x\)</span> gives highest payoff,
+that strategy gotta be played</li>
+<li><em>Dominated strategy</em>: not gonna be played ever? Should not
+matter for the game.</li>
+</ul>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Dominated Strategy
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:center;">
+L
+</th>
+<th style="text-align:center;">
+R
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+U
+</td>
+<td style="text-align:center;">
+(1,-1)
+</td>
+<td style="text-align:center;">
+(-1,1)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+M
+</td>
+<td style="text-align:center;">
+(-1,1)
+</td>
+<td style="text-align:center;">
+(1,-1)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:center;">
+(-2,5)
+</td>
+<td style="text-align:center;">
+(-3,2)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="prisoners-dilemma" class="slide section level2">
+<h1>Prisoner’s Dilemma</h1>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Prisoner’s Dilemma
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:center;">
+D
+</th>
+<th style="text-align:center;">
+C
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:center;">
+(-2,-2)
+</td>
+<td style="text-align:center;">
+(-10,0)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+C
+</td>
+<td style="text-align:center;">
+(0,-10)
+</td>
+<td style="text-align:center;">
+(-5,-5)
+</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>Dominance outcome: <span class="math inline">\((C,C)\)</span></li>
+<li>Pareto optimal: <span class="math inline">\((D,D)\)</span></li>
 </ul>
 </div>
-<div id="plans-for-the-semester" class="slide section level2">
-<h1>Plans for the semester</h1>
+<div id="das-brother" class="slide section level2">
+<h1>DA’s Brother</h1>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+DA’s Brother
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:center;">
+D
+</th>
+<th style="text-align:center;">
+C
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+D
+</td>
+<td style="text-align:center;">
+(0,-2)
+</td>
+<td style="text-align:center;">
+(-10,0)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+C
+</td>
+<td style="text-align:center;">
+(0,-10)
+</td>
+<td style="text-align:center;">
+(-5,-5)
+</td>
+</tr>
+</tbody>
+</table>
 <ul>
-<li>One 2 hour lectures per week</li>
-<li>One 2 hour tutorial per week</li>
-<li>We won’t do all tutorial questions at the same day, do the remainder
-by yourself</li>
-<li>Do problems in the textbook</li>
+<li>Pareto optimal: <span class="math inline">\((D,D)\)</span></li>
+<li>1st player’s C is no longer dominating</li>
+<li>Repeated elimination of dominated strategies outcome: <span class="math inline">\((C,C)\)</span></li>
 </ul>
+<!-- ## Mixed strategy dominance
+
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>Domination by Mixed</caption>
+ <thead>
+  <tr>
+   <th style="text-align:left;">  </th>
+   <th style="text-align:center;"> L </th>
+   <th style="text-align:center;"> R </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> U </td>
+   <td style="text-align:center;"> (10,1) </td>
+   <td style="text-align:center;"> (0,4) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> M </td>
+   <td style="text-align:center;"> (4,2) </td>
+   <td style="text-align:center;"> (4,3) </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> D </td>
+   <td style="text-align:center;"> (0,5) </td>
+   <td style="text-align:center;"> (10,2) </td>
+  </tr>
+</tbody>
+</table>
+
+- 50/50 mix of U and D gives 5 for sure; better than 4 from M
+- What other mixes dominate M?
+-->
 </div>
-<div id="today" class="slide section level2">
-<h1>Today</h1>
-<p>Today we are going to: - Solve the consumer’s problem - This is a key
-block of economics lingo, can’t do economics without consumers - Then
-ask ourselves where do the prices come from - Then add more
-consumers</p>
-</div>
-<div id="consumers" class="slide section level2">
-<h1>Consumers</h1>
-<p>If you did economics before, you saw <span class="math display">\[\max_{x,y} u(x,y) \text{ s.t. } p_x x+p_y y=m.
-\]</span></p>
+<div id="best-response-and-rationalizability" class="slide section level2">
+<h1>Best Response and Rationalizability</h1>
 <ul>
-<li>How do we know there are utility functions?</li>
-<li>Why do we believe everyone takes derivatives all the time?</li>
-<li>Is that limiting our options?</li>
+<li>Strategy <span class="math inline">\(\sigma_i\)</span> is a <em>best
+response</em> to <span class="math inline">\(\sigma_{-i}\)</span> if
+<span class="math display">\[u_i(\sigma_i,\sigma_{-i})\geq
+u_i(\sigma_i&#39;,\sigma_{-i}) \forall \sigma_{-i} \in
+\Delta(\Sigma_i).\]</span></li>
+<li><span class="math inline">\(\sigma_i\)</span> is <em>never a best
+response</em> if there is no <span class="math inline">\(\sigma_{-i}\)</span> for which <span class="math inline">\(\sigma_i\)</span> is a best response.</li>
+<li>Strategies that survive iterated removal of strategies that are
+never a best response are <em>rationalizable</em>.</li>
 </ul>
-</div>
-<div id="preferences" class="slide section level2">
-<h1>Preferences</h1>
-<p>OK maybe it’s hard to imagine everyone maximizes their functions all
-the time. Can we assume something weaker?</p>
-<ul>
-<li>Can consumers choose between two options? If yes, preferences are
-called <em>complete</em>.</li>
-<li>Can consumers choose between three options? If yes, preferences are
-called <em>transitive</em>.</li>
-<li>This is enough for us to figure out they can choose between
-countable number of options.</li>
-</ul>
-<p>Example: consider all the movies in the world. Can you pick the best
-one? Do you have a utility function about movies?</p>
-</div>
-<div id="utility-function-existence" class="slide section level2">
-<h1>Utility Function Existence</h1>
-<p>Theorem: With countable alternatives, rational preferences imply the
-existence of a utility function.</p>
-<p>Uncountable is harder.</p>
-<p>In <span class="math inline">\(R^2_+\)</span>, preference <span class="math inline">\(\succeq\)</span> is <em>lexicographic</em> if:</p>
-<ul>
-<li><span class="math inline">\(x_1&gt;y_1\)</span> implies <span class="math inline">\(x \succ y\)</span>.</li>
-<li>if <span class="math inline">\(x_1=y_1\)</span>, <span class="math inline">\(x_2&gt;y_2\)</span> implies <span class="math inline">\(x \succ y\)</span>.</li>
-<li>(can extend to more dimensions but 2 is enough).</li>
-</ul>
-<p>Theorem: lexicographic preferences have no utility function
-representation.</p>
-</div>
-<div id="need-more-assumptions" class="slide section level2">
-<h1>Need More Assumptions</h1>
-<p>A preference is <em>continuous</em> if <span class="math inline">\(a_n \succeq b\)</span> implies <span class="math inline">\(\lim a_n \succeq b\)</span>. Equivalent to
-<em>better-than set</em> <span class="math inline">\(B(x)=\{y\in A|
-y\succeq x\}\)</span> and <em>worse-than set</em> <span class="math inline">\(W(x)=\{y \in A| x \succeq y\}\)</span> are
-closed.</p>
-<p>Intersection of <span class="math inline">\(B(x)\)</span> and <span class="math inline">\(W(x)\)</span> is called the indifference
-curve.</p>
-<p>Preference is called (weakly) <em>monotone</em> if <span class="math inline">\(x&gt;=y \Rightarrow x \succeq y\)</span>,
-(strictly if <span class="math inline">\(\succ\)</span>). <em>locally
-nonsatiated</em> is weaker: means for every bundle there’s a better
-bundle in a neighborhood.</p>
-<p>Theorem: Rational continuous preferences in <span class="math inline">\(R^N\)</span> have a utility function
-representation.</p>
-<p>Will prove with an additional assumption of monotonicity.</p>
-<p>NB: can have utility function with <em>some</em> discontinuities, not
-a lot. For instance <span class="math display">\[u(x,y)=\begin{cases}\ln(x)+\ln(y), x&lt;=3,\\
-\ln(x)+\ln(y)+1, x&gt;3.\end{cases}\]</span></p>
-</div>
-<div id="nice-properties" class="slide section level2">
-<h1>Nice Properties</h1>
-<p>(strictly) <em>Convex</em> preferences <span class="math inline">\(=\)</span> (strictly) Convex better-than set <span class="math inline">\(\Leftrightarrow\)</span> quasi-concave <span class="math inline">\(u(x)\)</span></p>
-<p>Monotone preferences <span class="math inline">\(\Leftrightarrow\)</span> increasing <span class="math inline">\(u(x)\)</span></p>
-<p>if <span class="math inline">\(f(t)\)</span> is increasing, <span class="math inline">\(f(u(x))\)</span> represents same preferences.</p>
-<p>Marginal utility: <span class="math inline">\(u&#39;_i(x)\)</span>.
-Marginal rate of substitution <span class="math inline">\(u_i&#39;(x)/u&#39;_j(x)\)</span>, means how much
-<span class="math inline">\(j\)</span> you need to compensate for a loss
-of a bit of <span class="math inline">\(i\)</span>.</p>
-</div>
-<div id="consumers-problem" class="slide section level2">
-<h1>Consumer’s Problem</h1>
-<p>Now we know we can use utility function.</p>
-<p><span class="math display">\[\max u(x_1,x_2,...)\]</span></p>
-<p>We impose a budget constraint: <span class="math display">\[p_1
-x_1+p_2x_2+...\leq m.\]</span></p>
-<p>Bundles in the budget constraint are <em>feasible</em>.</p>
-<p>How to solve it?</p>
-</div>
-<div id="making-consumers-problem-easier" class="slide section level2">
-<h1>Making Consumer’s Problem Easier</h1>
-<p>Prove: if preferences are monotone, budget constraint binds.</p>
-<p>A preference is (strictly) <em>convex</em> if for all <span class="math inline">\(\alpha \in (0,1)\)</span> and <span class="math inline">\(a \sim b \in A\)</span>, <span class="math inline">\(\alpha a+(1-\alpha)b \succ a\)</span> (<span class="math inline">\(\succeq\)</span> if weakly). Equivalent to <span class="math inline">\(B(x)\)</span> being convex.</p>
-<p>Prove: for strictly convex preferences, there can be only one
-solution to the consumer’s problem.</p>
-</div>
-<div id="lagrangean" class="slide section level2">
-<h1>Lagrangean</h1>
-<p><span class="math display">\[L(x_1,x_2,...,\lambda)=u(x_1,x_2,...)-\lambda
-[p_1 x_1+p_2x_2+..-m].\]</span></p>
-<p>(Assuming all <span class="math inline">\(x_i&gt;0\)</span>)
-Derivative with respect to <span class="math inline">\(x_i\)</span>:
-<span class="math display">\[\frac{dL}{dx_i}=u&#39;_i(x_1,x_2,...)-\lambda
-p_i.\]</span> which means <span class="math display">\[\frac{u&#39;_i(x_1,x_2,..)}{p_i}=\lambda,\]</span>
-or <span class="math display">\[\frac{u&#39;_i(x_1,x_2,..)}{p_i}=\frac{u&#39;_j(x_1,x_2,..)}{p_j}.\]</span></p>
-<p>This implies a <em>per dollar</em> utility is equal across all goods
-and equal to <span class="math inline">\(\lambda\)</span>.</p>
+<p>Prove: dominated strategies are not rationalizable.</p>
 </div>
 <div id="example" class="slide section level2">
 <h1>Example</h1>
-<p><span class="math display">\[\max_{x,y} x^\rho+y^\rho \text{ s.t. }
-p_x x+p_y y\leq m.\]</span></p>
-<p>Q: Can you have a corner solution?</p>
-<p>Q: what <span class="math inline">\(\rho\)</span> makes sense for
-Lagrangean approach?</p>
-<p>Q: What’s the derivative of the utility function with respect to
-<span class="math inline">\(m\)</span>?</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Bernheim (1984)
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:center;">
+<span class="math inline">\(b_1\)</span>
+</th>
+<th style="text-align:center;">
+<span class="math inline">\(b_2\)</span>
+</th>
+<th style="text-align:center;">
+<span class="math inline">\(b_3\)</span>
+</th>
+<th style="text-align:center;">
+<span class="math inline">\(b_4\)</span>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<span class="math inline">\(a_1\)</span>
+</td>
+<td style="text-align:center;">
+(0,7)
+</td>
+<td style="text-align:center;">
+(2,2)
+</td>
+<td style="text-align:center;">
+(7,0)
+</td>
+<td style="text-align:center;">
+(0,1)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span class="math inline">\(a_2\)</span>
+</td>
+<td style="text-align:center;">
+(5,2)
+</td>
+<td style="text-align:center;">
+(3,3)
+</td>
+<td style="text-align:center;">
+(5,2)
+</td>
+<td style="text-align:center;">
+(0,1)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span class="math inline">\(a_3\)</span>
+</td>
+<td style="text-align:center;">
+(7,0)
+</td>
+<td style="text-align:center;">
+(2,5)
+</td>
+<td style="text-align:center;">
+(0,7)
+</td>
+<td style="text-align:center;">
+(0,1)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span class="math inline">\(a_4\)</span>
+</td>
+<td style="text-align:center;">
+(0,0)
+</td>
+<td style="text-align:center;">
+(0,-2)
+</td>
+<td style="text-align:center;">
+(0,0)
+</td>
+<td style="text-align:center;">
+(10,-1)
+</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="other-utility-functions-to-solve" class="slide section level2">
-<h1>Other utility functions to solve</h1>
+<div id="nash-equilibrium" class="slide section level2">
+<h1>Nash Equilibrium</h1>
+<p>A strategy profile <span class="math inline">\((s_1,s_2,..s_I)\)</span> is a <em>Nash
+equilibrium</em> if for every <span class="math inline">\(i\in\{1..I\}\)</span> <span class="math inline">\(s_i\)</span> is a best response to <span class="math inline">\(s_{-i}\)</span>.</p>
+<p>Not only rationalizable, but also <em>correct conjectures</em> of
+what is actually happening.</p>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+Find NE
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:center;">
+<span class="math inline">\(b_1\)</span>
+</th>
+<th style="text-align:center;">
+<span class="math inline">\(b_2\)</span>
+</th>
+<th style="text-align:center;">
+<span class="math inline">\(b_3\)</span>
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+<span class="math inline">\(a_1\)</span>
+</td>
+<td style="text-align:center;">
+(5,3)
+</td>
+<td style="text-align:center;">
+(0,4)
+</td>
+<td style="text-align:center;">
+(3,5)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span class="math inline">\(a_2\)</span>
+</td>
+<td style="text-align:center;">
+(4,0)
+</td>
+<td style="text-align:center;">
+(5,5)
+</td>
+<td style="text-align:center;">
+(4,0)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+<span class="math inline">\(a_3\)</span>
+</td>
+<td style="text-align:center;">
+(3,5)
+</td>
+<td style="text-align:center;">
+(0,4)
+</td>
+<td style="text-align:center;">
+(5,3)
+</td>
+</tr>
+</tbody>
+</table>
+<p>Prove: dominant outcome is a Nash equilibirum.</p>
+</div>
+<div id="practice" class="slide section level2">
+<h1>Practice</h1>
 <ul>
-<li><span class="math inline">\(u_1(x,y)=\alpha \ln (x)+\beta \ln
-y\)</span></li>
-<li><span class="math inline">\(u_2(x,y)=\min(\alpha x,\beta
-y)\)</span></li>
-<li><span class="math inline">\(u_3(x,y)=\alpha x+\beta y\)</span></li>
-<li><span class="math inline">\(u_4(x,y)=\max(\alpha x,\beta
-y)\)</span></li>
-<li><span class="math inline">\(u_5(x,y,z)=\alpha \ln(x)+\beta \ln
-y+\gamma \ln z\)</span></li>
-<li><span class="math inline">\(u_6(x,y)=\alpha \ln(x+1)+y\)</span></li>
-<li><span class="math inline">\(u_7(x,y)=\alpha \ln(x+1)+\beta \ln
-y\)</span></li>
-<li><span class="math inline">\(u_8(x,y)=5-(x-2)^2-(y-3)^2\)</span></li>
+<li>Design a 2x2 game with 4 pure strategy Nash equilibria</li>
+<li>Design a 2x2 game with 2 pure strategy Nash equilibria</li>
+<li>Design a 2x2 game without a pure strategy Nash equilibrium</li>
+</ul>
+<p>Reminder: <em>mixed strategy</em> is a probablity distribution over
+strategies</p>
+<p>Proposition 8.D.2: Every finite game has a mixed strategy Nash
+equilibrium.</p>
+<p>Proposition 8.D.3: A Nash equilibrium exists if</p>
+<ul>
+<li><span class="math inline">\(S_i\)</span> are a nonempty, covex,
+compact subset of <span class="math inline">\(\mathbb{R}^M\)</span></li>
+<li><span class="math inline">\(u_i(s_1,..s_I)\)</span> is continuous in
+<span class="math inline">\((s_1,..s_I)\)</span> and quasiconcave in
+<span class="math inline">\(s_i\)</span>.</li>
 </ul>
 </div>
-<div id="budget-constraint" class="slide section level2">
-<h1>Budget Constraint</h1>
-<p>Can be non trivial:</p>
+<div id="example-1" class="slide section level2">
+<h1>Example</h1>
 <ul>
-<li>Taxes if consuming too much <span class="math inline">\(x\)</span>:
-changes the slope</li>
-<li>Might be restricting, say, money and time: multiple constraints</li>
-<li>As long as remains compact, all results extend easily</li>
+<li>(Boxing, Boxing) is a NE</li>
+<li>(Theater, Theater) is a NE</li>
+<li>Is there a third one?..</li>
 </ul>
 </div>
-<div id="demand" class="slide section level2">
-<h1>Demand</h1>
-<p>The outcome of the consumer’s problem is <em>demand</em> <span class="math inline">\(x(p)\)</span>.</p>
-<ul>
-<li><em>Normal</em> good: <span class="math inline">\(\frac{dx_i}{dp_i}&lt;0\)</span>, <span class="math inline">\(\frac{dx_i}{dm}&gt;0\)</span></li>
-<li><em>Inferior</em> good: <span class="math inline">\(\frac{dx_i}{dm}&lt;0\)</span>.</li>
-<li><em>Giffen</em> good: <span class="math inline">\(\frac{dx_i}{dp_i}&gt;0\)</span>.</li>
-<li>Goods are <em>substitutes</em> if <span class="math inline">\(\frac{dx_i}{dp_j}&gt;0\)</span>,
-<em>complements</em> otherwise.</li>
-<li>Homogenous degree zero in <span class="math inline">\(p\)</span> and
-<span class="math inline">\(m\)</span></li>
-<li>If preferences are monotone, <span class="math inline">\(px(p,m)=m\)</span></li>
-<li>If preferences are convex, <span class="math inline">\(x(p,m)\)</span> is convex-valued.</li>
-</ul>
-<p>Generically: it’s (almost) never <span class="math inline">\(x(p)\)</span>, it’s a function of a lot of
-variables!</p>
+<div id="trembling-hand-perfection" class="slide section level2">
+<h1>Trembling Hand Perfection</h1>
+<p>Weakly dominated: Down, Right. (D,R) still a NE.</p>
+<p>Trembling hand perfection: imagine players make mistakes with
+probability <span class="math inline">\(\varepsilon\)</span>: is (D,R)
+still a NE?</p>
 </div>
-<div id="exchange-economy" class="slide section level2">
-<h1>Exchange Economy</h1>
-<p><span class="math inline">\(N\)</span> consumers, <span class="math inline">\(M\)</span> goods. Each consumer <span class="math inline">\(i\in\{1..N\}\)</span> has</p>
+<div id="incomplete-information-games" class="slide section level2">
+<h1>Incomplete Information Games</h1>
 <ul>
-<li>utility function <span class="math inline">\(u_i(x_i)\)</span>,
-where <span class="math inline">\(x_i^j\)</span> is the quantity of
-<span class="math inline">\(j\)</span>th good consumed by consumer <span class="math inline">\(i\)</span>,</li>
-<li>endowment <span class="math inline">\(\omega_i\)</span>, where <span class="math inline">\(\omega_i^j\)</span> is the amount of <span class="math inline">\(j\)</span>th good consumer <span class="math inline">\(i\)</span> owns before trade.</li>
+<li>New player, Nature, deciding on types, which might affect payoffs or
+action space</li>
+<li>Distribution of types is common knowledge</li>
+<li>Leads to <em>beliefs</em>: use <span class="math inline">\(\tilde
+u_i=E_\theta(u_i(s_1(\theta_1),s_2(\theta_2),..|\theta_i)\)</span></li>
 </ul>
-<p>They observe prices <span class="math inline">\(p=(p^1,p^2,...p^M)\)</span> and decide on demanded
-amounts by maximizing the utility.</p>
-<p><em>Equilibrium</em> is a collection of choices <span class="math inline">\(x^*_i\)</span> and price $p^* when</p>
+<p>Bayesian Nash equilibrium: Nash equilibrium where expectations are
+conditional on available information and strategies.</p>
+</div>
+<div id="example-2" class="slide section level2">
+<h1>Example</h1>
+<div style="display: flex; justify-content: space-around;">
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+DA’s brother, prob μ
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Don’t cooperate
+</th>
+<th style="text-align:left;">
+Cooperate
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Don’t cooperate
+</td>
+<td style="text-align:left;">
+(0,-2)
+</td>
+<td style="text-align:left;">
+(-10,-1)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cooperate
+</td>
+<td style="text-align:left;">
+(-1,-10)
+</td>
+<td style="text-align:left;">
+(-5,-5)
+</td>
+</tr>
+</tbody>
+</table>
+<table class="table" style="width: auto !important; margin-left: auto; margin-right: auto;">
+<caption>
+C-averse Column, prob 1-μ
+</caption>
+<thead>
+<tr>
+<th style="text-align:left;">
+</th>
+<th style="text-align:left;">
+Don’t cooperate
+</th>
+<th style="text-align:left;">
+Cooperate
+</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left;">
+Don’t cooperate
+</td>
+<td style="text-align:left;">
+(0,-2)
+</td>
+<td style="text-align:left;">
+(-10,-7)
+</td>
+</tr>
+<tr>
+<td style="text-align:left;">
+Cooperate
+</td>
+<td style="text-align:left;">
+(-1,-1)
+</td>
+<td style="text-align:left;">
+(-5,-11)
+</td>
+</tr>
+</tbody>
+</table>
+</div>
 <ul>
-<li><span class="math inline">\(x_i^* \in x_i(p)\)</span> - consumers
-maximize their utilities,</li>
-<li><span class="math inline">\(\sum_i x_i^*=\sum_i \omega_i\)</span> -
-markets clear.</li>
+<li>Type I Column will play Cooperate with probability 1 by
+dominance</li>
+<li>Type II Column will play Don’t cooperate with probability 1 by
+dominance</li>
+<li>Row player compares <span class="math inline">\([-10
+\mu+0(1-\mu)]\gtrless -5\mu-1(1-\mu)\)</span>, Cooperates if <span class="math inline">\(\mu\leq 1/6\)</span></li>
 </ul>
 </div>
-<div id="robinson-economy" class="slide section level2">
-<h1>Robinson Economy</h1>
-<p>Let Robinson have the utility function <span class="math display">\[u_1(x_1^1,x_1^2)=\sqrt{x_1^1}+\sqrt{x_1^2}\]</span></p>
-<p>Let his endowment be <span class="math inline">\((A,B)\)</span>.
-Solve for</p>
-<ul>
-<li>demand</li>
-<li>equilibrium quantities</li>
-<li>equilibrium prices (note that only ratio matters!)</li>
-</ul>
+<div id="cournot-with-uncertain-types" class="slide section level2">
+<h1>Cournot With Uncertain Types</h1>
+<p>Let’s say there are two firms. Market is <span class="math inline">\(P=A-BQ\)</span>, cost function is <span class="math inline">\(TC_i=c_iq\)</span>. <span class="math inline">\(c_i\)</span> can be either <span class="math inline">\(c_L&gt;0\)</span> or <span class="math inline">\(c_H&gt;c_L\)</span> with equal probabilities. How
+much is produced?</p>
+<p>A firm with cost <span class="math inline">\(c_L\)</span> produces
+<span class="math inline">\(q_L\)</span>, a firm with cost <span class="math inline">\(c_H\)</span> produces <span class="math inline">\(q_H\)</span>.</p>
+<p>Each firm with cost <span class="math inline">\(c\)</span> maximizes:
+<span class="math display">\[E\pi(q)=\frac{1}{2}(A-b[q+q_H])q+\frac{1}{2}(A-b[q+q_L])q-cq
+\Rightarrow q=\frac{A-c}{2B}-\frac{q_H+q_L}{2}\]</span> So <span class="math inline">\(q_H=\frac{A-c_H}{2B}-\frac{q_H+q_L}{2}\)</span>
+and <span class="math inline">\(q_L=\frac{A-c_L}{2B}-\frac{q_H+q_L}{2}\)</span>.</p>
+<p>Add them together: <span class="math inline">\(q_H+q_L=\frac{2A-(c_H+c_L)}{4B}=\frac{A-\frac{c_H+c_L}{2}}{2B}\)</span>.</p>
+<p>Subtract them from each other: <span class="math inline">\(q_L-q_H=\frac{c_H-c_L}{2B}\)</span>.</p>
 </div>
-<div id="does-the-equilibrium-exist" class="slide section level2">
-<h1>Does The Equilibrium Exist?</h1>
-<p>If you have two goods, and only the relative price matters, it’s a
-question of whether there is a solution to <span class="math inline">\(x(p)=\omega_x\)</span>.</p>
-<p>When can it not exist?</p>
-<ul>
-<li>Demand always less than <span class="math inline">\(\omega_x\)</span></li>
-<li>Demand always more than <span class="math inline">\(\omega_x\)</span></li>
-<li>Jump</li>
-</ul>
-<p>So need: continuity and avoid demand being <em>too large</em></p>
+<div id="cournot-with-uncertain-types-2" class="slide section level2">
+<h1>Cournot with Uncertain Types 2</h1>
+<p>Let’s say <span class="math inline">\(c=C_L\)</span> for both types
+with probability <span class="math inline">\(0.4\)</span>, same with
+<span class="math inline">\(c=C_H\)</span>, and costs are different with
+probability <span class="math inline">\(0.2\)</span>. Firms are
+symmetric.</p>
+<p>If your cost is <span class="math inline">\(c_L\)</span>, you know
+that other player’s cost is <span class="math inline">\(c_L\)</span> is
+<span class="math display">\[=\frac{P(\text{both }c_L)}{P(\text{mine is
+} c_L)}=\frac{0.4}{0.5}=0.8.\]</span></p>
+<p>so low cost’s best response is <span class="math display">\[E\pi(q)=0.2(A-b[q+q_H])q+0.8(A-b[q+q_L])q-c_Lq
+\Rightarrow q_L=\frac{A-c_L}{2B}-\frac{q_H+4q_L}{5},\]</span> and high
+cost’s best response is <span class="math display">\[E\pi(q)=0.8(A-b[q+q_H])q+0.2(A-b[q+q_L])q-c_Hq
+\Rightarrow q_H=\frac{A-c_H}{2B}-\frac{4q_H+q_L}{5}.\]</span></p>
 </div>
-<div id="two-consumers" class="slide section level2">
-<h1>Two Consumers</h1>
-<p>When we have multiple consumers, math does not change much.</p>
-<p>Add Friday with utility function <span class="math display">\[u_2(x_2)=\ln x_2^1+x_2^2\]</span> and endowment
-<span class="math inline">\((C,D)\)</span>.</p>
-<p>Solve for the market equilibrium. Does it exist? Same problem, same
-answer! And very similar for multiple goods.</p>
-</div>
-<div id="edgeworth-box" class="slide section level2">
-<h1>Edgeworth Box</h1>
-<p>Good for 2 agents and 2 goods, can do 3 goods but not 3 agents.</p>
-<p>Can see</p>
+<div id="summary" class="slide section level2">
+<h1>Summary</h1>
 <ul>
-<li>Better than sets</li>
-<li>Places where both consumers are better off</li>
-</ul>
-<p>With more math, can see</p>
-<ul>
-<li>Places where no one can be better off without hurting another
-(Pareto efficient)</li>
-</ul>
-</div>
-<div id="welfare-theorems" class="slide section level2">
-<h1>Welfare Theorems</h1>
-<p>Welfare Theorem 1: Every market equilibrium in the exchange economy
-is Pareto efficient.</p>
-<p>Welfare Theorem 2: If preferences are convex and monotone, every
-Pareto efficient outcome can be sustained as a market equilibrium by
-reallocating the endowment.</p>
-</div>
-<div id="today-1" class="slide section level2">
-<h1>Today</h1>
-<ul>
-<li>We learned how to solve for the equilibrium</li>
-<li>We talked about why should we care about the equilibrium</li>
-<li>Next time: adding producers</li>
+<li>Games!</li>
+<li>What strategies will happen? Not obvious!</li>
+<li>What strategies can’t happen? Can drop them!</li>
+<li>Nash equilibrium</li>
 </ul>
 </div>
 
