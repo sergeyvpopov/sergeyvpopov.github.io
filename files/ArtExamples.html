@@ -23,6 +23,7 @@
     --mono:      'Courier New', Courier, monospace;
     --serif:     Georgia, 'Times New Roman', serif;
     --sans:      system-ui, -apple-system, sans-serif;
+    --border:    #c9c2b4;
   }
 
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -640,12 +641,16 @@ function resolvent(M, s) {
 
 // Check spectral radius condition
 function spectralOk(X, alpha, beta) {
-  const Xt = toArray(transpose(X));
-  const XtX = toArray(matMul(Xt, X));
-  const eigs = math.eigs(XtX);
-  const vals = toArray(eigs.values).map(v => Math.abs(typeof v === 'object' ? v.re || 0 : v));
-  const rho = Math.max(...vals);
-  return { ok: alpha * beta * rho < 1, rho, product: alpha * beta * rho };
+  try {
+    const Xt = toArray(transpose(X));
+    const XtX = toArray(matMul(Xt, X));
+    const eigs = math.eigs(XtX);
+    const vals = toArray(eigs.values).map(v => Math.abs(typeof v === 'object' ? v.re || 0 : v));
+    const rho = Math.max(...vals);
+    return { ok: alpha * beta * rho < 1, rho, product: alpha * beta * rho };
+  } catch(e) {
+    return { ok: false, rho: Infinity, product: Infinity, error: e };
+  }
 }
 
 // Core computation: given X, theta, v, alpha, beta → {R, q, A, Aj, Ajj}
@@ -764,15 +769,24 @@ function writeVec(prefix, n, data) {
 }
 
 // Infer buyer/seller columns from diff of X and X'
+// Uses cell-level changes so net-zero column swaps (e.g. artist1: c1→c2, artist2: c2→c1)
+// are still detected correctly.
 function inferTrade(X, Xp) {
-  const J = X[0].length;
+  const I = X.length, J = X[0].length;
   const colDelta = Array(J).fill(0);
   for (let j = 0; j < J; j++)
-    for (let i = 0; i < X.length; i++)
+    for (let i = 0; i < I; i++)
       colDelta[j] += Xp[i][j] - X[i][j];
-  const buyers  = colDelta.map((d,j) => d > 0  ? j : -1).filter(j => j >= 0);
-  const sellers = colDelta.map((d,j) => d < 0  ? j : -1).filter(j => j >= 0);
-  return { buyers, sellers, colDelta };
+
+  // A column "participates" if ANY cell in it changed, not just if net delta ≠ 0
+  const changedCols = new Set();
+  for (let i = 0; i < I; i++)
+    for (let j = 0; j < J; j++)
+      if (Math.abs(Xp[i][j] - X[i][j]) > 1e-9) changedCols.add(j);
+
+  const buyers  = colDelta.map((d,j) => d >  1e-9 ? j : -1).filter(j => j >= 0);
+  const sellers = colDelta.map((d,j) => d < -1e-9 ? j : -1).filter(j => j >= 0);
+  return { buyers, sellers, colDelta, changedCols };
 }
 
 
@@ -812,30 +826,35 @@ function mkVerdict(cls, icon, title, detail) {
 }
 
 // ── trade classification ──────────────────────────────────────
-// Returns { isBilateral, isOneUnit, buyer, seller, participants }
 // bilateral = exactly one artist row changes, exactly two collector columns change
-// isOneUnit  = total units moved (sum of absolute column deltas / 2) equals 1
-// participants = set of collector indices whose holdings change
-function classifyTrade(X, Xp, colDelta) {
+// isOneUnit  = total gross units transferred equals 1
+// participants = collectors with any cell-level change (not just net change)
+function classifyTrade(X, Xp, colDelta, changedCols) {
   const I = X.length, J = X[0].length;
 
   // Which artist rows changed?
   const changedArtists = [];
-  for (let i = 0; i < I; i++) {
-    for (let j = 0; j < J; j++) {
+  for (let i = 0; i < I; i++)
+    for (let j = 0; j < J; j++)
       if (Math.abs(Xp[i][j] - X[i][j]) > 1e-9) { changedArtists.push(i); break; }
-    }
-  }
 
-  // Which collector columns changed?
-  const participants = colDelta.map((d,j) => Math.abs(d) > 1e-9 ? j : -1).filter(j => j >= 0);
+  // Participants: any collector with a changed cell
+  const participants = Array.from(changedCols).sort((a,b) => a - b);
+
+  // Buyers/sellers by net column delta (for bilateral price calc)
   const buyers  = colDelta.map((d,j) => d >  1e-9 ? j : -1).filter(j => j >= 0);
   const sellers = colDelta.map((d,j) => d < -1e-9 ? j : -1).filter(j => j >= 0);
 
   const isBilateral = (changedArtists.length === 1) && (participants.length === 2);
-  // total volume = sum of positive column deltas (= sum of negative, by conservation)
-  const totalVolume = colDelta.reduce((s,d) => s + Math.max(0, d), 0);
-  const isOneUnit   = Math.abs(totalVolume - 1) < 1e-9;
+
+  // Total volume = sum of all positive cell changes (gross flow)
+  let totalVolume = 0;
+  for (let i = 0; i < I; i++)
+    for (let j = 0; j < J; j++) {
+      const d = Xp[i][j] - X[i][j];
+      if (d > 1e-9) totalVolume += d;
+    }
+  const isOneUnit = Math.abs(totalVolume - 1) < 0.001;
 
   const buyer  = isBilateral ? buyers[0]  : null;
   const seller = isBilateral ? sellers[0] : null;
@@ -851,6 +870,10 @@ function runCheck() {
 
   const alpha = parseFloat(document.getElementById('alpha').value);
   const beta  = parseFloat(document.getElementById('beta').value);
+
+  if (!(alpha > 0 && alpha < 1)) { showError('α must be strictly between 0 and 1.'); return; }
+  if (!(beta  > 0 && beta  < 1)) { showError('β must be strictly between 0 and 1.'); return; }
+
   const I = nI(), J = nJ();
 
   const theta = readVec('θ', I);
@@ -875,14 +898,14 @@ function runCheck() {
         return;
       }
 
-  const { buyers, sellers, colDelta } = inferTrade(X, Xp);
+  const { buyers, sellers, colDelta, changedCols } = inferTrade(X, Xp);
 
-  if (buyers.length === 0 && sellers.length === 0) {
+  if (changedCols.size === 0) {
     showError('X and X′ are identical — no trade to evaluate.');
     return;
   }
 
-  const { isBilateral, isOneUnit, buyer, seller, participants } = classifyTrade(X, Xp, colDelta);
+  const { isBilateral, isOneUnit, buyer, seller, participants } = classifyTrade(X, Xp, colDelta, changedCols);
 
   const check  = spectralOk(X,  alpha, beta);
   const checkP = spectralOk(Xp, alpha, beta);
@@ -1108,6 +1131,10 @@ function runEntry() {
 
   const alpha   = parseFloat(document.getElementById('alpha').value);
   const beta    = parseFloat(document.getElementById('beta').value);
+
+  if (!(alpha > 0 && alpha < 1)) { showError('α must be strictly between 0 and 1.'); return; }
+  if (!(beta  > 0 && beta  < 1)) { showError('β must be strictly between 0 and 1.'); return; }
+
   const thetaNew = parseFloat(document.getElementById('theta-new').value);
   const I = nI(), J = nJ();
 
@@ -1127,19 +1154,36 @@ function runEntry() {
 
   const { R, q, Ajj } = base;
 
-  // For each collector j, build X' = X with new row [0..1..0] (1 in col j)
-  // Using the paper's closed-form from Lemma 1:
-  //   ΔR_j = Ajj/(1 - αβ·Ajj) · α(1-β)·θ_new  +  αβ·Ajj/(1 - αβ·Ajj) · R_j
-  //   R'_j = R_j + ΔR_j
-  // q'_new = (1-β)·θ_new + β·R'_j
+  // For each collector j, compute ΔR_j two ways and cross-check:
+  // (a) Closed-form from Lemma 2: ΔR_j = Ajj/(1-αβAjj)·α(1-β)·θ_new + αβAjj/(1-αβAjj)·R_j
+  // (b) Brute-force: append new artist row, put 1 under col j, recompute R
+  // If they disagree by more than 1e-6 we flag it; if they agree we use the brute-force value.
+  const thetaAugmented = [...theta, thetaNew];
   const results = Array.from({length: J}, (_, j) => {
-    const denom  = 1 - alpha * beta * Ajj[j];
-    if (denom <= 1e-9) return null; // resolvent would not exist
-    const dRj    = (Ajj[j] / denom) * alpha * (1 - beta) * thetaNew
+    const denom = 1 - alpha * beta * Ajj[j];
+    if (denom <= 1e-9) return null;
+
+    // Closed-form
+    const dRj_cf = (Ajj[j] / denom) * alpha * (1 - beta) * thetaNew
                  + (alpha * beta * Ajj[j] / denom) * R[j];
-    const Rpj    = R[j] + dRj;
-    const qNew   = (1 - beta) * thetaNew + beta * Rpj;
-    return { j, dRj, Rpj, qNew };
+
+    // Brute-force: X augmented with new row, 1 in col j
+    const Xaug = [...X.map(row => [...row]), Array(J).fill(0).map((_,k) => k === j ? 1 : 0)];
+    let Raug;
+    try {
+      const checkAug = spectralOk(Xaug, alpha, beta);
+      if (!checkAug.ok) return null;
+      const resAug = compute(Xaug, thetaAugmented, v, alpha, beta);
+      Raug = resAug.R;
+    } catch(e) { return null; }
+
+    const dRj_bf = Raug[j] - R[j];
+
+    // Use brute-force value; flag if closed-form disagrees
+    const mismatch = Math.abs(dRj_cf - dRj_bf) > 1e-4;
+    const Rpj  = Raug[j];
+    const qNew = (1 - beta) * thetaNew + beta * Rpj;
+    return { j, dRj: dRj_bf, dRj_cf, mismatch, Rpj, qNew };
   });
 
   const valid = results.filter(r => r !== null);
@@ -1160,7 +1204,6 @@ function runEntry() {
   // hide trade-specific sections
   document.getElementById('verdict-row').style.display   = 'none';
   document.getElementById('price-section').style.display = 'none';
-  document.getElementById('stat-grid').parentElement && (()=>{})();
 
   const sameCollector = bestWTP.j === bestPrestige.j;
 
@@ -1178,6 +1221,13 @@ function runEntry() {
     + (sameCollector ? ' This is the same collector — no tension between price and placement.' :
        ' This differs from the highest-WTP collector — the dealer faces a price vs. placement trade-off.')
   );
+
+  // Warn if any closed-form / brute-force mismatch detected
+  const mismatches = valid.filter(r => r.mismatch);
+  if (mismatches.length > 0) {
+    const ids = mismatches.map(r => `c${r.j+1}`).join(', ');
+    showError(`Warning: closed-form (Lemma 2) and brute-force results disagree for ${ids}. Brute-force values are shown.`);
+  }
 
   // Entry table: one row per collector
   const et = document.getElementById('entry-table');
