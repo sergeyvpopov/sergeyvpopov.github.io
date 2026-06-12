@@ -1,0 +1,1343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Art Market Network Trade Checker</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjs/12.4.2/math.min.js"></script>
+<style>
+  /* ── tokens ── */
+  :root {
+    --ink:       #1a1a1a;
+    --paper:     #f7f4ef;
+    --mid:       #e8e3da;
+    --rule:      #c9c2b4;
+    --accent:    #2a4a7f;
+    --accent2:   #8b3a3a;
+    --pos:       #1e5c34;
+    --neg:       #7a1f1f;
+    --pos-bg:    #eaf4ee;
+    --neg-bg:    #faeaea;
+    --warn-bg:   #fdf5e0;
+    --warn:      #7a5c00;
+    --mono:      'Courier New', Courier, monospace;
+    --serif:     Georgia, 'Times New Roman', serif;
+    --sans:      system-ui, -apple-system, sans-serif;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  /* ── masthead ── */
+  header {
+    border-bottom: 2px solid var(--ink);
+    padding: 2rem 2.5rem 1.25rem;
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    flex-wrap: wrap;
+  }
+  header h1 {
+    font-family: var(--serif);
+    font-size: 1.5rem;
+    font-weight: normal;
+    letter-spacing: 0.01em;
+  }
+  header p {
+    font-size: 0.82rem;
+    color: #666;
+    font-style: italic;
+  }
+
+  /* ── layout ── */
+  main {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+
+  .panel {
+    padding: 1.75rem 2rem;
+    border-right: 1px solid var(--rule);
+  }
+  .panel:last-child { border-right: none; }
+  .panel + .panel { border-top: none; }
+
+  .panel-title {
+    font-family: var(--serif);
+    font-size: 0.72rem;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: #888;
+    margin-bottom: 1.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid var(--mid);
+  }
+
+  /* full-width panels */
+  .full {
+    grid-column: 1 / -1;
+    border-right: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ── params row ── */
+  .params-row {
+    display: flex;
+    gap: 2rem;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+  }
+  .param-group { display: flex; flex-direction: column; gap: 0.3rem; }
+  .param-group label {
+    font-size: 0.78rem;
+    color: #666;
+    font-family: var(--mono);
+  }
+  .param-group input[type=number] {
+    width: 70px;
+    padding: 0.35rem 0.5rem;
+    border: 1px solid var(--rule);
+    background: white;
+    font-family: var(--mono);
+    font-size: 0.9rem;
+    color: var(--ink);
+    border-radius: 2px;
+  }
+  .param-group input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* ── dim selectors ── */
+  .dim-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+  }
+  .dim-row label { font-size: 0.82rem; color: #555; }
+  .dim-row select {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--rule);
+    background: white;
+    font-family: var(--mono);
+    font-size: 0.88rem;
+    border-radius: 2px;
+  }
+
+  /* ── vector inputs ── */
+  .vec-row {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+  }
+  .vec-label {
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: var(--accent);
+    min-width: 1.8rem;
+    font-style: italic;
+  }
+  .vec-row input[type=number] {
+    width: 58px;
+    padding: 0.3rem 0.4rem;
+    border: 1px solid var(--rule);
+    background: white;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    border-radius: 2px;
+    text-align: center;
+  }
+  .vec-row input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  /* ── matrix grid ── */
+  .matrix-wrap {
+    overflow-x: auto;
+    margin-bottom: 0.5rem;
+  }
+  .matrix-label {
+    font-family: var(--mono);
+    font-size: 0.78rem;
+    color: #888;
+    margin-bottom: 0.4rem;
+  }
+  .matrix-label span {
+    font-style: italic;
+    color: var(--accent2);
+  }
+  table.matrix {
+    border-collapse: collapse;
+    margin-bottom: 0.75rem;
+  }
+  table.matrix th {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: #aaa;
+    padding: 0 0.4rem 0.25rem;
+    font-weight: normal;
+    text-align: center;
+  }
+  table.matrix td { padding: 2px 3px; }
+  table.matrix input {
+    width: 54px;
+    padding: 0.28rem 0.3rem;
+    border: 1px solid var(--rule);
+    background: white;
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    text-align: center;
+    border-radius: 2px;
+  }
+  table.matrix input:focus {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+    background: #eef3fc;
+  }
+  table.matrix .row-label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: #aaa;
+    text-align: right;
+    padding-right: 0.5rem;
+  }
+
+  /* ── buttons ── */
+  .btn-row {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-top: 1.5rem;
+  }
+  button.primary {
+    background: var(--accent);
+    color: white;
+    border: none;
+    padding: 0.6rem 1.4rem;
+    font-size: 0.88rem;
+    letter-spacing: 0.04em;
+    cursor: pointer;
+    border-radius: 2px;
+    font-family: var(--sans);
+    transition: background 0.15s;
+  }
+  button.primary:hover { background: #1d3560; }
+  button.secondary {
+    background: transparent;
+    color: var(--ink);
+    border: 1px solid var(--rule);
+    padding: 0.58rem 1rem;
+    font-size: 0.85rem;
+    cursor: pointer;
+    border-radius: 2px;
+    font-family: var(--sans);
+    transition: border-color 0.15s;
+  }
+  button.secondary:hover { border-color: var(--ink); }
+
+  /* ── trade pair selector ── */
+  .trade-row {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 1rem;
+    padding: 0.75rem 1rem;
+    background: white;
+    border: 1px solid var(--mid);
+    border-radius: 3px;
+  }
+  .trade-row label { font-size: 0.82rem; color: #555; }
+  .trade-row select {
+    padding: 0.3rem 0.5rem;
+    border: 1px solid var(--rule);
+    font-family: var(--mono);
+    font-size: 0.85rem;
+    border-radius: 2px;
+    background: white;
+  }
+  .trade-arrow {
+    font-size: 1rem;
+    color: #999;
+  }
+
+  /* ── results ── */
+  #results { display: none; }
+
+  .verdict {
+    padding: 1rem 1.25rem;
+    border-radius: 3px;
+    margin-bottom: 1.25rem;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .verdict.positive { background: var(--pos-bg); border-left: 4px solid var(--pos); }
+  .verdict.negative { background: var(--neg-bg); border-left: 4px solid var(--neg); }
+  .verdict.warning  { background: var(--warn-bg); border-left: 4px solid var(--warn); }
+
+  .verdict-icon { font-size: 1.3rem; line-height: 1; }
+  .verdict-body { flex: 1; }
+  .verdict-title {
+    font-family: var(--serif);
+    font-size: 1rem;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+  .verdict.positive .verdict-title { color: var(--pos); }
+  .verdict.negative .verdict-title { color: var(--neg); }
+  .verdict.warning  .verdict-title { color: var(--warn); }
+  .verdict-detail { font-size: 0.85rem; color: #444; }
+
+  /* ── stat tables ── */
+  .stat-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 0.75rem;
+    margin-bottom: 1.25rem;
+  }
+  .stat-card {
+    background: white;
+    border: 1px solid var(--mid);
+    border-radius: 3px;
+    padding: 0.65rem 0.85rem;
+  }
+  .stat-card .label {
+    font-family: var(--mono);
+    font-size: 0.7rem;
+    color: #999;
+    margin-bottom: 0.15rem;
+  }
+  .stat-card .value {
+    font-family: var(--mono);
+    font-size: 1.05rem;
+    color: var(--ink);
+  }
+  .stat-card .delta {
+    font-family: var(--mono);
+    font-size: 0.75rem;
+    margin-top: 0.1rem;
+  }
+  .delta.up   { color: var(--pos); }
+  .delta.down { color: var(--neg); }
+  .delta.flat { color: #999; }
+
+  /* ── reputation tables ── */
+  .rep-table-wrap { overflow-x: auto; margin-bottom: 1rem; }
+  table.rep-table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+  }
+  table.rep-table th {
+    text-align: left;
+    padding: 0.4rem 0.75rem;
+    background: var(--mid);
+    font-size: 0.72rem;
+    letter-spacing: 0.03em;
+    color: #666;
+    font-weight: normal;
+  }
+  table.rep-table td {
+    padding: 0.38rem 0.75rem;
+    border-bottom: 1px solid var(--mid);
+  }
+  table.rep-table tr:last-child td { border-bottom: none; }
+  table.rep-table tr:hover td { background: #f0ece4; }
+  .cell-delta { font-size: 0.75rem; padding-left: 0.4rem; }
+  .cell-delta.up   { color: var(--pos); }
+  .cell-delta.down { color: var(--neg); }
+
+  /* ── price range bar ── */
+  .price-section { margin-bottom: 1.25rem; }
+  .price-label {
+    font-size: 0.78rem;
+    color: #666;
+    margin-bottom: 0.4rem;
+  }
+  .price-numbers {
+    display: flex;
+    gap: 1.5rem;
+    font-family: var(--mono);
+    font-size: 0.82rem;
+    color: #555;
+  }
+
+
+  /* ── error box ── */
+  .error-box {
+    background: var(--neg-bg);
+    border: 1px solid #e09090;
+    border-radius: 3px;
+    padding: 0.75rem 1rem;
+    font-size: 0.85rem;
+    color: var(--neg);
+    margin-bottom: 1rem;
+    display: none;
+  }
+
+  /* ── presets ── */
+  .preset-row {
+    display: flex;
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.25rem;
+  }
+  .preset-btn {
+    background: transparent;
+    border: 1px solid var(--rule);
+    padding: 0.28rem 0.65rem;
+    font-size: 0.78rem;
+    cursor: pointer;
+    border-radius: 2px;
+    color: #555;
+    font-family: var(--sans);
+    transition: all 0.12s;
+  }
+  .preset-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+  .mode-btn {
+    padding: 0.3rem 0.85rem;
+    border: 1.5px solid var(--border);
+    border-radius: 20px;
+    background: transparent;
+    color: #555;
+    font-size: 0.8rem;
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .mode-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .mode-btn.mode-active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight:600; }
+
+  /* ── section divider ── */
+  .section-rule {
+    grid-column: 1 / -1;
+    border: none;
+    border-top: 1px solid var(--rule);
+  }
+
+  /* ── responsive ── */
+  @media (max-width: 860px) {
+    main { grid-template-columns: 1fr; }
+    .panel { border-right: none; border-top: 1px solid var(--rule); }
+    header { padding: 1.25rem 1.25rem 0.85rem; }
+    .panel { padding: 1.25rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Art Market Network · Trade Checker</h1>
+  <p>Aslanyan &amp; Popov (2026) — reputation spillovers and trade rationality</p>
+</header>
+
+<main>
+
+  <!-- ── LEFT: PARAMETERS + VECTORS ── -->
+  <div class="panel">
+    <div class="panel-title">Parameters &amp; Primitives</div>
+
+    <div class="params-row">
+      <div class="param-group">
+        <label>α (collector weight)</label>
+        <input type="number" id="alpha" value="0.3" min="0.01" max="0.99" step="0.05">
+      </div>
+      <div class="param-group">
+        <label>β (artist weight)</label>
+        <input type="number" id="beta" value="0.3" min="0.01" max="0.99" step="0.05">
+      </div>
+      <div class="param-group">
+        <label>Artists (I)</label>
+        <select id="nArtists" onchange="rebuildGrids()">
+          <option value="1">1</option>
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+      <div class="param-group">
+        <label>Collectors (J)</label>
+        <select id="nCollectors" onchange="rebuildGrids()">
+          <option value="2" selected>2</option>
+          <option value="3">3</option>
+          <option value="4">4</option>
+          <option value="5">5</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- θ vector -->
+    <div class="panel-title" style="margin-top:0.5rem">Artist abilities θ</div>
+    <div id="theta-inputs"></div>
+
+    <!-- v vector -->
+    <div class="panel-title" style="margin-top:1rem">Collector baseline respect v</div>
+    <div id="v-inputs"></div>
+
+    <!-- Presets -->
+    <div class="panel-title" style="margin-top:1.25rem">Presets</div>
+    <div class="preset-row">
+      <button class="preset-btn" onclick="loadPreset('example1a')">Example 1 (1→2)</button>
+      <button class="preset-btn" onclick="loadPreset('example1b')">Example 1 (3→4)</button>
+      <button class="preset-btn" onclick="loadPreset('example2')">Example 2</button>
+      <button class="preset-btn" onclick="loadPreset('example3')">Example 3</button>
+      <button class="preset-btn" onclick="loadPreset('example4')">Example 4</button>
+      <button class="preset-btn" onclick="loadPreset('example5')">Example 5</button>
+      <button class="preset-btn" onclick="loadPreset('example6')">Example 6</button>
+    </div>
+
+  </div>
+
+  <!-- ── RIGHT: MATRICES ── -->
+  <div class="panel">
+    <div class="panel-title">Ownership matrices</div>
+
+    <div class="matrix-label">X — current holdings &nbsp;<span>(rows = artists, cols = collectors)</span></div>
+    <div class="matrix-wrap" id="X-wrap"></div>
+
+    <!-- mode toggle -->
+    <div style="margin-top:1.25rem; margin-bottom:0.75rem; display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap">
+      <span style="font-size:0.8rem; font-weight:600; text-transform:uppercase; letter-spacing:.05em; color:#888">Mode:</span>
+      <button id="mode-trade-btn" class="mode-btn mode-active" onclick="setMode('trade')">Trade between collectors</button>
+      <button id="mode-entry-btn" class="mode-btn" onclick="setMode('entry')">Entry of new artist</button>
+    </div>
+
+    <!-- TRADE mode: X prime matrix -->
+    <div id="trade-panel">
+      <div class="matrix-label">X′ — proposed holdings after trade</div>
+      <div class="matrix-wrap" id="Xp-wrap"></div>
+    </div>
+
+    <!-- ENTRY mode: theta_new input -->
+    <div id="entry-panel" style="display:none">
+      <div class="matrix-label">θ<sub>new</sub> — innate ability of entering artist</div>
+      <div style="display:flex; align-items:center; gap:0.5rem; margin-top:0.35rem">
+        <input id="theta-new" type="number" step="0.1" value="1"
+               style="width:5rem; padding:0.3rem 0.5rem; border:1px solid var(--border); border-radius:4px; font-size:0.9rem">
+
+      </div>
+    </div>
+
+    <div id="error-box" class="error-box"></div>
+
+    <div class="btn-row">
+      <button class="primary" id="run-btn" onclick="runDispatch()">Check trade</button>
+      <button class="secondary" id="copy-btn" onclick="copyX()">Copy X → X′</button>
+      <button class="secondary" onclick="clearResults()">Clear</button>
+    </div>
+  </div>
+
+  <!-- ── FULL-WIDTH: RESULTS ── -->
+  <div class="panel full" id="results">
+    <div class="panel-title">Results</div>
+
+    <!-- trade type label (trade mode) -->
+    <div id="trade-type-label" style="font-family:var(--serif); font-size:0.9rem; color:#555; font-style:italic; margin-bottom:1rem;"></div>
+
+    <!-- entry summary (entry mode) -->
+    <div id="entry-summary" style="display:none; margin-bottom:1.5rem">
+      <div id="entry-verdict-wtp"></div>
+      <div id="entry-verdict-prestige" style="margin-top:0.75rem"></div>
+      <div style="margin-top:1.25rem">
+        <div class="panel-title">Collector outcomes if buyer is c<em>j</em></div>
+        <div class="rep-table-wrap"><table class="rep-table" id="entry-table"></table></div>
+      </div>
+      <div style="margin-top:1rem">
+        <div class="panel-title">Baseline (before entry)</div>
+        <div class="rep-table-wrap"><table class="rep-table" id="entry-baseline-table"></table></div>
+      </div>
+    </div>
+
+    <!-- verdicts row -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1rem; margin-bottom:1.5rem" id="verdict-row">
+      <div id="verdict-ir"></div>
+      <div id="verdict-welfare"></div>
+    </div>
+
+    <!-- price numbers -->
+    <div class="price-section" id="price-section">
+      <div class="price-label">Acceptable price range for this trade</div>
+      <div class="price-numbers">
+        <span>P<sub>S</sub> = <strong id="ps-val">—</strong></span>
+        <span>P<sub>B</sub> = <strong id="pb-val">—</strong></span>
+        <span id="nash-val"></span>
+      </div>
+    </div>
+
+    <!-- trade-only result sections (hidden in entry mode) -->
+    <div id="trade-results-sections">
+    <!-- stat cards -->
+    <div class="panel-title" id="key-qty-header">Key quantities</div>
+    <div class="stat-grid" id="stat-grid"></div>
+
+    <!-- rep tables side by side -->
+    <div style="display:grid; grid-template-columns:1fr 1fr; gap:1.5rem; margin-top:1rem">
+      <div>
+        <div class="panel-title">Collector reputations R</div>
+        <div class="rep-table-wrap"><table class="rep-table" id="rep-table"></table></div>
+      </div>
+      <div>
+        <div class="panel-title">Artist prestige q</div>
+        <div class="rep-table-wrap"><table class="rep-table" id="prestige-table"></table></div>
+      </div>
+    </div>
+
+    <!-- centrality table -->
+    <div style="margin-top:1rem">
+      <div class="panel-title">Centrality (self-multiplier A<sub>jj</sub> and Katz-Bonacich A<sub>j</sub>)</div>
+      <div class="rep-table-wrap"><table class="rep-table" id="centrality-table"></table></div>
+    </div>
+    </div>
+
+  </div>
+
+</main>
+
+<script>
+// ── math helpers ──────────────────────────────────────────────
+function matMul(A, B) { return math.multiply(A, B); }
+function matAdd(A, B) { return math.add(A, B); }
+function matSub(A, B) { return math.subtract(A, B); }
+function matInv(A)    { return math.inv(A); }
+function transpose(A) { return math.transpose(A); }
+function identity(n)  { return math.identity(n).toArray(); }
+function scalarMul(s, A) { return math.multiply(s, A); }
+function matSum(A)    { return math.sum(A); }
+
+function toArray(m) {
+  if (Array.isArray(m)) return m;
+  return m.toArray ? m.toArray() : Array.from(m);
+}
+
+// Compute resolvent (I - s*M)^{-1}
+function resolvent(M, s) {
+  const n = M.length;
+  const I = identity(n);
+  const inner = matSub(I, scalarMul(s, M));
+  return toArray(matInv(inner));
+}
+
+// Check spectral radius condition
+function spectralOk(X, alpha, beta) {
+  const Xt = toArray(transpose(X));
+  const XtX = toArray(matMul(Xt, X));
+  const eigs = math.eigs(XtX);
+  const vals = toArray(eigs.values).map(v => Math.abs(typeof v === 'object' ? v.re || 0 : v));
+  const rho = Math.max(...vals);
+  return { ok: alpha * beta * rho < 1, rho, product: alpha * beta * rho };
+}
+
+// Core computation: given X, theta, v, alpha, beta → {R, q, A, Aj, Ajj}
+function compute(X, theta, v, alpha, beta) {
+  const I = X.length;      // artists
+  const J = X[0].length;   // collectors
+
+  const Xt = toArray(transpose(X));
+  const XtX = toArray(matMul(Xt, X));   // J×J
+  const XXt = toArray(matMul(X, Xt));   // I×I
+
+  // A = (I_J - αβ X^T X)^{-1}
+  const A = resolvent(XtX, alpha * beta);
+  // B = (1-α)v + α(1-β) X^T θ
+  const Xtt = toArray(matMul(Xt, theta.map(t => [t])));
+  const B = v.map((vj, j) =>
+    (1 - alpha) * vj + alpha * (1 - beta) * Xtt[j][0]
+  );
+  // R = A * B
+  const R = toArray(matMul(A, B.map(b => [b]))).map(r => r[0]);
+
+  // q = (I_I - αβ XX^T)^{-1} [(1-β)θ + β(1-α) X v]
+  const Aart = resolvent(XXt, alpha * beta);
+  const Xv = toArray(matMul(X, v.map(vv => [vv]))).map(r => r[0]);
+  const Bq = theta.map((th, i) => (1 - beta) * th + beta * (1 - alpha) * Xv[i]);
+  const q = toArray(matMul(Aart, Bq.map(b => [b]))).map(r => r[0]);
+
+  // Self-multiplier Ajj and Katz-Bonacich Aj = sum_k A_jk
+  const Ajj = A.map((row, j) => row[j]);
+  const Aj  = A.map(row => row.reduce((s, x) => s + x, 0));
+
+  return { R, q, A, Ajj, Aj, B };
+}
+
+// ── DOM helpers ───────────────────────────────────────────────
+function nI() { return parseInt(document.getElementById('nArtists').value); }
+function nJ() { return parseInt(document.getElementById('nCollectors').value); }
+
+function buildVecInputs(containerId, prefix, n, defaults) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = '';
+  const row = document.createElement('div');
+  row.className = 'vec-row';
+  for (let k = 0; k < n; k++) {
+    const lbl = document.createElement('span');
+    lbl.className = 'vec-label';
+    lbl.textContent = prefix + (k+1);
+    const inp = document.createElement('input');
+    inp.type = 'number';
+    inp.id = `${prefix}${k}`;
+    inp.value = defaults ? defaults[k] : 1;
+    inp.step = '0.1';
+    row.appendChild(lbl);
+    row.appendChild(inp);
+  }
+  el.appendChild(row);
+}
+
+function buildMatrixInput(wrapId, prefix, rows, cols, defaults) {
+  const wrap = document.getElementById(wrapId);
+  wrap.innerHTML = '';
+  const tbl = document.createElement('table');
+  tbl.className = 'matrix';
+
+  // header row
+  const thead = document.createElement('tr');
+  thead.appendChild(document.createElement('th')); // corner
+  for (let j = 0; j < cols; j++) {
+    const th = document.createElement('th');
+    th.textContent = 'c' + (j+1);
+    thead.appendChild(th);
+  }
+  tbl.appendChild(thead);
+
+  for (let i = 0; i < rows; i++) {
+    const tr = document.createElement('tr');
+    const lbl = document.createElement('td');
+    lbl.className = 'row-label';
+    lbl.textContent = 'a' + (i+1);
+    tr.appendChild(lbl);
+    for (let j = 0; j < cols; j++) {
+      const td = document.createElement('td');
+      const inp = document.createElement('input');
+      inp.type = 'number';
+      inp.id = `${prefix}_${i}_${j}`;
+      inp.min = '0';
+      inp.step = '1';
+      inp.value = defaults ? (defaults[i] ? (defaults[i][j] ?? 0) : 0) : 0;
+      td.appendChild(inp);
+      tr.appendChild(td);
+    }
+    tbl.appendChild(tr);
+  }
+  wrap.appendChild(tbl);
+}
+
+function readVec(prefix, n) {
+  return Array.from({length: n}, (_, k) => parseFloat(document.getElementById(`${prefix}${k}`).value) || 0);
+}
+
+function readMatrix(prefix, rows, cols) {
+  return Array.from({length: rows}, (_, i) =>
+    Array.from({length: cols}, (_, j) => parseFloat(document.getElementById(`${prefix}_${i}_${j}`).value) || 0)
+  );
+}
+
+function writeMatrix(prefix, rows, cols, data) {
+  for (let i = 0; i < rows; i++)
+    for (let j = 0; j < cols; j++)
+      document.getElementById(`${prefix}_${i}_${j}`).value = data[i][j];
+}
+
+function writeVec(prefix, n, data) {
+  for (let k = 0; k < n; k++)
+    document.getElementById(`${prefix}${k}`).value = data[k];
+}
+
+// Infer buyer/seller columns from diff of X and X'
+function inferTrade(X, Xp) {
+  const J = X[0].length;
+  const colDelta = Array(J).fill(0);
+  for (let j = 0; j < J; j++)
+    for (let i = 0; i < X.length; i++)
+      colDelta[j] += Xp[i][j] - X[i][j];
+  const buyers  = colDelta.map((d,j) => d > 0  ? j : -1).filter(j => j >= 0);
+  const sellers = colDelta.map((d,j) => d < 0  ? j : -1).filter(j => j >= 0);
+  return { buyers, sellers, colDelta };
+}
+
+
+function rebuildGrids() {
+  const I = nI(), J = nJ();
+  buildVecInputs('theta-inputs', 'θ', I, Array(I).fill(1));
+  buildVecInputs('v-inputs',     'v', J, Array(J).fill(1));
+  buildMatrixInput('X-wrap',  'X',  I, J, null);
+  buildMatrixInput('Xp-wrap', 'Xp', I, J, null);
+  clearResults();
+}
+
+function copyX() {
+  const I = nI(), J = nJ();
+  const X = readMatrix('X', I, J);
+  writeMatrix('Xp', I, J, X);
+}
+
+// ── fmt helpers ───────────────────────────────────────────────
+const fmt = x => isFinite(x) ? x.toFixed(4) : '—';
+const fmtDelta = (d) => {
+  if (!isFinite(d)) return '';
+  const s = (d >= 0 ? '+' : '') + d.toFixed(4);
+  const cls = d > 1e-9 ? 'up' : d < -1e-9 ? 'down' : 'flat';
+  return `<span class="cell-delta ${cls}">${s}</span>`;
+};
+
+// ── verdicts ──────────────────────────────────────────────────
+function mkVerdict(cls, icon, title, detail) {
+  return `<div class="verdict ${cls}">
+    <div class="verdict-icon">${icon}</div>
+    <div class="verdict-body">
+      <div class="verdict-title">${title}</div>
+      <div class="verdict-detail">${detail}</div>
+    </div>
+  </div>`;
+}
+
+// ── trade classification ──────────────────────────────────────
+// Returns { isBilateral, isOneUnit, buyer, seller, participants }
+// bilateral = exactly one artist row changes, exactly two collector columns change
+// isOneUnit  = total units moved (sum of absolute column deltas / 2) equals 1
+// participants = set of collector indices whose holdings change
+function classifyTrade(X, Xp, colDelta) {
+  const I = X.length, J = X[0].length;
+
+  // Which artist rows changed?
+  const changedArtists = [];
+  for (let i = 0; i < I; i++) {
+    for (let j = 0; j < J; j++) {
+      if (Math.abs(Xp[i][j] - X[i][j]) > 1e-9) { changedArtists.push(i); break; }
+    }
+  }
+
+  // Which collector columns changed?
+  const participants = colDelta.map((d,j) => Math.abs(d) > 1e-9 ? j : -1).filter(j => j >= 0);
+  const buyers  = colDelta.map((d,j) => d >  1e-9 ? j : -1).filter(j => j >= 0);
+  const sellers = colDelta.map((d,j) => d < -1e-9 ? j : -1).filter(j => j >= 0);
+
+  const isBilateral = (changedArtists.length === 1) && (participants.length === 2);
+  // total volume = sum of positive column deltas (= sum of negative, by conservation)
+  const totalVolume = colDelta.reduce((s,d) => s + Math.max(0, d), 0);
+  const isOneUnit   = Math.abs(totalVolume - 1) < 1e-9;
+
+  const buyer  = isBilateral ? buyers[0]  : null;
+  const seller = isBilateral ? sellers[0] : null;
+
+  return { isBilateral, isOneUnit, buyer, seller, participants };
+}
+
+// ── main computation ──────────────────────────────────────────
+function runCheck() {
+  clearResults();
+  const errBox = document.getElementById('error-box');
+  errBox.style.display = 'none';
+
+  const alpha = parseFloat(document.getElementById('alpha').value);
+  const beta  = parseFloat(document.getElementById('beta').value);
+  const I = nI(), J = nJ();
+
+  const theta = readVec('θ', I);
+  const v     = readVec('v', J);
+  const X     = readMatrix('X',  I, J);
+  const Xp    = readMatrix('Xp', I, J);
+
+  // Conservation check: each artist's total supply must be unchanged
+  for (let i = 0; i < I; i++) {
+    const rowDelta = X[i].reduce((s,x,j) => s + Xp[i][j] - x, 0);
+    if (Math.abs(rowDelta) > 1e-9) {
+      showError(`Total holdings of artist ${i+1} change by ${rowDelta.toFixed(4)} between X and X′. Art cannot be created or destroyed — only redistributed.`);
+      return;
+    }
+  }
+
+  // Also check no negative holdings
+  for (let i = 0; i < I; i++)
+    for (let j = 0; j < J; j++)
+      if (Xp[i][j] < -1e-9) {
+        showError(`X′[${i+1}][${j+1}] = ${Xp[i][j].toFixed(4)} is negative. Holdings must be non-negative.`);
+        return;
+      }
+
+  const { buyers, sellers, colDelta } = inferTrade(X, Xp);
+
+  if (buyers.length === 0 && sellers.length === 0) {
+    showError('X and X′ are identical — no trade to evaluate.');
+    return;
+  }
+
+  const { isBilateral, isOneUnit, buyer, seller, participants } = classifyTrade(X, Xp, colDelta);
+
+  const check  = spectralOk(X,  alpha, beta);
+  const checkP = spectralOk(Xp, alpha, beta);
+
+  if (!check.ok) {
+    showError(`Resolvent condition αβ·ρ(XᵀX) < 1 is violated for X (product = ${check.product.toFixed(4)}). Reduce α, β, or the holdings.`);
+    return;
+  }
+  if (!checkP.ok) {
+    showError(`Resolvent condition is violated for X′ (product = ${checkP.product.toFixed(4)}). Adjust the proposed holdings.`);
+    return;
+  }
+
+  let res, resp;
+  try {
+    res  = compute(X,  theta, v, alpha, beta);
+    resp = compute(Xp, theta, v, alpha, beta);
+  } catch(e) {
+    showError('Matrix computation failed: ' + e.message + '. Check that the resolvent exists (reduce αβ or holdings).');
+    return;
+  }
+
+  const { R, q, Ajj, Aj } = res;
+  const { R: Rp, q: qp, Ajj: Ajjp, Aj: Ajp } = resp;
+
+  // ── Individual / coalitional rationality ──
+  // Bilateral: standard PB > PS (a mutually acceptable price exists)
+  // Multilateral: sum of ΔR across participants > 0 — gainers can compensate
+  //   losers within the coalition via prices (Coasean condition).
+  //   This differs from total reputation improvement, which also counts
+  //   bystander collectors outside the trade.
+  let irOk, irDetail;
+  let PB = null, PS = null;
+
+  if (isBilateral) {
+    PB = Rp[buyer]  - R[buyer];   // buyer's max WTP
+    PS = R[seller]  - Rp[seller]; // seller's min acceptable price
+    irOk = PB > PS;
+    if (irOk) {
+      irDetail = `P<sub>B</sub> = ${fmt(PB)} &gt; P<sub>S</sub> = ${fmt(PS)}. A mutually acceptable price exists in [${fmt(PS)}, ${fmt(PB)}].`;
+    } else {
+      irDetail = `P<sub>B</sub> = ${fmt(PB)} &lt; P<sub>S</sub> = ${fmt(PS)}. No mutually acceptable price exists; the trade will not occur.`;
+    }
+  } else {
+    // Coalitional rationality: net gain for the coalition is positive
+    const coalitionDelta = participants.reduce((s, j) => s + Rp[j] - R[j], 0);
+    irOk = coalitionDelta > 1e-9;
+    const breakdown = participants.map(j => `c${j+1}: ${fmt(Rp[j]-R[j])}`).join(', ');
+    if (irOk) {
+      const losers = participants.filter(j => Rp[j] - R[j] < -1e-9);
+      if (losers.length === 0) {
+        irDetail = `Coalition gain = ${fmt(coalitionDelta)}. All participants gain. ΔR by collector: ${breakdown}.`;
+      } else {
+        const loseStr = losers.map(j => `c${j+1}`).join(', ');
+        irDetail = `Coalition gain = ${fmt(coalitionDelta)} &gt; 0. Gainers can compensate ${loseStr} via prices. ΔR by collector: ${breakdown}.`;
+      }
+    } else {
+      irDetail = `Coalition gain = ${fmt(coalitionDelta)} ≤ 0. No price system can make all participants agree. ΔR by collector: ${breakdown}.`;
+    }
+  }
+
+  // ── Total reputation ──
+  const W  = R.reduce((s,x) => s+x, 0);
+  const Wp = Rp.reduce((s,x) => s+x, 0);
+  const repUp    = Wp > W;
+  const repDelta = Wp - W;
+
+  // ── Trade type label ──
+  let tradeLabel = isBilateral ? 'This is a bilateral trade' : 'This is a multilateral trade';
+  if (isBilateral && isOneUnit) tradeLabel += ', one unit traded';
+
+  // ── Show results ──
+  document.getElementById('results').style.display = 'block';
+
+  // Trade-type badge above the verdict row
+  document.getElementById('trade-type-label').textContent = tradeLabel + '.';
+
+  // IR verdict
+  const irLabel = isBilateral ? 'individually rational' : 'coalitionally rational';
+  document.getElementById('verdict-ir').innerHTML = irOk
+    ? mkVerdict('positive', '✓', `Trade is ${irLabel}`, irDetail)
+    : mkVerdict('negative', '✗', `Trade is not ${irLabel}`, irDetail);
+
+  // Total reputation verdict
+  let repHtml;
+  if (Math.abs(repDelta) < 1e-9) {
+    repHtml = mkVerdict('warning', '→', 'Trade leaves total reputation unchanged', `ΔR<sub>total</sub> ≈ 0.`);
+  } else if (repUp) {
+    repHtml = mkVerdict('positive', '↑', 'Trade improves total reputation',
+      `ΔR<sub>total</sub> = +${fmt(repDelta)}. The move from X to X′ raises aggregate collector reputation.`);
+  } else if (irOk) {
+    const externalityNote = isBilateral
+      ? 'The trade is individually rational but harms the rest of the network — a negative externality. This is the stability/efficiency wedge.'
+      : 'The coalition gains, but bystander collectors outside the trade lose more — a negative externality. This is the stability/efficiency wedge.';
+    repHtml = mkVerdict('negative', '↓', 'Trade reduces total reputation',
+      `ΔR<sub>total</sub> = ${fmt(repDelta)}. ${externalityNote}`);
+  } else {
+    repHtml = mkVerdict('negative', '↓', 'Trade reduces total reputation',
+      `ΔR<sub>total</sub> = ${fmt(repDelta)}. The move from X to X′ reduces aggregate collector reputation.`);
+  }
+  document.getElementById('verdict-welfare').innerHTML = repHtml;
+
+  // Price numbers: only meaningful for bilateral trades
+  const priceSection = document.getElementById('price-section');
+  if (isBilateral) {
+    priceSection.style.display = '';
+    document.getElementById('ps-val').textContent = fmt(PS);
+    document.getElementById('pb-val').textContent = fmt(PB);
+    const nashEl = document.getElementById('nash-val');
+    if (irOk) {
+      nashEl.innerHTML = `Nash midpoint ≈ <strong>${fmt((PB + PS) / 2)}</strong>`;
+    } else {
+      nashEl.textContent = '';
+    }
+  } else {
+    priceSection.style.display = 'none';
+  }
+
+  // Stat cards
+  const sg = document.getElementById('stat-grid');
+  sg.innerHTML = '';
+  const cards = [
+    { label: 'ΔR total', value: fmt(repDelta), delta: null },
+    { label: 'R total (before)', value: fmt(W),  delta: null },
+    { label: 'R total (after)',  value: fmt(Wp), delta: null },
+    ...(isBilateral ? [
+      { label: `P_B (buyer c${buyer+1} max WTP)`,    value: fmt(PB), delta: null },
+      { label: `P_S (seller c${seller+1} min accept)`, value: fmt(PS), delta: null },
+    ] : []),
+    ...q.map((qi, i) => ({ label: `q (artist ${i+1})`, value: fmt(qi), delta: qp[i] - qi })),
+  ];
+  cards.forEach(c => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    const dStr = c.delta !== null ? fmtDelta(c.delta) : '';
+    card.innerHTML = `<div class="label">${c.label}</div><div class="value">${c.value} ${dStr}</div>`;
+    sg.appendChild(card);
+  });
+
+  // Reputation table — star buyer/seller only for bilateral
+  const rt = document.getElementById('rep-table');
+  rt.innerHTML = `<tr><th>Collector</th><th>R (before)</th><th>R′ (after)</th><th>Δ</th><th>A<sub>jj</sub></th><th>A<sub>j</sub></th></tr>`;
+  for (let j = 0; j < J; j++) {
+    const d = Rp[j] - R[j];
+    let tag = '';
+    if (isBilateral) {
+      tag = j === buyer ? ' ★buyer' : j === seller ? ' ★seller' : '';
+    }
+    rt.innerHTML += `<tr>
+      <td>c${j+1}${tag}</td>
+      <td>${fmt(R[j])}</td><td>${fmt(Rp[j])}</td>
+      <td>${fmtDelta(d)}</td>
+      <td>${fmt(Ajj[j])}</td><td>${fmt(Aj[j])}</td>
+    </tr>`;
+  }
+
+  // Prestige table
+  const pt = document.getElementById('prestige-table');
+  pt.innerHTML = `<tr><th>Artist</th><th>q (before)</th><th>q′ (after)</th><th>Δ</th></tr>`;
+  for (let i = 0; i < I; i++) {
+    const d = qp[i] - q[i];
+    pt.innerHTML += `<tr>
+      <td>a${i+1}</td>
+      <td>${fmt(q[i])}</td><td>${fmt(qp[i])}</td>
+      <td>${fmtDelta(d)}</td>
+    </tr>`;
+  }
+
+  // Centrality table
+  const ct = document.getElementById('centrality-table');
+  ct.innerHTML = `<tr><th>Collector</th><th>A<sub>jj</sub> (before)</th><th>A<sub>jj</sub>′ (after)</th><th>Δ</th><th>A<sub>j</sub> (before)</th><th>A<sub>j</sub>′ (after)</th></tr>`;
+  for (let j = 0; j < J; j++) {
+    ct.innerHTML += `<tr>
+      <td>c${j+1}</td>
+      <td>${fmt(Ajj[j])}</td><td>${fmt(Ajjp[j])}</td><td>${fmtDelta(Ajjp[j]-Ajj[j])}</td>
+      <td>${fmt(Aj[j])}</td><td>${fmt(Ajp[j])}</td>
+    </tr>`;
+  }
+
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function showError(msg) {
+  const eb = document.getElementById('error-box');
+  eb.textContent = msg;
+  eb.style.display = 'block';
+}
+
+function clearResults() {
+  document.getElementById('results').style.display = 'none';
+  document.getElementById('error-box').style.display = 'none';
+  // reset section visibility for next run
+  document.getElementById('entry-summary').style.display = 'none';
+  document.getElementById('verdict-row').style.display   = '';
+  document.getElementById('price-section').style.display = '';
+  document.getElementById('trade-type-label').textContent = '';
+  document.getElementById('trade-results-sections').style.display = currentMode === 'entry' ? 'none' : '';
+}
+
+// ── mode toggle ───────────────────────────────────────────────
+let currentMode = 'trade';
+
+function setMode(mode) {
+  currentMode = mode;
+  document.getElementById('trade-panel').style.display  = mode === 'trade' ? '' : 'none';
+  document.getElementById('entry-panel').style.display  = mode === 'entry' ? '' : 'none';
+  document.getElementById('copy-btn').style.display     = mode === 'trade' ? '' : 'none';
+  document.getElementById('run-btn').textContent        = mode === 'trade' ? 'Check trade' : 'Check entry';
+  document.getElementById('mode-trade-btn').classList.toggle('mode-active', mode === 'trade');
+  document.getElementById('mode-entry-btn').classList.toggle('mode-active', mode === 'entry');
+  clearResults();
+}
+
+function runDispatch() {
+  if (currentMode === 'entry') runEntry();
+  else runCheck();
+}
+
+// ── entry computation ─────────────────────────────────────────
+function runEntry() {
+  clearResults();
+  document.getElementById('error-box').style.display = 'none';
+
+  const alpha   = parseFloat(document.getElementById('alpha').value);
+  const beta    = parseFloat(document.getElementById('beta').value);
+  const thetaNew = parseFloat(document.getElementById('theta-new').value);
+  const I = nI(), J = nJ();
+
+  const theta = readVec('θ', I);
+  const v     = readVec('v', J);
+  const X     = readMatrix('X', I, J);
+
+  const check = spectralOk(X, alpha, beta);
+  if (!check.ok) {
+    showError(`Resolvent condition αβ·ρ(XᵀX) < 1 violated for X (product = ${check.product.toFixed(4)}). Reduce α, β, or holdings.`);
+    return;
+  }
+
+  let base;
+  try { base = compute(X, theta, v, alpha, beta); }
+  catch(e) { showError('Baseline computation failed: ' + e.message); return; }
+
+  const { R, q, Ajj } = base;
+
+  // For each collector j, build X' = X with new row [0..1..0] (1 in col j)
+  // Using the paper's closed-form from Lemma 1:
+  //   ΔR_j = Ajj/(1 - αβ·Ajj) · α(1-β)·θ_new  +  αβ·Ajj/(1 - αβ·Ajj) · R_j
+  //   R'_j = R_j + ΔR_j
+  // q'_new = (1-β)·θ_new + β·R'_j
+  const results = Array.from({length: J}, (_, j) => {
+    const denom  = 1 - alpha * beta * Ajj[j];
+    if (denom <= 1e-9) return null; // resolvent would not exist
+    const dRj    = (Ajj[j] / denom) * alpha * (1 - beta) * thetaNew
+                 + (alpha * beta * Ajj[j] / denom) * R[j];
+    const Rpj    = R[j] + dRj;
+    const qNew   = (1 - beta) * thetaNew + beta * Rpj;
+    return { j, dRj, Rpj, qNew };
+  });
+
+  const valid = results.filter(r => r !== null);
+  if (valid.length === 0) {
+    showError('Resolvent does not exist for any candidate buyer. Reduce α, β, or holdings.');
+    return;
+  }
+
+  // Collector with max WTP = max ΔR_j
+  const bestWTP      = valid.reduce((a, b) => b.dRj > a.dRj ? b : a);
+  // Collector who gives highest reputation boost to artist = max R'_j
+  const bestPrestige = valid.reduce((a, b) => b.Rpj > a.Rpj ? b : a);
+
+  // ── show results ──
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('entry-summary').style.display = '';
+
+  // hide trade-specific sections
+  document.getElementById('verdict-row').style.display   = 'none';
+  document.getElementById('price-section').style.display = 'none';
+  document.getElementById('stat-grid').parentElement && (()=>{})();
+
+  const sameCollector = bestWTP.j === bestPrestige.j;
+
+  document.getElementById('entry-verdict-wtp').innerHTML = mkVerdict(
+    'positive', '★',
+    `c${bestWTP.j + 1} would pay the most`,
+    `ΔR = ${fmt(bestWTP.dRj)} — the largest reputation gain among all collectors, making this the highest willingness to pay.`
+  );
+
+  document.getElementById('entry-verdict-prestige').innerHTML = mkVerdict(
+    sameCollector ? 'positive' : 'warning',
+    sameCollector ? '★' : '◆',
+    `c${bestPrestige.j + 1} provides the highest reputation boost to the entering artist`,
+    `R′ = ${fmt(bestPrestige.Rpj)} — the artist's prestige after entry would be q′(I+1) = ${fmt(bestPrestige.qNew)}.`
+    + (sameCollector ? ' This is the same collector — no tension between price and placement.' :
+       ' This differs from the highest-WTP collector — the dealer faces a price vs. placement trade-off.')
+  );
+
+  // Entry table: one row per collector
+  const et = document.getElementById('entry-table');
+  et.innerHTML = `<tr>
+    <th>Collector</th>
+    <th>R (baseline)</th>
+    <th>R′ (if buyer)</th>
+    <th>ΔR (WTP)</th>
+    <th>A<sub>jj</sub></th>
+    <th>q′<sub>I+1</sub> (if buyer)</th>
+  </tr>`;
+  valid.forEach(({ j, dRj, Rpj, qNew }) => {
+    const isWTP  = j === bestWTP.j;
+    const isPres = j === bestPrestige.j;
+    const tag    = isWTP && isPres ? ' ★' : isWTP ? ' ★wtp' : isPres ? ' ◆prestige' : '';
+    et.innerHTML += `<tr>
+      <td>c${j+1}${tag}</td>
+      <td>${fmt(R[j])}</td>
+      <td>${fmt(Rpj)}</td>
+      <td>${fmtDelta(dRj)}</td>
+      <td>${fmt(Ajj[j])}</td>
+      <td>${fmt(qNew)}</td>
+    </tr>`;
+  });
+
+  // Baseline table
+  const bt = document.getElementById('entry-baseline-table');
+  bt.innerHTML = `<tr><th>Collector</th><th>R</th><th>A<sub>jj</sub></th><th>A<sub>j</sub></th></tr>`;
+  for (let j = 0; j < J; j++) {
+    bt.innerHTML += `<tr>
+      <td>c${j+1}</td><td>${fmt(R[j])}</td>
+      <td>${fmt(base.Ajj[j])}</td><td>${fmt(base.Aj[j])}</td>
+    </tr>`;
+  }
+
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── presets ───────────────────────────────────────────────────
+function loadPreset(name) {
+  // Paper Example 1 (law of one price failure):
+  // 3 artists, 4 collectors; α = β = 0.15
+  // θ = (1,2,2), v = (3,6,2,0.5)
+  // X = [[1,3,1,1],[3,1,0,0],[3,1,0,0]]
+  // Trade A: c1 sells artist 1 to c2  → X' differs only in col 1 & 2 of row 1
+  // Trade B: c3 sells artist 1 to c4  → X' differs only in col 3 & 4 of row 1
+  const ex1_I = 3, ex1_J = 4;
+  const ex1_alpha = 0.15, ex1_beta = 0.15;
+  const ex1_theta = [1, 2, 2];
+  const ex1_v     = [3, 6, 2, 0.5];
+  const ex1_X     = [[1,3,1,1],[3,1,0,0],[3,1,0,0]];
+
+  if (name === 'example1a') {
+    setMode('trade');
+    // c1 sells 1 unit of artist 1 to c2
+    document.getElementById('nArtists').value = ex1_I;
+    document.getElementById('nCollectors').value = ex1_J;
+    document.getElementById('alpha').value = ex1_alpha;
+    document.getElementById('beta').value = ex1_beta;
+    rebuildGrids();
+    writeVec('θ', ex1_I, ex1_theta);
+    writeVec('v', ex1_J, ex1_v);
+    writeMatrix('X',  ex1_I, ex1_J, ex1_X);
+    writeMatrix('Xp', ex1_I, ex1_J, [[0,4,1,1],[3,1,0,0],[3,1,0,0]]);
+
+  } else if (name === 'example1b') {
+    setMode('trade');
+    // c3 sells 1 unit of artist 1 to c4
+    document.getElementById('nArtists').value = ex1_I;
+    document.getElementById('nCollectors').value = ex1_J;
+    document.getElementById('alpha').value = ex1_alpha;
+    document.getElementById('beta').value = ex1_beta;
+    rebuildGrids();
+    writeVec('θ', ex1_I, ex1_theta);
+    writeVec('v', ex1_J, ex1_v);
+    writeMatrix('X',  ex1_I, ex1_J, ex1_X);
+    writeMatrix('Xp', ex1_I, ex1_J, [[1,3,0,2],[3,1,0,0],[3,1,0,0]]);
+
+  } else if (name === 'example2') {
+    setMode('trade');
+    // Paper Example 2 (hoarding stability):
+    // 1 artist, 2 collectors; α = β = 0.3, θ = (1), v = (1,1)
+    // X = (2,0)^T  →  X' = (1,1)^T
+    document.getElementById('nArtists').value = 1;
+    document.getElementById('nCollectors').value = 2;
+    document.getElementById('alpha').value = 0.3;
+    document.getElementById('beta').value = 0.3;
+    rebuildGrids();
+    writeVec('θ', 1, [1]);
+    writeVec('v', 2, [1, 1]);
+    writeMatrix('X',  1, 2, [[2, 0]]);
+    writeMatrix('Xp', 1, 2, [[1, 1]]);
+
+  } else if (name === 'example3') {
+    setMode('trade');
+    // Paper Example 3 (negative v, hoarding not individually rational):
+    // α = β = 0.3, θ = 1, v = (−2,−2)
+    // X = (1,1)^T  →  X' = (2,0)^T
+    document.getElementById('nArtists').value = 1;
+    document.getElementById('nCollectors').value = 2;
+    document.getElementById('alpha').value = 0.3;
+    document.getElementById('beta').value = 0.3;
+    rebuildGrids();
+    writeVec('θ', 1, [1]);
+    writeVec('v', 2, [-2, -2]);
+    writeMatrix('X',  1, 2, [[1, 1]]);
+    writeMatrix('Xp', 1, 2, [[2, 0]]);
+
+  } else if (name === 'example4') {
+    setMode('trade');
+    // Paper Example 4 (negative θ, hoarding not individually rational):
+    // α = β = 0.3, θ = −1, v = (1,1)
+    // X = (1,1)^T  →  X' = (2,0)^T
+    document.getElementById('nArtists').value = 1;
+    document.getElementById('nCollectors').value = 2;
+    document.getElementById('alpha').value = 0.3;
+    document.getElementById('beta').value = 0.3;
+    rebuildGrids();
+    writeVec('θ', 1, [-1]);
+    writeVec('v', 2, [1, 1]);
+    writeMatrix('X',  1, 2, [[1, 1]]);
+    writeMatrix('Xp', 1, 2, [[2, 0]]);
+
+  } else if (name === 'example5') {
+    setMode('trade');
+    // Paper Example 5 (IR but total-reputation-worsening trade):
+    // α = β = 0.3, I = 2, J = 3, θ = (1,1), v = (1.5,3,−2.3)
+    // X  = [[1,1,0],[0,1,2]]
+    // X' = [[0,1,1],[0,1,2]]  — artist 1 piece moves from c1 to c3
+    document.getElementById('nArtists').value = 2;
+    document.getElementById('nCollectors').value = 3;
+    document.getElementById('alpha').value = 0.3;
+    document.getElementById('beta').value = 0.3;
+    rebuildGrids();
+    writeVec('θ', 2, [1, 1]);
+    writeVec('v', 3, [1.5, 3, -2.3]);
+    writeMatrix('X',  2, 3, [[1,1,0],[0,1,2]]);
+    writeMatrix('Xp', 2, 3, [[0,1,1],[0,1,2]]);
+
+  } else if (name === 'example6') {
+    setMode('entry');
+    // Paper Example 6 (entry: WTP collector ≠ prestige-maximising collector):
+    // α = β = 0.2, I = 2, J = 3, θ = (1,1), v = (5, 0.5, 1)
+    // X = [[0,2,1],[0,2,1]], θ_new = 1
+    // c2 has highest ΔR (0.385); c1 gives highest R' (4.333) → dealer trade-off
+    document.getElementById('nArtists').value = 2;
+    document.getElementById('nCollectors').value = 3;
+    document.getElementById('alpha').value = 0.2;
+    document.getElementById('beta').value = 0.2;
+    rebuildGrids();
+    writeVec('θ', 2, [1, 1]);
+    writeVec('v', 3, [5, 0.5, 1]);
+    writeMatrix('X', 2, 3, [[0,2,1],[0,2,1]]);
+    document.getElementById('theta-new').value = 1;
+  }
+}
+
+// ── init ──────────────────────────────────────────────────────
+rebuildGrids();
+loadPreset('example1a');
+</script>
+</body>
+</html>
