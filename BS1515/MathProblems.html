@@ -65,6 +65,29 @@
 function rand(a,b){ return Math.floor(Math.random()*(b-a+1))+a }
 function random(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 
+// GCD (always returns a non-negative value)
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); return b===0?a:gcd(b,a%b); }
+
+// Render cx^n cleanly: omits coefficient 1, omits ^1
+function xpow(c,n){ const xs=n===1?'x':'x^{'+n+'}'; return c===1?xs:c+xs; }
+// Render (fracTeX string coef) * x^n, suppressing coef when it equals '1'
+function coefXpow(coef,n){ const xs=n===1?'x':'x^{'+n+'}'; return coef==='1'?xs:coef+xs; }
+// Render linear term cx or cy in LaTeX, suppressing coefficient 1
+function linx(c){ return c===1?'x':c+'x'; }
+function liny(c){ return c===1?'y':c+'y'; }
+
+// Render an integer fraction num/denom as LaTeX, fully reduced.
+// e.g. fracTeX(4,6) → '\frac{2}{3}', fracTeX(-3,6) → '-\frac{1}{2}', fracTeX(6,3) → '2'
+function fracTeX(num,denom){
+  if(denom < 0){ num=-num; denom=-denom; }
+  if(num===0) return '0';
+  const g = gcd(Math.abs(num), denom);
+  const n = num/g, d = denom/g;
+  if(d===1) return `${n}`;
+  const sign = n<0 ? '-' : '';
+  return `${sign}\\frac{${Math.abs(n)}}{${d}}`;
+}
+
 // =========================
 // LECTURE BANKS
 // =========================
@@ -72,6 +95,7 @@ function random(arr){ return arr[Math.floor(Math.random()*arr.length)] }
 const lectureBanks = {
 
 L1: [
+  /* Unit disk */
   () => ({
     q:`Prove that \\(A = \\{(x,y): x^2 + y^2 < 1\\}\\) is open.`,
     s:`<strong>Lecture 1 — Open sets</strong>
@@ -83,7 +107,43 @@ A = f^{-1}\\left((-\\infty,1)\\right)
 \\]
 
 Since \\((-\\infty,1)\\) is an open interval and \\(f\\) is continuous, the preimage \\(A\\) is open.`
-  })
+  }),
+
+  /* Half-plane */
+  () => {
+    let a = rand(1,4), b = rand(1,4), c = rand(5,20);
+    let ax = a===1?'x':`${a}x`, by = b===1?'y':`${b}y`;
+    return {
+      q:`Prove that \\(A = \\{(x,y): ${ax} + ${by} < ${c}\\}\\) is open.`,
+      s:`<strong>Lecture 1 — Open sets</strong>
+
+Let \\(f(x,y)=${ax}+${by}\\), which is continuous (a linear function).
+
+\\[
+A = f^{-1}\\left((-\\infty,${c})\\right)
+\\]
+
+Since \\((-\\infty,${c})\\) is an open interval and \\(f\\) is continuous, the preimage \\(A\\) is open.`
+    }
+  },
+
+  /* Ball of radius r */
+  () => {
+    let r = rand(2,6);
+    let r2 = r*r;
+    return {
+      q:`Prove that \\(B = \\{(x,y): x^2+y^2 < ${r2}\\}\\) is open.`,
+      s:`<strong>Lecture 1 — Open sets</strong>
+
+Let \\(f(x,y)=x^2+y^2\\), which is continuous.
+
+\\[
+B = f^{-1}\\left((-\\infty,${r2})\\right)
+\\]
+
+This is the open ball of radius \\(${r}\\) centred at the origin. Since \\((-\\infty,${r2})\\) is open and \\(f\\) is continuous, \\(B\\) is open.`
+    }
+  }
 ],
 
 L2: [
@@ -125,28 +185,103 @@ Evaluate each \\(2\\times2\\) minor:
     }
   },
 
-  /* Eigenvectors */
-  () => ({
-    q:`Find eigenvalues and eigenvectors of
+  /* Eigenvectors — randomised, non-symmetric */
+  () => {
+    // Build A = P diag(l1,l2) P^{-1} where P = [[2,1],[1,1]].
+    // This always gives eigenvectors (2,1) for l1 and (1,1) for l2 with integer matrix entries.
+    const pairs = [[3,1],[4,1],[4,2],[5,1],[5,2],[5,3],[6,2],[6,4],[7,3],[7,5]];
+    const [l1,l2] = random(pairs);
+    const diff = l1 - l2;
+    const a11 = 2*l1 - l2,  a12 = 2*(l2 - l1);
+    const a21 = l1 - l2,    a22 = 2*l2 - l1;
+    const tr = l1 + l2, det = l1 * l2;
+    return {
+      q:`Find the eigenvalues and eigenvectors of
 \\[
-A=\\begin{pmatrix}2&1\\\\1&2\\end{pmatrix}
+A=\\begin{pmatrix}${a11}&${a12}\\\\${a21}&${a22}\\end{pmatrix}
 \\]`,
+      s:`<strong>Lecture 2 — Eigenvalues and eigenvectors</strong>
 
-    s:`<strong>Lecture 2 — Eigenvalues and eigenvectors</strong>
+Characteristic equation (using \\(\\text{tr}(A)=${tr}\\), \\(\\det(A)=${det}\\)):
+
+\\[
+\\lambda^2 - ${tr}\\lambda + ${det} = (\\lambda-${l1})(\\lambda-${l2}) = 0
+\\implies \\lambda = ${l1},\\,${l2}
+\\]
+
+For \\(\\lambda=${l1}\\): \\((A-${l1}I)v=0\\) gives rows \\([${diff},\\,${-2*diff}]\\), so \\(v_1=2v_2\\). Eigenvector: \\((2,1)\\)
+
+For \\(\\lambda=${l2}\\): \\((A-${l2}I)v=0\\) gives rows \\([${2*diff},\\,${-2*diff}]\\), so \\(v_1=v_2\\). Eigenvector: \\((1,1)\\)`
+    }
+  },
+
+  /* Eigenvectors — symmetric matrix [[p,q],[q,p]]; eigenvalues p±q, eigenvectors (1,±1) */
+  () => {
+    let p = rand(3,7), q = rand(1, Math.min(p-1, 4));
+    let l1 = p+q, l2 = p-q;
+    return {
+      q:`Find the eigenvalues and eigenvectors of
+\\[
+A=\\begin{pmatrix}${p}&${q}\\\\${q}&${p}\\end{pmatrix}
+\\]`,
+      s:`<strong>Lecture 2 — Eigenvalues and eigenvectors (symmetric matrix)</strong>
 
 Characteristic equation:
 
 \\[
-\\det(A-\\lambda I) = (2-\\lambda)^2-1=0 \\implies \\lambda=1,\\,3
+\\det(A-\\lambda I)=(${p}-\\lambda)^2-${q*q}=(${p}-\\lambda-${q})(${p}-\\lambda+${q})=0
+\\implies \\lambda=${l1}\\text{ or }\\lambda=${l2}
 \\]
 
-For \\(\\lambda=3\\): \\((A-3I)v=0\\) gives \\(-v_1+v_2=0\\), so an eigenvector is \\((1,1)\\)
+For \\(\\lambda=${l1}\\): \\((A-${l1}I)v=0\\) gives row \\([${-q},\\;${q}]\\), i.e. \\(v_1=v_2\\). Eigenvector: \\((1,1)\\)
 
-For \\(\\lambda=1\\): \\((A-I)v=0\\) gives \\(v_1+v_2=0\\), so an eigenvector is \\((1,-1)\\)`
-  })
+For \\(\\lambda=${l2}\\): \\((A-${l2}I)v=0\\) gives row \\([${q},\\;${q}]\\), i.e. \\(v_1=-v_2\\). Eigenvector: \\((1,-1)\\)
+
+Since \\(A\\) is symmetric the eigenvectors must be orthogonal — verify: \\((1,1)\\cdot(1,-1)=0\\) ✓`
+    }
+  },
+
+  /* Matrix inverse — 2×2, students first check invertibility via det */
+  () => {
+    // Generate until det ≠ 0 (almost always first try with these ranges)
+    let a,b,c,d,det;
+    let attempts = 0;
+    do {
+      a=rand(1,4); b=rand(1,4); c=rand(1,4); d=rand(1,4);
+      det = a*d - b*c;
+      attempts++;
+    } while(det===0 && attempts<200);
+
+    // Inverse entries via the 2×2 formula: A^{-1} = (1/det)[[d,-b],[-c,a]]
+    const d11=fracTeX(d,det),  d12=fracTeX(-b,det);
+    const d21=fracTeX(-c,det), d22=fracTeX(a,det);
+
+    // Verification: (A A^{-1})_{11} = a*(d/det) + b*(-c/det) = (ad-bc)/det = 1  ✓ (shown symbolically)
+    return {
+      q:`Let \\(A=\\begin{pmatrix}${a}&${b}\\\\${c}&${d}\\end{pmatrix}\\). Check whether \\(A\\) is invertible, and if so find \\(A^{-1}\\).`,
+      s:`<strong>Lecture 2 — Matrix inverse</strong>
+
+Step 1 — Check invertibility:
+
+\\[
+\\det(A)=${a}\\cdot ${d}-${b}\\cdot ${c}=${det}
+\\]
+
+Since \\(\\det(A)=${det}\\neq 0\\), the matrix is invertible.
+
+Step 2 — Apply the \\(2\\times 2\\) inverse formula \\(A^{-1}=\\dfrac{1}{\\det A}\\begin{pmatrix}d&-b\\\\-c&a\\end{pmatrix}\\):
+
+\\[
+A^{-1}=\\frac{1}{${det}}\\begin{pmatrix}${d}&${-b}\\\\${-c}&${a}\\end{pmatrix}=\\begin{pmatrix}${d11}&${d12}\\\\${d21}&${d22}\\end{pmatrix}
+\\]
+
+Verify \\(A\\,A^{-1}=I_2\\): the \\((1,1)\\) entry is \\(\\dfrac{${a}\\cdot ${d}-${b}\\cdot ${c}}{${det}}=\\dfrac{${a*d-b*c}}{${det}}=1\\) ✓`
+    }
+  }
 ],
 
 L3: [
+  /* Critical points of ln x - kx */
   () => {
     let k = rand(2,5);
     return {
@@ -161,6 +296,7 @@ f'(x)=\\frac{1}{x}-${k}=0 \\implies x=\\frac{1}{${k}}
     }
   },
 
+  /* Chain rule — sqrt */
   () => ({
     q:`Differentiate \\(f(x)=\\sqrt{x^2+1}\\)`,
     s:`<strong>Lecture 3 — Differentiation (chain rule)</strong>
@@ -170,17 +306,144 @@ Write \\(f(x)=(x^2+1)^{1/2}\\) and apply the chain rule:
 \\[
 f'(x)=\\frac{1}{2}(x^2+1)^{-1/2}\\cdot 2x = \\frac{x}{\\sqrt{x^2+1}}
 \\]`
-  })
+  }),
+
+  /* Product rule — x^n e^{kx} */
+  () => {
+    let n = rand(2,5), k = rand(2,6), nm1 = n-1;
+    return {
+      q:`Differentiate \\(f(x)=x^{${n}}e^{${k}x}\\)`,
+      s:`<strong>Lecture 3 — Differentiation (product rule)</strong>
+
+Let \\(u=x^{${n}}\\) and \\(v=e^{${k}x}\\), so \\(u'=${n}${xpow(1,nm1)}\\) and \\(v'=${k}e^{${k}x}\\).
+
+\\[
+f'(x)=u'v+uv'=${n}${xpow(1,nm1)}e^{${k}x}+${k}x^{${n}}e^{${k}x}
+\\]
+
+Factor out \\(${xpow(1,nm1)}e^{${k}x}\\):
+
+\\[
+f'(x)=${xpow(1,nm1)}e^{${k}x}\\left(${n}+${k}x\\right)
+\\]`
+    }
+  },
+
+  /* Quotient rule — (ax+b)/(cx+d) */
+  () => {
+    let a=rand(1,5), b=rand(1,8), c=rand(1,5), d=rand(1,8);
+    let top = a*d - b*c;
+    let aStr = a===1 ? '' : `${a}`, cStr = c===1 ? '' : `${c}`;
+    return {
+      q:`Differentiate \\(f(x)=\\dfrac{${aStr}x+${b}}{${cStr}x+${d}}\\)`,
+      s:`<strong>Lecture 3 — Differentiation (quotient rule)</strong>
+
+Let \\(u=${aStr}x+${b}\\) and \\(v=${cStr}x+${d}\\), so \\(u'=${a}\\) and \\(v'=${c}\\).
+
+\\[
+f'(x)=\\frac{u'v-uv'}{v^2}=\\frac{${a}(${cStr}x+${d})-${c}(${aStr}x+${b})}{(${cStr}x+${d})^2}
+\\]
+
+The \\(x\\) terms cancel in the numerator:
+
+\\[
+f'(x)=\\frac{${a*d}-${b*c}}{(${cStr}x+${d})^2}=\\frac{${top}}{(${cStr}x+${d})^2}
+\\]`
+    }
+  },
+
+  /* Integral — indefinite, linear combination of two power terms */
+  () => {
+    let a=rand(1,5), n=rand(3,5), b=rand(1,6), m=rand(1,2);  // n≥3, m≤2 ensures n≠m
+    let n1=n+1, m1=m+1;
+    let coefN = fracTeX(a,n1);
+    let coefM = fracTeX(b,m1);
+    let midA = a===1 ? `\\frac{x^{${n1}}}{${n1}}` : `${a}\\cdot\\frac{x^{${n1}}}{${n1}}`;
+    let midB = b===1 ? `\\frac{x^{${m1}}}{${m1}}` : `${b}\\cdot\\frac{x^{${m1}}}{${m1}}`;
+    return {
+      q:`Find \\(\\displaystyle\\int\\!\\left(${xpow(a,n)}+${xpow(b,m)}\\right)dx\\)`,
+      s:`<strong>Lecture 3 — Integration (power rule, indefinite)</strong>
+
+Apply \\(\\int x^k\\,dx=\\dfrac{x^{k+1}}{k+1}+C\\) term by term:
+
+\\[
+\\int\\!\\left(${xpow(a,n)}+${xpow(b,m)}\\right)dx
+= ${midA}+${midB}+C
+= ${coefXpow(coefN,n1)}+${coefXpow(coefM,m1)}+C
+\\]`
+    }
+  },
+
+  /* Integral — definite, power rule with explicit numerical answer */
+  () => {
+    let n=rand(2,4), lo=rand(0,2), hi=rand(lo+1,4);
+    let n1=n+1;
+    let Fhi=Math.pow(hi,n1), Flo=Math.pow(lo,n1);
+    let numResult=Fhi-Flo;
+    let resultTeX=fracTeX(numResult,n1);
+    let loTermTeX = lo===0 ? '0' : `\\frac{${Flo}}{${n1}}`;
+    return {
+      q:`Evaluate \\(\\displaystyle\\int_{${lo}}^{${hi}}x^{${n}}\\,dx\\)`,
+      s:`<strong>Lecture 3 — Integration (power rule, definite)</strong>
+
+Use the fundamental theorem \\(\\int_a^b f(x)\\,dx=F(b)-F(a)\\) where \\(F(x)=\\dfrac{x^{${n1}}}{${n1}}\\):
+
+\\[
+\\int_{${lo}}^{${hi}}x^{${n}}\\,dx=\\left[\\frac{x^{${n1}}}{${n1}}\\right]_{${lo}}^{${hi}}=\\frac{${hi}^{${n1}}}{${n1}}-${loTermTeX}=\\frac{${Fhi}}{${n1}}-\\frac{${Flo}}{${n1}}=${resultTeX}
+\\]`
+    }
+  },
+
+  /* Integral — e^x and 1/x (indefinite), mirrors the two special rules in the lecture */
+  () => {
+    // Choose randomly between e^x type and 1/x type
+    if(Math.random()<0.5){
+      // ∫(a·e^x + b·x^n) dx
+      let a=rand(1,4), b=rand(1,4), n=rand(1,3), n1=n+1;
+      let aStr=a===1?'':''+a, coefB=fracTeX(b,n1);
+      let exStr=`${aStr}e^x`, bxnStr=xpow(b,n);
+      let midB = b===1 ? `\\frac{x^{${n1}}}{${n1}}` : `${b}\\cdot\\frac{x^{${n1}}}{${n1}}`;
+      return {
+        q:`Find \\(\\displaystyle\\int\\!\\left(${exStr}+${bxnStr}\\right)dx\\)`,
+        s:`<strong>Lecture 3 — Integration (exponential + power)</strong>
+
+Using \\(\\int e^x\\,dx=e^x+C\\) and the power rule:
+
+\\[
+\\int\\!\\left(${exStr}+${bxnStr}\\right)dx=${exStr}+${midB}+C=${exStr}+${coefXpow(coefB,n1)}+C
+\\]`
+      };
+    } else {
+      // ∫(a/x + b·x^n) dx
+      let a=rand(1,4), b=rand(1,4), n=rand(1,3), n1=n+1;
+      let coefB=fracTeX(b,n1);
+      let recStr=a===1?`\\frac{1}{x}`:`\\frac{${a}}{x}`;
+      let alnStr=a===1?`\\ln x`:`${a}\\ln x`;
+      let bxnStr=xpow(b,n);
+      let midB = b===1 ? `\\frac{x^{${n1}}}{${n1}}` : `${b}\\cdot\\frac{x^{${n1}}}{${n1}}`;
+      return {
+        q:`Find \\(\\displaystyle\\int\\!\\left(${recStr}+${bxnStr}\\right)dx\\) for \\(x>0\\)`,
+        s:`<strong>Lecture 3 — Integration (reciprocal + power)</strong>
+
+Using \\(\\int\\frac{1}{x}\\,dx=\\ln x+C\\) (for \\(x>0\\)) and the power rule:
+
+\\[
+\\int\\!\\left(${recStr}+${bxnStr}\\right)dx=${alnStr}+${midB}+C=${alnStr}+${coefXpow(coefB,n1)}+C
+\\]`
+      };
+    }
+  }
 ],
 
 L4: [
+  /* Quadratic form — single critical point at origin */
   () => {
     let k = rand(3,6), m = rand(6,10);
     let detH = 4*m - k*k;
     let conclusion = detH > 0
-      ? `Since \\(\\det H = ${detH}>0\\) and \\(f_{xx}=2>0\\), the point \\((0,0)\\) is a minimum.`
+      ? `Since \\(\\det H = ${detH}>0\\) and \\(f_{xx}=2>0\\), the point \\((0,0)\\) is a <strong>minimum</strong>.`
       : (detH < 0
-        ? `Since \\(\\det H = ${detH}<0\\), the point \\((0,0)\\) is a saddle point.`
+        ? `Since \\(\\det H = ${detH}<0\\), the point \\((0,0)\\) is a <strong>saddle point</strong>.`
         : `Since \\(\\det H = 0\\), the second-derivative test is inconclusive here.`);
 
     return {
@@ -205,6 +468,46 @@ H=\\begin{pmatrix}2 & -${k}\\\\ -${k} & ${2*m}\\end{pmatrix}
 
 ${conclusion}`
     }
+  },
+
+  /* Cubic — two critical points: saddle at origin, minimum at (a,a) */
+  () => {
+    let a = rand(2,5);
+    let coeff = 3*a;
+    let detAt0  = -(9*a*a);
+    let detAtAA =  27*a*a;
+    return {
+      q:`Find and classify all critical points of
+\\[
+f(x,y)=x^3+y^3-${coeff}xy
+\\]`,
+      s:`<strong>Lecture 4 — Critical points in two variables</strong>
+
+FOC:
+
+\\[
+f_x=3x^2-${coeff}y=0 \\implies y=\\frac{x^2}{${a}} \\quad (*)
+\\]
+\\[
+f_y=3y^2-${coeff}x=0 \\quad (**)
+\\]
+
+Substitute \\((*)\\) into \\((**)\\):
+
+\\[
+3\\!\\left(\\frac{x^2}{${a}}\\right)^{\\!2}-${coeff}x=0
+\\implies x^4-${a*a*a}x=0
+\\implies x(x^3-${a*a*a})=0
+\\]
+
+So \\(x=0\\) or \\(x=${a}\\), giving two critical points: \\((0,0)\\) and \\((${a},${a})\\).
+
+Hessian: \\(H=\\begin{pmatrix}6x & -${coeff}\\\\ -${coeff} & 6y\\end{pmatrix}\\)
+
+At \\((0,0)\\): \\(\\det H = ${detAt0} < 0\\) → <strong>saddle point</strong>
+
+At \\((${a},${a})\\): \\(\\det H = ${detAtAA} > 0\\) and \\(f_{xx}=${6*a}>0\\) → <strong>local minimum</strong>`
+    }
   }
 ],
 
@@ -213,9 +516,10 @@ L5: [
   /* log */
   () => {
     let a=rand(1,5), b=rand(1,5), c=rand(1,5), d=rand(1,5), m=rand(20,100);
+    let alnx=a===1?'\\ln x':`${a}\\ln x`, blny=b===1?'\\ln y':`${b}\\ln y`;
 
     return {
-      q:`Maximise \\(${a}\\ln x + ${b}\\ln y\\) subject to \\(${c}x+${d}y=${m}\\).`,
+      q:`Maximise \\(${alnx} + ${blny}\\) subject to \\(${linx(c)}+${liny(d)}=${m}\\).`,
 
       s:`<strong>Lecture 5 — Lagrange multipliers</strong>
 
@@ -247,8 +551,8 @@ x^*=\\frac{${a}\\cdot ${m}}{${c}(${a}+${b})}, \\qquad y^*=\\frac{${b}\\cdot ${m}
     return {
       q:`Solve
 \\[
-\\min ${a}x^2 + ${b}y^2
-\\quad \\text{s.t. } ${c}x+${d}y=${m}
+\\min ${xpow(a,2)} + ${xpow(b,2).replace(/x/g,'y')}
+\\quad \\text{s.t. } ${linx(c)}+${liny(d)}=${m}
 \\]`,
 
       s:`<strong>Lecture 5 — Lagrange multipliers</strong>
@@ -280,7 +584,7 @@ x^*=\\frac{${b}\\cdot ${c}\\cdot ${m}}{${denom}}, \\qquad y^*=\\frac{${a}\\cdot 
     let bbc = b*b*c;
 
     return {
-      q:`Maximise \\(${a}\\sqrt{x} + ${b}\\sqrt{y}\\) subject to \\(${c}x+${d}y=${m}\\).`,
+      q:`Maximise \\(${a===1?'':''+a}\\sqrt{x} + ${b===1?'':''+b}\\sqrt{y}\\) subject to \\(${linx(c)}+${liny(d)}=${m}\\).`,
 
       s:`<strong>Lecture 5 — Lagrange multipliers</strong>
 
