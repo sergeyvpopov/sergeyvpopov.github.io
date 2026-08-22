@@ -83,7 +83,7 @@ cat(sprintf("G^1_3,1 = %.6f  (paper: strictly negative)\n", G1_31))
 cat(sprintf("G^2_3,1 = %.6f  (paper: strictly negative)\n\n", G2_31))
 
 # ---------------------------------------------------------------- outer/inner grid
-n_outer <- 41      # 60 intervals -> X[1,1]=X[2,1]=1 lands EXACTLY on a grid node
+n_outer <- 41      # 40 intervals -> X[1,1]=X[2,1]=1 lands EXACTLY on a grid node
 n_inner <- 21
 
 a1_vals <- seq(0, 2, length.out = n_outer)   # X[1,1] values (plotted, x-axis)
@@ -163,7 +163,7 @@ filled.contour(
   ylab = expression(X[21] ~ "  (artist 2, collector 1)"),
   plot.axes = {
     axis(1); axis(2)
-    contour(a1_vals, b1_vals, t(Phi_s),
+    contour(a1_vals, b1_vals, Phi_s,
             levels = c(1e-5,1e-4,1e-3,3e-3,1e-2,3e-2,6e-2,1e-1),
             add = TRUE, col = "white", labcex = 0.6, method = "edge")
     points(1, 1, pch = 8, col = "red", cex = 2.2, lwd = 2)
