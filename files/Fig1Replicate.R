@@ -83,7 +83,7 @@ cat(sprintf("G^1_3,1 = %.6f  (paper: strictly negative)\n", G1_31))
 cat(sprintf("G^2_3,1 = %.6f  (paper: strictly negative)\n\n", G2_31))
 
 # ---------------------------------------------------------------- outer/inner grid
-n_outer <- 61      # 60 intervals -> X[1,1]=X[2,1]=1 lands EXACTLY on a grid node
+n_outer <- 41      # 60 intervals -> X[1,1]=X[2,1]=1 lands EXACTLY on a grid node
 n_inner <- 21
 
 a1_vals <- seq(0, 2, length.out = n_outer)   # X[1,1] values (plotted, x-axis)
