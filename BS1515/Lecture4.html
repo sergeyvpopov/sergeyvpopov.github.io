@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Sergey V. Popov" />
-  <meta name="date" content="2026-09-19" />
+  <meta name="date" content="2026-09-21" />
   <title>BS 1515 Lecture 4: Optimization</title>
   <style type="text/css">
 code{white-space: pre-wrap;}
@@ -399,12 +399,12 @@ list-style-type: none;
   <p class="author">
 Sergey V. Popov
   </p>
-  <p class="date">2026-09-19</p>
+  <p class="date">2026-09-21</p>
 </div>
 <div id="last-time" class="slide section level2">
 <h1>Last time</h1>
 <ul>
-<li><p>Derivatives: a change in the value of the function</p></li>
+<li><p>Derivatives: the rate of change of a function</p></li>
 <li><p>Integrals: a sum of function values</p></li>
 </ul>
 <p>Today: optimization</p>
@@ -418,14 +418,14 @@ people can make</p></li>
 </div>
 <div id="optimization-theorems" class="slide section level2">
 <h1>Optimization theorems</h1>
-<p>Weierstrass Theorem: for every continuous function <span class="math inline">\(f(x)\)</span> on an interval <span class="math inline">\([a,b]\)</span> there is a <span class="math inline">\(c,d\in [a,b]\)</span> such that <span class="math inline">\(f(c)\leq f(x) \leq f(d)\)</span> for all <span class="math inline">\(x\in[a,b]\)</span>.</p>
-<p>So what do we do now? Imagine we have an interior solution! How does
+<p>Weierstrass Theorem: for every continuous function <span class="math inline">\(f(x)\)</span> on an interval <span class="math inline">\([a,b]\)</span> there exist <span class="math inline">\(c,d\in [a,b]\)</span> such that <span class="math inline">\(f(c)\leq f(x) \leq f(d)\)</span> for all <span class="math inline">\(x\in[a,b]\)</span>.</p>
+<p>So what do we do now? Imagine we have an interior solution! What does
 it look like?</p>
 <p>If <span class="math inline">\(f&#39;(x)&gt;0\)</span>, function is
-higher a bit to the left - we should not be able to do this if we are at
-the maximum.</p>
+higher a bit to the right - we should not be able to do this if we are
+at the maximum.</p>
 <p>If <span class="math inline">\(f&#39;(x)&lt;0\)</span>, function is a
-bit higher to the right - we should not be able to do this if we are at
+bit higher to the left - we should not be able to do this if we are at
 the maximum.</p>
 <p>Only if <span class="math inline">\(f&#39;(x)=0\)</span>, <span class="math inline">\(x\)</span> can be a maximum.</p>
 <p>Prove: Only if <span class="math inline">\(f&#39;(x)=0\)</span>,
@@ -435,7 +435,7 @@ the maximum.</p>
 <h1>Example</h1>
 <p>Consider <span class="math inline">\(f(x)=x^2-5x+6\)</span>. Where is
 its maximum?</p>
-<p><span class="math inline">\(f&#39;(x)=2x-5=0\)</span> so is <span class="math inline">\(x=5/2\)</span> a maximum? No! Value at <span class="math inline">\(x=5/2\)</span> is <span class="math inline">\(25/4-25/2+6=-12.5+6=-6.5\)</span>, but value at
+<p><span class="math inline">\(f&#39;(x)=2x-5=0\)</span> so is <span class="math inline">\(x=5/2\)</span> a maximum? No! Value at <span class="math inline">\(x=5/2\)</span> is <span class="math inline">\(25/4-25/2+6=-6.25+6=-0.25\)</span>, but value at
 <span class="math inline">\(x=10\)</span> is <span class="math inline">\(100-50+6=56\)</span> so there is no maximum.</p>
 <p>What happens to <span class="math inline">\(f&#39;(x)\)</span> at
 <span class="math inline">\(x=5/2\)</span>?</p>
@@ -445,13 +445,12 @@ you move left - you have a <em>minimum</em>!</p>
 </div>
 <div id="solving-quadratic-equations" class="slide section level2">
 <h1>Solving Quadratic Equations</h1>
-<p>Take an equation <span class="math inline">\(f(x)=x^2+bx+c\)</span>.
-We want to find where are its roots: <span class="math inline">\(f(x)=0\)</span>.</p>
+<p>Take a function <span class="math inline">\(f(x)=x^2+bx+c\)</span>.
+We want to find where its roots are: <span class="math inline">\(f(x)=0\)</span>.</p>
 <ul>
 <li>Find a minimum: <span class="math inline">\(x^*=-b/2\)</span>. If
 <span class="math inline">\(f(x^*)=b^2/4-b^2/2+c=c-b^2/4&gt;0\)</span>,
-the whole graph is positive <span class="math inline">\(=&gt;\)</span>
-no solution.</li>
+the whole graph is positive <span class="math inline">\(\Rightarrow\)</span> no real roots.</li>
 <li>If <span class="math inline">\(c=b^2/4\)</span>, we have one
 solution and we’re done!</li>
 <li>If <span class="math inline">\(c&lt;b^2/4\)</span>, we have two
@@ -470,11 +469,14 @@ x_2=\frac{-b-\sqrt{b^2-4ac}}{2a}.\]</span></p>
 <p>Consider <span class="math inline">\(f(x)=x^3\)</span>. Observe that
 <span class="math inline">\(f&#39;(0)=0\)</span>. Is that a maximum? A
 minimum?</p>
-<p>It’s an <em>inflection</em> point. Notice that <span class="math inline">\(f&#39;&#39;(0)&gt;0\)</span> would mean it’s a
-minimum and <span class="math inline">\(f&#39;&#39;(0)&lt;0\)</span>
-would mean it’s a maximum. But here <span class="math inline">\(f&#39;&#39;(x)=0\)</span> which means need to
-investigate further, and <span class="math inline">\(f&#39;&#39;&#39;(0)=6\not =0\)</span> means it is
-going to be an increasing function.</p>
+<p>It’s an <em>inflection</em> point: the function switches from concave
+to convex there. If <span class="math inline">\(f&#39;(0)=0\)</span>,
+then <span class="math inline">\(f&#39;&#39;(0)&gt;0\)</span> would mean
+a minimum and <span class="math inline">\(f&#39;&#39;(0)&lt;0\)</span> a
+maximum. But here <span class="math inline">\(f&#39;&#39;(x)=6x\)</span>, so <span class="math inline">\(f&#39;&#39;(0)=0\)</span> and we need to look
+further. The first non-zero derivative at 0 is <span class="math inline">\(f&#39;&#39;&#39;(0)=6\)</span>; because its order
+is odd, <span class="math inline">\(x=0\)</span> is neither a maximum
+nor a minimum.</p>
 </div>
 <div id="constraints" class="slide section level2">
 <h1>Constraints</h1>
@@ -483,28 +485,36 @@ maximum on <span class="math inline">\((-\infty,+\infty)\)</span>?
 No.</p>
 <p>Is there a maximum on <span class="math inline">\([-2,5]\)</span>?
 Yes by Weierstrass theorem, and since it can’t be a maximum
-<em>inside</em> the interval (why not?), it must be a maximum on the
-border. <span class="math inline">\(f(-2)=-8, f(5)=125\)</span>, so the
-maximum is at <span class="math inline">\(x=5\)</span>.</p>
+<em>inside</em> the interval (why not?), it must be a maximum at an
+endpoint. <span class="math inline">\(f(-2)=-8, f(5)=125\)</span>, so
+the maximum is at <span class="math inline">\(x=5\)</span>.</p>
 <p>Is there a maximum on <span class="math inline">\((-2,5)\)</span>?..</p>
 </div>
 <div id="convex-analysis" class="slide section level2">
 <h1>Convex Analysis</h1>
-<p>Note that knowing the second derivative helps knowing maxima and
-minima. A function that has <span class="math inline">\(f&#39;&#39;(x)&lt;0\)</span> everywhere will have
-at most one internal maximum, and no internal minima - we call those
-<em>concave</em>. A function that has <span class="math inline">\(f&#39;&#39;(x)&gt;0\)</span> has at most one
-internal minimum and no maxima - we call those <em>convex</em>.</p>
+<p>Knowing the second derivative helps identify maxima and minima. A
+function with <span class="math inline">\(f&#39;&#39;(x)&lt;0\)</span>
+everywhere is (strictly) <em>concave</em>: it has at most one interior
+maximum and no interior minima. A function with <span class="math inline">\(f&#39;&#39;(x)&gt;0\)</span> everywhere is
+(strictly) <em>convex</em>: at most one interior minimum and no interior
+maxima.</p>
+<p>The general definition: <span class="math inline">\(f\)</span> is
+convex if <span class="math inline">\(f\)</span>’s supergraph is convex;
+e.g. <span class="math inline">\(x^4\)</span> is convex even though
+<span class="math inline">\(f&#39;&#39;(0)=0\)</span>, and concave if
+it’s subgraph is convex.</p>
 <p>Prove: Sum of two convex functions is convex.</p>
-<p>Prove: The minimum of the sum of two convex functions is between the
-minima of summands.</p>
+<p>Prove: For two convex functions of one variable, the point that
+minimizes their sum lies between the points that minimize each of
+them.</p>
 <p>Prove: Sum of two concave functions is concave.</p>
-<p>Prove: The maximum of the sum of two concave functions is between the
-maxima of summands.</p>
+<p>Prove: For two concave functions of one variable, the point that
+maximizes their sum lies between the points that maximize each of
+them.</p>
 </div>
 <div id="multidimensional-optimization" class="slide section level2">
 <h1>Multidimensional optimization</h1>
-<p>Weierstrass Theorem: for every continuous function <span class="math inline">\(f(x)\)</span> on a compact set <span class="math inline">\(S\)</span> there is a <span class="math inline">\(c,d\in S\)</span> such that <span class="math inline">\(f(c)\leq f(x) \leq f(d)\)</span> for all <span class="math inline">\(x\in S\)</span>.</p>
+<p>Weierstrass Theorem: for every continuous function <span class="math inline">\(f(x)\)</span> on a compact set <span class="math inline">\(S\)</span> there exist <span class="math inline">\(c,d\in S\)</span> such that <span class="math inline">\(f(c)\leq f(x) \leq f(d)\)</span> for all <span class="math inline">\(x\in S\)</span>.</p>
 <p>Does not have to be one-dimensional!</p>
 <p><em>Compact</em> set: in finite dimensions, closed and bounded. On
 compact sets, every sequence has a convergent subsequence.</p>
@@ -524,7 +534,7 @@ f&#39;_y(x^*,y^*)=0.\]</span></p>
 </div>
 <div id="is-that-a-maximum" class="slide section level2">
 <h1>Is that a maximum?</h1>
-<p>Would need to check second derivative, but now we have
+<p>Would need to check second derivative, but now we have <em>three</em>
 derivatives:</p>
 <ul>
 <li><span class="math inline">\(f&#39;&#39;_{xx}(x,y)&gt;0\)</span>:
@@ -536,7 +546,7 @@ of <span class="math inline">\(f\)</span> to an increase of <span class="math in
 <li><span class="math inline">\(f&#39;&#39;_{xy}(x,y)=f&#39;&#39;_{yx}(x,y)\)</span>
 cross-derivative: when you increase <span class="math inline">\(x\)</span>, the response of <span class="math inline">\(f\)</span> to an increase of <span class="math inline">\(y\)</span> becomes higher - and vice versa!</li>
 </ul>
-<p>We’ll def need <span class="math inline">\(f&#39;&#39;_{xx}&lt;0\)</span> and <span class="math inline">\(f&#39;&#39;_{yy}&lt;0\)</span> for the
+<p>We definitely need <span class="math inline">\(f&#39;&#39;_{xx}&lt;0\)</span> and <span class="math inline">\(f&#39;&#39;_{yy}&lt;0\)</span> for the
 one-dimension argument…</p>
 </div>
 <div id="example-1" class="slide section level2">
@@ -546,9 +556,9 @@ y\)</span>.</p>
 <p><span class="math inline">\((x,y)=(0,0)\)</span> solves first-order
 conditions. Is that a maximum?</p>
 <ul>
-<li><span class="math inline">\(f&#39;&#39;_{xx}(0,0)=-1&lt;0\)</span>:
+<li><span class="math inline">\(f&#39;&#39;_{xx}(0,0)=-2&lt;0\)</span>:
 so concave in <span class="math inline">\(x\)</span>;</li>
-<li><span class="math inline">\(f&#39;&#39;_{yy}(0,0)=-1&lt;0\)</span>:
+<li><span class="math inline">\(f&#39;&#39;_{yy}(0,0)=-2&lt;0\)</span>:
 so concave in <span class="math inline">\(y\)</span>;</li>
 <li>so should be a maximum, no?</li>
 </ul>
@@ -558,14 +568,14 @@ so concave in <span class="math inline">\(y\)</span>;</li>
 for all <span class="math inline">\(t\not =0\)</span>! So if you take a
 path of <span class="math inline">\((x(t),y(t))=(t,t)\)</span>, the
 function is convex along this path.</p>
-<p>To establish convexity, we need a way of checking whether
+<p>To establish concavity, we need a way of checking whether
 cross-derivatives dominate the own second derivatives…</p>
 </div>
 <div id="one-way" class="slide section level2">
 <h1>One way</h1>
-<p>Let’s take a direction <span class="math inline">\((\alpha,\beta)\)</span>, and look what happens to
-<span class="math display">\[f(x^*+\alpha t,y^*+\beta t) \text{ around
-$t=0$.}\]</span></p>
+<p>Let’s take a direction <span class="math inline">\((\alpha,\beta)\not=(0,0)\)</span>, and look what
+happens to <span class="math display">\[f(x^*+\alpha t,y^*+\beta t)
+\text{ around $t=0$.}\]</span></p>
 <p>Take derivative with respect to <span class="math inline">\(t\)</span>: <span class="math inline">\(\alpha
 f&#39;_x(x^*,y^*)+\beta f&#39;_y(x^*,y^*)=0\)</span></p>
 <p>Works for all <span class="math inline">\(\alpha\)</span> and <span class="math inline">\(\beta\)</span> when necessary conditions hold.
@@ -575,12 +585,17 @@ Take second derivative:</p>
 f&#39;&#39;_{yy}(x^*,y^*)&lt;0\)</span></p>
 <p>Does this work for all <span class="math inline">\(\alpha\)</span>
 and <span class="math inline">\(\beta\)</span>?</p>
-<p>Observe that when <span class="math inline">\(f&#39;&#39;_{xy}=\sqrt{f&#39;&#39;_{xx}(x^*,y^*)
-f&#39;&#39;_{yy}(x^*,y^*)}\)</span>, this is equal to <span class="math display">\[(\alpha \sqrt{f&#39;&#39;_{xx}}+\beta
-\sqrt{f&#39;&#39;_{yy}})^2\geq 0 \forall (\alpha,\beta).\]</span></p>
-<p>Also when <span class="math inline">\(f&#39;&#39;_{xy}=-\sqrt{f&#39;&#39;_{xx}(x^*,y^*)
-f&#39;&#39;_{yy}(x^*,y^*)}\)</span>, this is equal to <span class="math display">\[(\alpha \sqrt{f&#39;&#39;_{xx}}-\beta
-\sqrt{f&#39;&#39;_{yy}})^2\geq 0 \forall (\alpha,\beta).\]</span></p>
+<p>Observe that when <span class="math inline">\(f&#39;&#39;_{xy}=\sqrt{f&#39;&#39;_{xx}
+f&#39;&#39;_{yy}}\)</span> (with both <span class="math inline">\(f&#39;&#39;_{xx},f&#39;&#39;_{yy}&lt;0\)</span>),
+this is equal to <span class="math display">\[-\left(\alpha
+\sqrt{-f&#39;&#39;_{xx}}-\beta \sqrt{-f&#39;&#39;_{yy}}\right)^2\leq 0
+\quad \forall (\alpha,\beta),\]</span> which is exactly zero in one
+direction.</p>
+<p>Also when <span class="math inline">\(f&#39;&#39;_{xy}=-\sqrt{f&#39;&#39;_{xx}
+f&#39;&#39;_{yy}}\)</span>, this is equal to <span class="math display">\[-\left(\alpha \sqrt{-f&#39;&#39;_{xx}}+\beta
+\sqrt{-f&#39;&#39;_{yy}}\right)^2\leq 0 \quad \forall
+(\alpha,\beta).\]</span></p>
+<p>So the strict inequality holds in every direction only if <span class="math inline">\((f&#39;&#39;_{xy})^2&lt;f&#39;&#39;_{xx}f&#39;&#39;_{yy}\)</span>.</p>
 </div>
 <div id="convex-multidimensional-analysis" class="slide section level2">
 <h1>Convex Multidimensional Analysis</h1>
@@ -594,22 +609,22 @@ f&#39;&#39;_{yy}(x^*,y^*)}\)</span>, this is equal to <span class="math display"
 <ul>
 <li><span class="math inline">\(f&#39;&#39;_{xx}(x^*,y^*)&gt;0\)</span>,
 <span class="math inline">\(f&#39;&#39;_{yy}(x^*,y^*)&gt;0\)</span> -
-concavity in each variable.</li>
-<li><span class="math inline">\((f&#39;&#39;_{x,y}(x^*,y^*))^2&lt;f&#39;&#39;_{xx}(x^*,y^*)
+convexity in each variable.</li>
+<li><span class="math inline">\((f&#39;&#39;_{xy}(x^*,y^*))^2&lt;f&#39;&#39;_{xx}(x^*,y^*)
 f&#39;&#39;_{yy}(x^*,y^*)\)</span> - cross-derivative is not dominating
 own derivatives from either side</li>
 </ul>
 <p>Derive: sufficient conditions for the maximum.</p>
 </div>
-<div id="generical-approach" class="slide section level2">
-<h1>Generical Approach</h1>
-<p>Let <span class="math inline">\(x\)</span> be an <span class="math inline">\(N-\)</span>dimensional vector and <span class="math inline">\(f(x)=a+v^Tx+\frac{1}{2}x^TAx\)</span>, where <span class="math inline">\(v\)</span> is an <span class="math inline">\(N-\)</span>dimensional vector, and <span class="math inline">\(A\)</span> is an <span class="math inline">\(N\times N\)</span> symmetric matrix.</p>
+<div id="general-approach" class="slide section level2">
+<h1>General Approach</h1>
+<p>Let <span class="math inline">\(x\)</span> be an <span class="math inline">\(N\)</span>-dimensional vector and <span class="math inline">\(f(x)=a+v^Tx+\frac{1}{2}x^TAx\)</span>, where <span class="math inline">\(v\)</span> is an <span class="math inline">\(N\)</span>-dimensional vector, and <span class="math inline">\(A\)</span> is an <span class="math inline">\(N\times N\)</span> symmetric matrix.</p>
 <p>Observe that <span class="math inline">\(f&#39;_i(x)=v_i+\frac{1}{2}\left(a_{1i}x_1+a_{2i}x_2+...+a_{Ni}x_N+a_{i1}x_1+a_{i2}x_2+...+a_{iN}x_N\right)=v_i+A_ix\)</span>
 where <span class="math inline">\(A_i\)</span> is <span class="math inline">\(A\)</span>’s <span class="math inline">\(i\)</span>th row.</p>
 <p>Now observe that <span class="math inline">\(f&#39;&#39;_{ij}(x)=a_{ij}\)</span>, does not
 depend on <span class="math inline">\(v\)</span> or <span class="math inline">\(a\)</span>; so the convexity/concavity depends on
 <span class="math inline">\(A\)</span> only. How to establish it? Check
-for positive/negative semidefiniteness of the matrix of second
+for positive/negative definiteness of the matrix of second
 derivatives!</p>
 </div>
 <div id="summary-for-today" class="slide section level2">

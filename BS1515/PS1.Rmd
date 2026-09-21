@@ -23,7 +23,8 @@ On axis $(x,y)\in \mathbb{R}^2_{+}$ space, plot:
     + $u(x,y)=x^{0.3}y^{0.5}$
     + $u(x,y)=x+ \ln(y)$
     + $u(x,y)=x^2+y^2$
-Note: subscript $+$ on $\mathbb{R}^2_{+}$ means considering only positive values. $++$ would mean that $0$ is not included.
+    
+Note: subscript $+$ on $\mathbb{R}^2_{+}$ means considering only nonnegative values. $++$ would mean that $0$ is not included.
 
 ## Open and Closed
 
@@ -31,7 +32,7 @@ Take sets you plotted above and explain whether they are open in $\mathbb{R}^2$.
 
 Draw a set in $\mathbb{R}^2_{+}$ that is neither open nor closed.
 
-Draw a set that is open in $\mathbb{R}^2_{+}$ but closed in $\mathbb{R}^2$ .
+Draw a set that is open in $\mathbb{R}^2_{+}$ but closed in $\mathbb{R}^2$.
 
 ## Convex
 
@@ -52,8 +53,8 @@ Plot these systems of equations on $\mathbb{R}^2$ space and solve.
 3x + 4y = 7. \\
 \end{cases}\quad
 \begin{cases}
-2x - 3y = 5, \\
-3x + 4y = 7. \\
+6x + 8y = 0, \\
+3x + 4y = 0. \\
 \end{cases}
  \quad
 \begin{cases}

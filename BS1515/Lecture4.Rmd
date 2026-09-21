@@ -17,7 +17,7 @@ knitr::opts_chunk$set(echo = FALSE)
 
 ## Last time
 
-- Derivatives: a change in the value of the function
+- Derivatives: the rate of change of a function
 
 - Integrals: a sum of function values
 
@@ -33,13 +33,13 @@ Why do we care about optimization:
 
 ## Optimization theorems
 
-Weierstrass Theorem: for every continuous function $f(x)$ on an interval $[a,b]$ there is a $c,d\in [a,b]$ such that $f(c)\leq f(x) \leq f(d)$ for all $x\in[a,b]$.
+Weierstrass Theorem: for every continuous function $f(x)$ on an interval $[a,b]$ there exist $c,d\in [a,b]$ such that $f(c)\leq f(x) \leq f(d)$ for all $x\in[a,b]$.
 
-So what do we do now? Imagine we have an interior solution! How does it look like?
+So what do we do now? Imagine we have an interior solution! What does it look like?
 
-If $f'(x)>0$, function is higher a bit to the left - we should not be able to do this if we are at the maximum.
+If $f'(x)>0$, function is higher a bit to the right - we should not be able to do this if we are at the maximum.
 
-If $f'(x)<0$, function is a bit higher to the right - we should not be able to do this if we are at the maximum.
+If $f'(x)<0$, function is a bit higher to the left - we should not be able to do this if we are at the maximum.
 
 Only if $f'(x)=0$, $x$ can be a maximum.
 
@@ -49,7 +49,7 @@ Prove: Only if $f'(x)=0$, $x$ can be a minimum.
 
 Consider $f(x)=x^2-5x+6$. Where is its maximum?
 
-$f'(x)=2x-5=0$ so is $x=5/2$ a maximum? No! Value at $x=5/2$ is $25/4-25/2+6=-12.5+6=-6.5$, but value at $x=10$ is $100-50+6=56$ so there is no maximum.
+$f'(x)=2x-5=0$ so is $x=5/2$ a maximum? No! Value at $x=5/2$ is $25/4-25/2+6=-6.25+6=-0.25$, but value at $x=10$ is $100-50+6=56$ so there is no maximum.
 
 What happens to $f'(x)$ at $x=5/2$?
 
@@ -57,9 +57,9 @@ $f''(x)=2>0$ so derivative becomes positive if you move right and becomes negati
 
 ## Solving Quadratic Equations
 
-Take an equation $f(x)=x^2+bx+c$. We want to find where are its roots: $f(x)=0$.
+Take a function $f(x)=x^2+bx+c$. We want to find where its roots are: $f(x)=0$.
 
-- Find a minimum: $x^*=-b/2$. If $f(x^*)=b^2/4-b^2/2+c=c-b^2/4>0$, the whole graph is positive $=>$ no solution.
+- Find a minimum: $x^*=-b/2$. If $f(x^*)=b^2/4-b^2/2+c=c-b^2/4>0$, the whole graph is positive $\Rightarrow$ no real roots.
 - If $c=b^2/4$, we have one solution and we're done!
 - If $c<b^2/4$, we have two solutions, just need to find them!
 
@@ -73,31 +73,33 @@ Redo the logic for $f(x)=ax^2+bx+c$ for $a\not =0$ to obtain
 
 Consider $f(x)=x^3$. Observe that $f'(0)=0$. Is that a maximum? A minimum?
 
-It's an *inflection* point. Notice that $f''(0)>0$ would mean it's a minimum and $f''(0)<0$ would mean it's a maximum. But here $f''(x)=0$ which means need to investigate further, and $f'''(0)=6\not =0$ means it is going to be an increasing function.
+ It's an *inflection* point: the function switches from concave to convex there. If $f'(0)=0$, then $f''(0)>0$ would mean a minimum and $f''(0)<0$ a maximum. But here $f''(x)=6x$, so $f''(0)=0$ and we need to look further. The first non-zero derivative at 0 is $f'''(0)=6$; because its order is odd, $x=0$ is neither a maximum nor a minimum.
 
 ## Constraints
 
 Consider $f(x)=x^3$. Is there a maximum on $(-\infty,+\infty)$? No.
 
-Is there a maximum on $[-2,5]$? Yes by Weierstrass theorem, and since it can't be a maximum *inside* the interval (why not?), it must be a maximum on the border. $f(-2)=-8, f(5)=125$, so the maximum is at $x=5$.
+Is there a maximum on $[-2,5]$? Yes by Weierstrass theorem, and since it can't be a maximum *inside* the interval (why not?), it must be a maximum at an endpoint. $f(-2)=-8, f(5)=125$, so the maximum is at $x=5$.
 
 Is there a maximum on $(-2,5)$?..
 
 ## Convex Analysis
 
-Note that knowing the second derivative helps knowing maxima and minima. A function that has $f''(x)<0$ everywhere will have at most one internal maximum, and no internal minima - we call those *concave*. A function that has $f''(x)>0$ has at most one internal minimum and no maxima - we call those *convex*.
+ Knowing the second derivative helps identify maxima and minima. A function with $f''(x)<0$ everywhere is (strictly) *concave*: it has at most one interior maximum and no interior minima. A function with $f''(x)>0$ everywhere is (strictly) *convex*: at most one interior minimum and no interior maxima. 
+ 
+The general definition: $f$ is convex if $f$'s supergraph is convex; e.g. $x^4$ is convex even though $f''(0)=0$, and concave if it's subgraph is convex.
 
 Prove: Sum of two convex functions is convex.
 
-Prove: The minimum of the sum of two convex functions is between the minima of summands.
+Prove: For two convex functions of one variable, the point that minimizes their sum lies between the points that minimize each of them.
 
 Prove: Sum of two concave functions is concave.
 
-Prove: The maximum of the sum of two concave functions is between the maxima of summands.
+Prove: For two concave functions of one variable, the point that maximizes their sum lies between the points that maximize each of them.
 
 ## Multidimensional optimization
 
-Weierstrass Theorem: for every continuous function $f(x)$ on a compact set $S$ there is a $c,d\in S$ such that $f(c)\leq f(x) \leq f(d)$ for all $x\in S$.
+Weierstrass Theorem: for every continuous function $f(x)$ on a compact set $S$ there exist $c,d\in S$ such that $f(c)\leq f(x) \leq f(d)$ for all $x\in S$.
 
 Does not have to be one-dimensional!
 
@@ -116,13 +118,13 @@ Necessary optimality condition for the interior solution: \[f'_x(x^*,y^*)=0 \tex
 
 ## Is that a maximum?
 
-Would need to check second derivative, but now we have \emph{three} derivatives:
+Would need to check second derivative, but now we have *three* derivatives:
 
 - $f''_{xx}(x,y)>0$: when you increase $x$, the response of $f$ to an increase of $x$ becomes higher;
 - $f''_{yy}(x,y)>0$: when you increase $y$, the response of $f$ to an increase of $y$ becomes higher;
 - $f''_{xy}(x,y)=f''_{yx}(x,y)$ cross-derivative: when you increase $x$, the response of $f$ to an increase of $y$ becomes higher - and vice versa!
 
-We'll def need $f''_{xx}<0$ and $f''_{yy}<0$ for the one-dimension argument...
+We definitely need $f''_{xx}<0$ and $f''_{yy}<0$ for the one-dimension argument...
 
 ## Example
 
@@ -130,19 +132,19 @@ Consider $f(x,y)=-x^2-y^2+3\cdot x\cdot y$.
 
 $(x,y)=(0,0)$ solves first-order conditions. Is that a maximum?
 
-- $f''_{xx}(0,0)=-1<0$: so concave in $x$;
-- $f''_{yy}(0,0)=-1<0$: so concave in $y$;
+- $f''_{xx}(0,0)=-2<0$: so concave in $x$;
+- $f''_{yy}(0,0)=-2<0$: so concave in $y$;
 - so should be a maximum, no?
 
 Consider $(x,y)=(2,2)$. $f(2,2)=-2^2-2^2+3\cdot 2\cdot 2=4>f(0,0)$.
 
 Moreover, $f(t,t)=t^2>f(0,0)$ for all $t\not =0$! So if you take a path of $(x(t),y(t))=(t,t)$, the function is convex along this path.
 
-To establish convexity, we need a way of checking whether cross-derivatives dominate the own second derivatives...
+To establish concavity, we need a way of checking whether cross-derivatives dominate the own second derivatives...
 
 ## One way
 
-Let's take a direction $(\alpha,\beta)$, and look what happens to
+Let's take a direction $(\alpha,\beta)\not=(0,0)$, and look what happens to
 \[f(x^*+\alpha t,y^*+\beta t) \text{ around $t=0$.}\]
 
 Take derivative with respect to $t$: $\alpha f'_x(x^*,y^*)+\beta f'_y(x^*,y^*)=0$
@@ -153,9 +155,12 @@ $\alpha^2 f''_{xx}(x^*,y^*)+2 \alpha \beta f''_{xy}(x^*,y^*)+\beta^2 f''_{yy}(x^
 
 Does this work for all $\alpha$ and $\beta$?
 
-Observe that when $f''_{xy}=\sqrt{f''_{xx}(x^*,y^*) f''_{yy}(x^*,y^*)}$, this is equal to \[(\alpha \sqrt{f''_{xx}}+\beta \sqrt{f''_{yy}})^2\geq 0 \forall (\alpha,\beta).\]
+Observe that when $f''_{xy}=\sqrt{f''_{xx} f''_{yy}}$ (with both $f''_{xx},f''_{yy}<0$), this is equal to \[-\left(\alpha \sqrt{-f''_{xx}}-\beta \sqrt{-f''_{yy}}\right)^2\leq 0 \quad \forall (\alpha,\beta),\]
+  which is exactly zero in one direction.
 
-Also when $f''_{xy}=-\sqrt{f''_{xx}(x^*,y^*) f''_{yy}(x^*,y^*)}$, this is equal to \[(\alpha \sqrt{f''_{xx}}-\beta \sqrt{f''_{yy}})^2\geq 0 \forall (\alpha,\beta).\]
+  Also when $f''_{xy}=-\sqrt{f''_{xx} f''_{yy}}$, this is equal to \[-\left(\alpha \sqrt{-f''_{xx}}+\beta \sqrt{-f''_{yy}}\right)^2\leq 0 \quad \forall (\alpha,\beta).\]
+
+  So the strict inequality holds in every direction only if $(f''_{xy})^2<f''_{xx}f''_{yy}$.
 
 ## Convex Multidimensional Analysis
 
@@ -168,18 +173,18 @@ Necessary conditions:
 
 Sufficient conditions:
 
-- $f''_{xx}(x^*,y^*)>0$, $f''_{yy}(x^*,y^*)>0$ - concavity in each variable.
-- $(f''_{x,y}(x^*,y^*))^2<f''_{xx}(x^*,y^*) f''_{yy}(x^*,y^*)$ - cross-derivative is not dominating own derivatives from either side
+- $f''_{xx}(x^*,y^*)>0$, $f''_{yy}(x^*,y^*)>0$ - convexity in each variable.
+- $(f''_{xy}(x^*,y^*))^2<f''_{xx}(x^*,y^*) f''_{yy}(x^*,y^*)$ - cross-derivative is not dominating own derivatives from either side
 
 Derive: sufficient conditions for the maximum.
 
-## Generical Approach
+## General Approach
 
-Let $x$ be an $N-$dimensional vector and $f(x)=a+v^Tx+\frac{1}{2}x^TAx$, where $v$ is an $N-$dimensional vector, and $A$ is an $N\times N$ symmetric matrix.
+Let $x$ be an $N$-dimensional vector and $f(x)=a+v^Tx+\frac{1}{2}x^TAx$, where $v$ is an $N$-dimensional vector, and $A$ is an $N\times N$ symmetric matrix.
 
 Observe that $f'_i(x)=v_i+\frac{1}{2}\left(a_{1i}x_1+a_{2i}x_2+...+a_{Ni}x_N+a_{i1}x_1+a_{i2}x_2+...+a_{iN}x_N\right)=v_i+A_ix$ where $A_i$ is $A$'s $i$th row.
 
-Now observe that $f''_{ij}(x)=a_{ij}$, does not depend on $v$ or $a$; so the convexity/concavity depends on $A$ only. How to establish it? Check for positive/negative semidefiniteness of the matrix of second derivatives!
+Now observe that $f''_{ij}(x)=a_{ij}$, does not depend on $v$ or $a$; so the convexity/concavity depends on $A$ only. How to establish it? Check for positive/negative definiteness of the matrix of second derivatives!
 
 ## Summary for Today
 

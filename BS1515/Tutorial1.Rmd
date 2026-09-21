@@ -1,0 +1,111 @@
+---
+title: "BS 1515 Tutorial 1: Sets, Linear Algebra, and Calculus Foundations"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Timing overview
+
+| Time | Segment | Source |
+|---|---|---|
+| 0–5 | Framing / what ties these three lectures together | — |
+| 5–15 | Sets and systems of equations | L1, PS1 |
+| 15–30 | Matrices: multiplication, determinants, null space | L2, PS2 |
+| 30–45 | Derivatives and integration | L3, PS3 |
+| 45–50 | Synthesis and preview of Tutorial 2 | — |
+
+**Opening framing (2 min, no problem):** Tell students the throughline is *"describe a mathematical object precisely, then manipulate it."* Sets/equations describe constraint regions; matrices are compact machinery for solving systems of those equations; calculus tells you how functions defined on those sets change. This is also literally the order the course will need them in Lecture 4 onward.
+
+---
+
+### Problem 1.1 (Sets) — 4 min
+Prove: $A \setminus B = A \cap \neg B$.
+
+**Solution.**
+By definition, $A\setminus B=\{a: a\in A \text{ and } a\notin B\}$.
+Also, $A\cap \neg B=\{a: a\in A \text{ and } a\in \neg B\}=\{a: a\in A \text{ and } a\notin B\}$ (since $\neg B=\{a: a\notin B\}$).
+Both sets are defined by the identical condition "$a\in A$ and $a\notin B$", so they are the same set. $\blacksquare$
+
+*Board tip:* draw the Euler–Venn diagram from L1 and shade both descriptions to show they coincide visually before doing the one-line proof.
+
+---
+
+### Problem 1.2 (Systems of equations, geometric + algebraic) — 6 min
+Solve, and interpret geometrically:
+$$\begin{cases}2x+3y=5\\3x+4y=7\end{cases}\qquad \begin{cases}6x+8y=5\\3x+4y=7\end{cases}$$
+
+**Solution.**
+
+*System (a):* Multiply the first equation by 4 and the second by 3: $8x+12y=20$, $9x+12y=21$. Subtracting gives $x=1$. Substituting back: $2(1)+3y=5\Rightarrow y=1$. Unique solution $(x,y)=(1,1)$ — two non-parallel lines crossing at one point.
+
+*System (b):* The left-hand side of the first equation is exactly $2\times(3x+4y)$, so if both equations held we'd need $5 = 2\times 7=14$, a contradiction. **No solution** — the two lines are parallel (same slope) but have different intercepts, so they never meet.
+
+*Link forward:* the coefficient matrix of (a) is $\begin{bmatrix}2&3\\3&4\end{bmatrix}$ with determinant $2\cdot4-3\cdot3=-1\neq0$ (invertible ⇒ unique solution); the coefficient matrix of (b) is $\begin{bmatrix}6&8\\3&4\end{bmatrix}$ with determinant $6\cdot4-8\cdot3=0$ (singular ⇒ either no solution or infinitely many — here, no solution). Flag that this determinant test is exactly what's coming next in the linear algebra block.
+
+---
+
+## Matrices (L2, PS2)
+
+### Problem 1.3 (Matrix multiplication and non-commutativity) — 7 min
+Let
+$$A=\begin{bmatrix}1&2&3\\4&5&6\\0&1&0\end{bmatrix},\quad B=\begin{bmatrix}1&0&0\\0&2&0\\0&0&3\end{bmatrix}.$$
+Compute $AB$ and $BA$. Is $PQ=QP$ in general for square matrices $P,Q$?
+
+**Solution.**
+$B$ is diagonal, so $AB$ scales the **columns** of $A$ by $1,2,3$ respectively, and $BA$ scales the **rows** of $A$ by $1,2,3$ respectively:
+$$AB=\begin{bmatrix}1&4&9\\4&10&18\\0&2&0\end{bmatrix},\qquad BA=\begin{bmatrix}1&2&3\\8&10&12\\0&3&0\end{bmatrix}.$$
+These are different matrices, so $AB\neq BA$ here. In general matrix multiplication is **not commutative**; equality can happen for special pairs (e.g. $A=I$, or if $A$ and $B$ share the same eigenvectors), but it is not true generically.
+
+---
+
+### Problem 1.4 (Determinant and invertibility) — 4 min
+Compute $\det A$ for the matrix $A$ above and state whether it is invertible.
+
+**Solution.**
+Expanding along the third row (which has two zeros):
+$$\det A = 0\cdot(2\cdot6-3\cdot5) - 1\cdot(1\cdot6-3\cdot4)+0\cdot(1\cdot5-2\cdot4) = -1\cdot(6-12) = 6.$$
+Since $\det A = 6\neq 0$, $A$ is invertible.
+
+---
+
+### Problem 1.5 (Null space) — 5 min
+Let $A=\begin{bmatrix}2&3&5\\-4&2&3\end{bmatrix}$. Verify that $v=\begin{bmatrix}-1/16\\-13/8\\1\end{bmatrix}$ is in the null space of $A$. Are there others?
+
+**Solution.**
+Row 1: $2(-\tfrac1{16})+3(-\tfrac{13}{8})+5(1) = -\tfrac18-\tfrac{39}{8}+\tfrac{40}{8}=0.$
+Row 2: $-4(-\tfrac1{16})+2(-\tfrac{13}{8})+3(1) = \tfrac14-\tfrac{26}{8}+3=\tfrac28-\tfrac{26}8+\tfrac{24}8=0.$
+So $Av=0$: confirmed, $v$ is in the null space.
+
+$A$ is $2\times3$ with two linearly independent rows (rows are not proportional), so $\text{rank}(A)=2$. By rank–nullity, the null space has dimension $3-2=1$. So every vector in the null space is a scalar multiple of $v$ — there is a whole line of solutions, but no linearly independent second direction.
+
+---
+
+## Derivatives and Integrals (L3, PS3)
+
+### Problem 1.6 (Proving the power rule inductively) — 6 min
+You already know $x'=1$ and the product rule $(fg)'=f'g+fg'$. Given $f(x)=x^N\Rightarrow f'(x)=Nx^{N-1}$, prove $(x^{N+1})'=(N+1)x^N$.
+
+**Solution.**
+Write $x^{N+1}=x^N\cdot x$. Let $g(x)=x^N$ (so $g'(x)=Nx^{N-1}$ by assumption) and $h(x)=x$ (so $h'(x)=1$). By the product rule,
+$$(x^{N+1})' = (gh)' = g'h+gh' = Nx^{N-1}\cdot x + x^N\cdot 1 = Nx^N+x^N=(N+1)x^N.\ \blacksquare$$
+This is the induction step that, combined with the base case $x'=1$, proves the power rule for all natural-number exponents.
+
+---
+
+### Problem 1.7 (Integration by substitution) — 6 min
+Evaluate $\displaystyle\int 5(x-4)\sqrt{x^2-8x}\,dx$.
+
+**Solution.**
+Let $u=x^2-8x$, so $du = (2x-8)\,dx = 2(x-4)\,dx$, i.e. $(x-4)\,dx=\tfrac12 du$. Substituting:
+$$\int 5(x-4)\sqrt{x^2-8x}\,dx = 5\int \sqrt{u}\cdot\tfrac12\,du=\tfrac52\int u^{1/2}\,du=\tfrac52\cdot\tfrac23 u^{3/2}+C=\tfrac53(x^2-8x)^{3/2}+C.$$
+
+---
+
+## Wrap-up (5 min)
+Ask students to state, in one sentence each: (i) how a determinant tells you whether a system of equations has a unique solution, (ii) why the product rule lets you build up all power-rule derivatives from scratch. Preview: "next week we use exactly these derivative tools to *find* maxima and minima — that's optimization."

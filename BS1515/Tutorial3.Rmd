@@ -1,0 +1,88 @@
+---
+title: "BS 1515 Tutorial 3: Constrained Optimization"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Timing overview
+
+| Time | Segment | Source |
+|---|---|---|
+| 0–5 | Lagrangean recap | L5 |
+| 5–17 | Linear utility: corner solution | PS5 ($u_1$) |
+| 17–37 | Cobb–Douglas: full Lagrange + bordered Hessian | PS5 ($u_2$), echoes L5 example |
+| 37–47 | Leontief (min) utility: kinks and systems of equations | PS5 ($u_3$) |
+| 47–50 | Wrap-up | — |
+
+**Opening recap (5 min, no new problem):** Write the general recipe from L5:
+$$\max_{x,y} u(x,y)\ \text{s.t. } f(x,y)=C \quad\Longrightarrow\quad \mathcal{L}(x,y,\lambda)=u(x,y)-\lambda[f(x,y)-C],$$
+with FOCs $\mathcal L'_x=0$, $\mathcal L'_y=0$, $\mathcal L'_\lambda=0$ (the last one just gives back the constraint). Remind them $\lambda$ is the shadow price of relaxing the constraint (Envelope Theorem, L5).
+
+---
+
+### Problem 3.1 (Linear utility — corner solution) — 12 min
+$u_1(x_1,x_2)=a_1x_1+a_2x_2$, $a_i>0$, subject to $p_1x_1+p_2x_2=m$. Maximise.
+
+**Solution.**
+Try the Lagrangean anyway: $\mathcal L = a_1x_1+a_2x_2-\lambda(p_1x_1+p_2x_2-m)$.
+FOCs: $a_1=\lambda p_1$ and $a_2=\lambda p_2$, i.e. $\lambda = a_1/p_1 = a_2/p_2$.
+
+This is a **knife-edge** condition — it only holds for very specific price ratios. Generically $a_1/p_1\neq a_2/p_2$, so no interior $(x_1,x_2)$ satisfies both FOCs simultaneously with a single $\lambda$. This signals a **corner solution**: since utility is linear, the marginal utility per pound spent, $a_i/p_i$, is constant, so you should spend the *entire* budget on whichever good has the higher ratio.
+
+- If $a_1/p_1>a_2/p_2$: spend everything on good 1: $x_1^*=m/p_1,\ x_2^*=0$.
+- If $a_1/p_1<a_2/p_2$: spend everything on good 2: $x_2^*=m/p_2,\ x_1^*=0$.
+- If $a_1/p_1=a_2/p_2$: every point on the budget line gives the same utility — indifference, not a unique optimum.
+
+*Discussion prompt:* this is the same logic as the Leisure/Study example opening L5 ($u(L,S)=L+S^2$ has an interior solution because $S^2$ is not linear, but here both terms are linear, so we never get an interior tangency).
+
+---
+
+### Problem 3.2 (Cobb–Douglas — full Lagrange + SOC) — 20 min
+$u_2(x_1,x_2)=x_1^{a}x_2^{b}$, $a,b>0$, subject to $p_1x_1+p_2x_2=m$. Find the optimal bundle and verify it's a maximum.
+
+**Solution — FOCs.**
+$$\mathcal L(x_1,x_2,\lambda)=x_1^ax_2^b-\lambda(p_1x_1+p_2x_2-m).$$
+$$\mathcal L'_{x_1}= a\,x_1^{a-1}x_2^b-\lambda p_1=0,\qquad \mathcal L'_{x_2}=b\,x_1^ax_2^{b-1}-\lambda p_2=0.$$
+Divide the two:
+$$\frac{a\,x_1^{a-1}x_2^b}{b\,x_1^ax_2^{b-1}}=\frac{p_1}{p_2}\ \Longrightarrow\ \frac{a}{b}\cdot\frac{x_2}{x_1}=\frac{p_1}{p_2}\ \Longrightarrow\ x_2=\frac{b\,p_1}{a\,p_2}\,x_1.$$
+Substitute into the budget constraint:
+$$p_1x_1+p_2\cdot\frac{bp_1}{ap_2}x_1=m\ \Longrightarrow\ p_1x_1\left(1+\frac ba\right)=m\ \Longrightarrow\ x_1^*=\frac{a}{a+b}\cdot\frac{m}{p_1}.$$
+By symmetry, $x_2^*=\dfrac{b}{a+b}\cdot\dfrac{m}{p_2}$.
+
+*Note for students:* this is structurally identical to the $A\ln x+B\ln y$ example done in L5 — because $\ln(x_1^ax_2^b)=a\ln x_1+b\ln x_2$, and taking logs is a monotone (invertible!) transformation, so maximising $u_2$ is equivalent to maximising $a\ln x_1+b\ln x_2$. **Callback to L1:** this equivalence relies exactly on invertibility of $\ln(\cdot)$ discussed in Lecture 1's "Functions" section — a monotone transform of the objective never changes where the maximum sits.
+
+**Solution — second-order condition (bordered Hessian).**
+$$u_{x_1x_1}=a(a-1)x_1^{a-2}x_2^b,\quad u_{x_2x_2}=b(b-1)x_1^ax_2^{b-2},\quad u_{x_1x_2}=ab\,x_1^{a-1}x_2^{b-1}.$$
+The bordered Hessian is
+$$H=\begin{bmatrix}u_{x_1x_1}&u_{x_1x_2}&-p_1\\u_{x_1x_2}&u_{x_2x_2}&-p_2\\-p_1&-p_2&0\end{bmatrix}.$$
+For $0<a,b<1$ (the usual Cobb–Douglas case), $u_{x_1x_1}<0$ and $u_{x_2x_2}<0$ on the relevant domain, and the border/cross terms work out (exactly as in the $A\ln x+B\ln y$ numerical check in L5: diagonal entries negative, second-order minors positive, full determinant zero along the boundary case) to satisfy the negative-semidefiniteness pattern needed for a maximum. **Point students back to Lecture 2's positive/negative definiteness criteria** (checking signs of principal minors) — this is the exact same test, just applied to a bordered matrix.
+
+---
+
+### Problem 3.3 (Leontief / min utility — kinks and simultaneous equations) — 10 min
+$u_3(x_1,x_2)=\min\{a_1x_1+b_1,\ a_2x_2+b_2\}$, $a_i>0$, subject to $p_1x_1+p_2x_2=m$. How do you even start, given $u_3$ isn't differentiable everywhere?
+
+**Solution.**
+$\min(\cdot,\cdot)$ has no derivative exactly where the two arguments cross (a kink), so Lagrange's FOCs don't directly apply there. But economic reasoning gets you to the answer directly: **the optimum must occur where the two arguments are equal.**
+
+*Why:* suppose at the optimum $a_1x_1+b_1 > a_2x_2+b_2$. Then $u_3$ is currently determined only by the *smaller* term, $a_2x_2+b_2$. You could reduce $x_1$ slightly (freeing up budget) without lowering utility at all (since it wasn't the binding term), and use the freed-up money to raise $x_2$, which *does* raise utility. That's a strict improvement — contradiction. So at the optimum the two arguments must be equal:
+$$a_1x_1+b_1=a_2x_2+b_2.$$
+
+Combine this with the budget constraint — **now we're back to solving a 2×2 system of linear equations**, exactly the technique from Tutorial 1 (Problem 1.2) / Lecture 1:
+$$\begin{cases}a_1x_1-a_2x_2 = b_2-b_1\\p_1x_1+p_2x_2=m\end{cases}$$
+Solve by elimination or Cramer's rule (Lecture 2): coefficient matrix $\begin{bmatrix}a_1&-a_2\\p_1&p_2\end{bmatrix}$, determinant $=a_1p_2+a_2p_1\neq0$ (since $a_i,p_i>0$), so a unique solution exists:
+$$x_1^*=\frac{(b_2-b_1)p_2+a_2m}{a_1p_2+a_2p_1},\qquad x_2^*=\frac{a_1m-(b_2-b_1)p_1}{a_1p_2+a_2p_1}.$$
+(Sign/feasibility of $x_1^*,x_2^*\geq0$ depends on parameters — worth flagging as an exercise for strong students.)
+
+*Discussion prompt:* contrast with $u_4=\max\{\cdot\}$ (also in PS5) — there, spending everything on the single largest term is optimal, so the logic (and the resulting corner solution) is the mirror image of this one.
+
+---
+
+## Wrap-up (3 min)
+Ask: "why did the linear utility problem fail to have an interior solution, but Cobb–Douglas worked?" (Answer: diminishing marginal utility / strict concavity is what makes an interior tangency exist and be a genuine maximum — flat or kinked utility functions push the solution to a corner or to a kink point instead.) This closes the loop from Lecture 4's convexity/concavity discussion through to Lecture 5's constrained problems.

@@ -13,7 +13,7 @@
 
 <meta name="date" content="2026-09-21" />
 
-<title>Problem Set 5: Multidimensional Optimization</title>
+<title>BS 1515 Tutorial 3: Constrained Optimization</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -351,7 +351,7 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Problem Set 5: Multidimensional
+<h1 class="title toc-ignore">BS 1515 Tutorial 3: Constrained
 Optimization</h1>
 <h4 class="author">Sergey V. Popov</h4>
 <h4 class="date">2026-09-21</h4>
@@ -359,36 +359,175 @@ Optimization</h1>
 </div>
 
 
-<p>For the following functions (you will meet them again and again in
-your second and third years):</p>
+<div id="timing-overview" class="section level2">
+<h2>Timing overview</h2>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Time</th>
+<th>Segment</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0–5</td>
+<td>Lagrangean recap</td>
+<td>L5</td>
+</tr>
+<tr class="even">
+<td>5–17</td>
+<td>Linear utility: corner solution</td>
+<td>PS5 (<span class="math inline">\(u_1\)</span>)</td>
+</tr>
+<tr class="odd">
+<td>17–37</td>
+<td>Cobb–Douglas: full Lagrange + bordered Hessian</td>
+<td>PS5 (<span class="math inline">\(u_2\)</span>), echoes L5
+example</td>
+</tr>
+<tr class="even">
+<td>37–47</td>
+<td>Leontief (min) utility: kinks and systems of equations</td>
+<td>PS5 (<span class="math inline">\(u_3\)</span>)</td>
+</tr>
+<tr class="odd">
+<td>47–50</td>
+<td>Wrap-up</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Opening recap (5 min, no new problem):</strong> Write the
+general recipe from L5: <span class="math display">\[\max_{x,y} u(x,y)\
+\text{s.t. } f(x,y)=C \quad\Longrightarrow\quad
+\mathcal{L}(x,y,\lambda)=u(x,y)-\lambda[f(x,y)-C],\]</span> with FOCs
+<span class="math inline">\(\mathcal L&#39;_x=0\)</span>, <span class="math inline">\(\mathcal L&#39;_y=0\)</span>, <span class="math inline">\(\mathcal L&#39;_\lambda=0\)</span> (the last one
+just gives back the constraint). Remind them <span class="math inline">\(\lambda\)</span> is the shadow price of relaxing
+the constraint (Envelope Theorem, L5).</p>
+<hr />
+<div id="problem-3.1-linear-utility-corner-solution-12-min" class="section level3">
+<h3>Problem 3.1 (Linear utility — corner solution) — 12 min</h3>
+<p><span class="math inline">\(u_1(x_1,x_2)=a_1x_1+a_2x_2\)</span>,
+<span class="math inline">\(a_i&gt;0\)</span>, subject to <span class="math inline">\(p_1x_1+p_2x_2=m\)</span>. Maximise.</p>
+<p><strong>Solution.</strong> Try the Lagrangean anyway: <span class="math inline">\(\mathcal L =
+a_1x_1+a_2x_2-\lambda(p_1x_1+p_2x_2-m)\)</span>. FOCs: <span class="math inline">\(a_1=\lambda p_1\)</span> and <span class="math inline">\(a_2=\lambda p_2\)</span>, i.e. <span class="math inline">\(\lambda = a_1/p_1 = a_2/p_2\)</span>.</p>
+<p>This is a <strong>knife-edge</strong> condition — it only holds for
+very specific price ratios. Generically <span class="math inline">\(a_1/p_1\neq a_2/p_2\)</span>, so no interior <span class="math inline">\((x_1,x_2)\)</span> satisfies both FOCs
+simultaneously with a single <span class="math inline">\(\lambda\)</span>. This signals a <strong>corner
+solution</strong>: since utility is linear, the marginal utility per
+pound spent, <span class="math inline">\(a_i/p_i\)</span>, is constant,
+so you should spend the <em>entire</em> budget on whichever good has the
+higher ratio.</p>
 <ul>
-<li><span class="math inline">\(u_1(x_1,x_2,\ldots,x_n)=a_1x_1+a_2x_2+\ldots+a_n
-x_n,  a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_2(x_1,x_2,\ldots,x_n)=x_1^{a_1}x_2^{a_2}\ldots
-x_n^{a_n},  a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_3(x_1,x_2,\ldots,x_n)=\min\left\{a_1x_1+b_1,a_2x_2+b_2,\ldots,a_Nx_N+b_N\right\},
-a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_4(x_1,x_2,\ldots,x_n)=\max\left\{a_1x_1+b_1,a_2x_2+b_2,\ldots,a_Nx_N+b_N\right\},
-a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_5(x_1,x_2,\ldots,x_n)=\left(a_1x_1^\rho+a_2x_2^{\rho}+\ldots+a_nx_n^{\rho}\right)^{1/\rho},  a_i&gt;0,
-\rho \not =0,\)</span></li>
-<li><span class="math inline">\(u_6(x_1,x_2)=v(x_1)+x_2\)</span>, <span class="math inline">\(v(\cdot)\)</span> is increasing and
-differentiable,</li>
-<li><span class="math inline">\(u_7(x_1,x_2,\ldots,x_n)=3-\sum_{i\in\{1\ldots n\}}
-a_i(x_i-b_i)^2, a_i,b_i&gt;0\)</span>:</li>
+<li>If <span class="math inline">\(a_1/p_1&gt;a_2/p_2\)</span>: spend
+everything on good 1: <span class="math inline">\(x_1^*=m/p_1,\
+x_2^*=0\)</span>.</li>
+<li>If <span class="math inline">\(a_1/p_1&lt;a_2/p_2\)</span>: spend
+everything on good 2: <span class="math inline">\(x_2^*=m/p_2,\
+x_1^*=0\)</span>.</li>
+<li>If <span class="math inline">\(a_1/p_1=a_2/p_2\)</span>: every point
+on the budget line gives the same utility — indifference, not a unique
+optimum.</li>
 </ul>
-<div id="derivatives" class="section level2">
-<h2>Derivatives</h2>
-<p>Calculate first and second derivatives. Notice that functions <span class="math inline">\(u_3\)</span> and <span class="math inline">\(u_4\)</span> might not be differentiable.</p>
+<p><em>Discussion prompt:</em> this is the same logic as the
+Leisure/Study example opening L5 (<span class="math inline">\(u(L,S)=L+S^2\)</span> has an interior solution
+because <span class="math inline">\(S^2\)</span> is not linear, but here
+both terms are linear, so we never get an interior tangency).</p>
+<hr />
 </div>
-<div id="convexity-and-concavity" class="section level2">
-<h2>Convexity and Concavity</h2>
-<p>Find conditions on parameters that make functions (weakly) convex or
-concave (not always possible!). Start with <span class="math inline">\(a_i=1\)</span> and <span class="math inline">\(b_i=0\)</span> if it helps. ## Constrained
-Optimization</p>
-<p>Maximize each utility function subject to <span class="math inline">\(p_1 x_1+p_2 x_2+...+p_n x_n=m\)</span>; <span class="math inline">\(x_i\geq 0\)</span>, <span class="math inline">\(m&gt;0\)</span>, <span class="math inline">\(p_i&gt;0 \forall i\)</span>. Explain why the
-extremum that you found must be a maximum and not a minimum. This might
-or might not involve second derivatives.</p>
+<div id="problem-3.2-cobbdouglas-full-lagrange-soc-20-min" class="section level3">
+<h3>Problem 3.2 (Cobb–Douglas — full Lagrange + SOC) — 20 min</h3>
+<p><span class="math inline">\(u_2(x_1,x_2)=x_1^{a}x_2^{b}\)</span>,
+<span class="math inline">\(a,b&gt;0\)</span>, subject to <span class="math inline">\(p_1x_1+p_2x_2=m\)</span>. Find the optimal bundle
+and verify it’s a maximum.</p>
+<p><strong>Solution — FOCs.</strong> <span class="math display">\[\mathcal
+L(x_1,x_2,\lambda)=x_1^ax_2^b-\lambda(p_1x_1+p_2x_2-m).\]</span> <span class="math display">\[\mathcal L&#39;_{x_1}= a\,x_1^{a-1}x_2^b-\lambda
+p_1=0,\qquad \mathcal L&#39;_{x_2}=b\,x_1^ax_2^{b-1}-\lambda
+p_2=0.\]</span> Divide the two: <span class="math display">\[\frac{a\,x_1^{a-1}x_2^b}{b\,x_1^ax_2^{b-1}}=\frac{p_1}{p_2}\
+\Longrightarrow\ \frac{a}{b}\cdot\frac{x_2}{x_1}=\frac{p_1}{p_2}\
+\Longrightarrow\ x_2=\frac{b\,p_1}{a\,p_2}\,x_1.\]</span> Substitute
+into the budget constraint: <span class="math display">\[p_1x_1+p_2\cdot\frac{bp_1}{ap_2}x_1=m\
+\Longrightarrow\ p_1x_1\left(1+\frac ba\right)=m\ \Longrightarrow\
+x_1^*=\frac{a}{a+b}\cdot\frac{m}{p_1}.\]</span> By symmetry, <span class="math inline">\(x_2^*=\dfrac{b}{a+b}\cdot\dfrac{m}{p_2}\)</span>.</p>
+<p><em>Note for students:</em> this is structurally identical to the
+<span class="math inline">\(A\ln x+B\ln y\)</span> example done in L5 —
+because <span class="math inline">\(\ln(x_1^ax_2^b)=a\ln x_1+b\ln
+x_2\)</span>, and taking logs is a monotone (invertible!)
+transformation, so maximising <span class="math inline">\(u_2\)</span>
+is equivalent to maximising <span class="math inline">\(a\ln x_1+b\ln
+x_2\)</span>. <strong>Callback to L1:</strong> this equivalence relies
+exactly on invertibility of <span class="math inline">\(\ln(\cdot)\)</span> discussed in Lecture 1’s
+“Functions” section — a monotone transform of the objective never
+changes where the maximum sits.</p>
+<p><strong>Solution — second-order condition (bordered
+Hessian).</strong> <span class="math display">\[u_{x_1x_1}=a(a-1)x_1^{a-2}x_2^b,\quad
+u_{x_2x_2}=b(b-1)x_1^ax_2^{b-2},\quad
+u_{x_1x_2}=ab\,x_1^{a-1}x_2^{b-1}.\]</span> The bordered Hessian is
+<span class="math display">\[H=\begin{bmatrix}u_{x_1x_1}&amp;u_{x_1x_2}&amp;-p_1\\u_{x_1x_2}&amp;u_{x_2x_2}&amp;-p_2\\-p_1&amp;-p_2&amp;0\end{bmatrix}.\]</span>
+For <span class="math inline">\(0&lt;a,b&lt;1\)</span> (the usual
+Cobb–Douglas case), <span class="math inline">\(u_{x_1x_1}&lt;0\)</span>
+and <span class="math inline">\(u_{x_2x_2}&lt;0\)</span> on the relevant
+domain, and the border/cross terms work out (exactly as in the <span class="math inline">\(A\ln x+B\ln y\)</span> numerical check in L5:
+diagonal entries negative, second-order minors positive, full
+determinant zero along the boundary case) to satisfy the
+negative-semidefiniteness pattern needed for a maximum. <strong>Point
+students back to Lecture 2’s positive/negative definiteness
+criteria</strong> (checking signs of principal minors) — this is the
+exact same test, just applied to a bordered matrix.</p>
+<hr />
+</div>
+<div id="problem-3.3-leontief-min-utility-kinks-and-simultaneous-equations-10-min" class="section level3">
+<h3>Problem 3.3 (Leontief / min utility — kinks and simultaneous
+equations) — 10 min</h3>
+<p><span class="math inline">\(u_3(x_1,x_2)=\min\{a_1x_1+b_1,\
+a_2x_2+b_2\}\)</span>, <span class="math inline">\(a_i&gt;0\)</span>,
+subject to <span class="math inline">\(p_1x_1+p_2x_2=m\)</span>. How do
+you even start, given <span class="math inline">\(u_3\)</span> isn’t
+differentiable everywhere?</p>
+<p><strong>Solution.</strong> <span class="math inline">\(\min(\cdot,\cdot)\)</span> has no derivative
+exactly where the two arguments cross (a kink), so Lagrange’s FOCs don’t
+directly apply there. But economic reasoning gets you to the answer
+directly: <strong>the optimum must occur where the two arguments are
+equal.</strong></p>
+<p><em>Why:</em> suppose at the optimum <span class="math inline">\(a_1x_1+b_1 &gt; a_2x_2+b_2\)</span>. Then <span class="math inline">\(u_3\)</span> is currently determined only by the
+<em>smaller</em> term, <span class="math inline">\(a_2x_2+b_2\)</span>.
+You could reduce <span class="math inline">\(x_1\)</span> slightly
+(freeing up budget) without lowering utility at all (since it wasn’t the
+binding term), and use the freed-up money to raise <span class="math inline">\(x_2\)</span>, which <em>does</em> raise utility.
+That’s a strict improvement — contradiction. So at the optimum the two
+arguments must be equal: <span class="math display">\[a_1x_1+b_1=a_2x_2+b_2.\]</span></p>
+<p>Combine this with the budget constraint — <strong>now we’re back to
+solving a 2×2 system of linear equations</strong>, exactly the technique
+from Tutorial 1 (Problem 1.2) / Lecture 1: <span class="math display">\[\begin{cases}a_1x_1-a_2x_2 =
+b_2-b_1\\p_1x_1+p_2x_2=m\end{cases}\]</span> Solve by elimination or
+Cramer’s rule (Lecture 2): coefficient matrix <span class="math inline">\(\begin{bmatrix}a_1&amp;-a_2\\p_1&amp;p_2\end{bmatrix}\)</span>,
+determinant <span class="math inline">\(=a_1p_2+a_2p_1\neq0\)</span>
+(since <span class="math inline">\(a_i,p_i&gt;0\)</span>), so a unique
+solution exists: <span class="math display">\[x_1^*=\frac{(b_2-b_1)p_2+a_2m}{a_1p_2+a_2p_1},\qquad
+x_2^*=\frac{a_1m-(b_2-b_1)p_1}{a_1p_2+a_2p_1}.\]</span>
+(Sign/feasibility of <span class="math inline">\(x_1^*,x_2^*\geq0\)</span> depends on parameters —
+worth flagging as an exercise for strong students.)</p>
+<p><em>Discussion prompt:</em> contrast with <span class="math inline">\(u_4=\max\{\cdot\}\)</span> (also in PS5) — there,
+spending everything on the single largest term is optimal, so the logic
+(and the resulting corner solution) is the mirror image of this one.</p>
+<hr />
+</div>
+</div>
+<div id="wrap-up-3-min" class="section level2">
+<h2>Wrap-up (3 min)</h2>
+<p>Ask: “why did the linear utility problem fail to have an interior
+solution, but Cobb–Douglas worked?” (Answer: diminishing marginal
+utility / strict concavity is what makes an interior tangency exist and
+be a genuine maximum — flat or kinked utility functions push the
+solution to a corner or to a kink point instead.) This closes the loop
+from Lecture 4’s convexity/concavity discussion through to Lecture 5’s
+constrained problems.</p>
 </div>
 
 

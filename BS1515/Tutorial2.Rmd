@@ -1,0 +1,75 @@
+---
+title: "BS 1515 Tutorial 2: Optimization"
+author: "Sergey V. Popov"
+date: "`r Sys.Date()`"
+output: html_document
+css: cardiff.css
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Timing overview
+
+| Time | Segment | Source |
+|---|---|---|
+| 0–5 | FOC/SOC recap | L4 |
+| 5–20 | Fence problem (single-variable, constrained by substitution) | PS4 |
+| 20–35 | Tin-can problem (single-variable, real minimisation) | PS4 |
+| 35–47 | Multivariable example: when do FOCs fail to give a max? | L4, tying back to L2 |
+| 47–50 | Wrap-up / preview | — |
+
+**Opening recap (5 min, board only, no new problem):** Write the three-line logic from L4: if $f'(x^*)>0$ you can improve by moving right; if $f'(x^*)<0$ you can improve by moving left; so an interior maximum needs $f'(x^*)=0$. Then $f''(x^*)<0$ confirms a max, $f''(x^*)>0$ confirms a min, $f''(x^*)=0$ needs more work (inflection). This is the template for both problems below.
+
+---
+
+### Problem 2.1 (Fenced rectangle) — 15 min
+You have 50 metres of fence. What rectangle shape maximises the enclosed area?
+
+**Solution.**
+Let the sides be $x$ and $y$. The perimeter constraint is $2x+2y=50\Rightarrow y=25-x$ (this substitution is exactly the "solve the constraint, plug in" trick from L1 on equations). Area as a function of $x$ alone:
+$$A(x)=x(25-x)=25x-x^2,\qquad x\in[0,25].$$
+FOC: $A'(x)=25-2x=0\Rightarrow x^*=12.5.$
+SOC: $A''(x)=-2<0$, so this is a maximum.
+Then $y^*=25-12.5=12.5$: **the optimal rectangle is a square**, $12.5\text{m}\times12.5\text{m}$, giving area $156.25\text{ m}^2$.
+
+*Discussion prompt:* ask why we didn't need to check the endpoints $x=0,25$ — because $A(0)=A(25)=0$, clearly worse, and $A$ is concave (a single interior critical point of a concave function on an interval is automatically the global max, per the Weierstrass + concavity argument from L4).
+
+---
+
+### Problem 2.2 (Minimal-material can) — 15 min
+Design a cylindrical can to hold 1 litre ($1000\text{ cm}^3$). What shape minimises the material used (total surface area)?
+
+**Solution.**
+Let radius $r$, height $h$. Volume constraint: $\pi r^2 h = 1000 \Rightarrow h = \dfrac{1000}{\pi r^2}$.
+
+Surface area (top + bottom + side):
+$$S(r) = 2\pi r^2 + 2\pi r h = 2\pi r^2 + 2\pi r\cdot\frac{1000}{\pi r^2} = 2\pi r^2 + \frac{2000}{r}.$$
+
+FOC: $S'(r) = 4\pi r - \dfrac{2000}{r^2} = 0 \;\Rightarrow\; 4\pi r^3 = 2000 \;\Rightarrow\; r^3 = \dfrac{500}{\pi}\;\Rightarrow\; r^*=\left(\dfrac{500}{\pi}\right)^{1/3}\approx 5.42\text{ cm}.$
+
+SOC: $S''(r) = 4\pi + \dfrac{4000}{r^3} > 0$ for all $r>0$, confirming a minimum.
+
+**Neat result:** check that $h^*=2r^*$. Since $h=1000/(\pi r^2)$ and we need $2r=1000/(\pi r^2)\iff 2\pi r^3=1000\iff r^3=500/\pi$ — exactly the FOC condition. So *the optimal can has height equal to its diameter*, $h^*\approx10.84$ cm. This is a good "surprising clean fact" to leave students with.
+
+---
+
+### Problem 2.3 (When first-order conditions aren't enough — multivariable) — 12 min
+Consider $f(x,y)=-x^2-y^2+3xy$. Verify $(0,0)$ satisfies the first-order conditions. Is it a maximum?
+
+**Solution.**
+$f'_x=-2x+3y,\; f'_y=-2y+3x$. At $(0,0)$: both are $0$ — FOCs hold.
+
+Check own second partials: $f''_{xx}=-2<0$, $f''_{yy}=-2<0$ — looks concave in each direction separately. But this is **not sufficient** in two dimensions; the cross-partial can dominate.
+
+Direct check: $f(t,t) = -t^2-t^2+3t^2=t^2>f(0,0)=0$ for all $t\neq0$. So moving along the diagonal $x=y$, the function *increases* — $(0,0)$ is **not** a maximum.
+
+**Why the algebra predicted this (ties to L2):** the Hessian is $H=\begin{bmatrix}-2&3\\3&-2\end{bmatrix}$. For a maximum we need $H$ negative definite: $\det H>0$ together with $f''_{xx}<0$. Here $\det H = (-2)(-2)-(3)(3)=4-9=-5<0$ — fails. Equivalently, the eigenvalues solve $(-2-\lambda)^2-9=0\Rightarrow\lambda=1$ or $\lambda=-5$: one positive, one negative eigenvalue. A symmetric matrix with eigenvalues of mixed sign is neither positive nor negative definite — $(0,0)$ is a **saddle point**.
+
+*Board tip:* this is a great moment to connect explicitly back to Lecture 2's determinant/eigenvalue tests for definiteness — the exact same machinery from Tutorial 1's Problem 1.4/1.5 block is what tells you a critical point is *not* an extremum here.
+
+---
+
+## Wrap-up (3 min)
+One-line summary: single-variable optimization needs $f'=0$ then a sign check on $f''$; multivariable needs *all* partials $=0$, then the *whole* Hessian checked for definiteness, not just the diagonal. Preview: "next week, most interesting economic problems add a constraint — budgets, time, resources — that's Lagrange multipliers."

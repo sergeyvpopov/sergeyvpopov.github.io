@@ -10,15 +10,15 @@ css: cardiff.css
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-For functions (you will meet them again and again during 2nd and 3rd year)
+For the following functions (you will meet them again and again in your second and third years):
 
-* $u_1(x_1,x_2,...,x_N)=a_1x_1+a_2+x_2+...a_n x_n,  a_i>0,$
-* $u_2(x_1,x_2,...,x_N)=x_1^{a_1}x_2^{a_2}...x_n^{a_n},  a_i>0,$
-* $u_3(x_1,x_2,...,x_N)=\min\left\{a_1x_1+b_1,a_2x_2+b_2,...,a_Nx_N+b_N\right\}, a_i>0,$
-* $u_4(x_1,x_2,...,x_N)=\max\left\{a_1x_1+b_1,a_2x_2+b_2,...,a_Nx_N+b_N\right\}, a_i>0,$
-* $u_5(x_1,x_2,...,x_N)=\left(a_1x_1^\rho+a_2x_2^{\rho}+...+a_nx_n^{\rho}\right)^{1/\rho},  a_i>0, \rho \not =0,$
-* $u_6(x_1,x_2)=v(x_1)+x_2, v(\cdot)$ is increasing and differentiable,
-* $u_7(x_1,x_2,...,x_N)=3-\sum_{i\in\{1..N\}} a_i(x_i-b_i)^2, a_i,b_i>0$:
+* $u_1(x_1,x_2,\ldots,x_n)=a_1x_1+a_2x_2+\ldots+a_n x_n,  a_i>0,$
+* $u_2(x_1,x_2,\ldots,x_n)=x_1^{a_1}x_2^{a_2}\ldots x_n^{a_n},  a_i>0,$
+* $u_3(x_1,x_2,\ldots,x_n)=\min\left\{a_1x_1+b_1,a_2x_2+b_2,\ldots,a_Nx_N+b_N\right\}, a_i>0,$
+* $u_4(x_1,x_2,\ldots,x_n)=\max\left\{a_1x_1+b_1,a_2x_2+b_2,\ldots,a_Nx_N+b_N\right\}, a_i>0,$
+* $u_5(x_1,x_2,\ldots,x_n)=\left(a_1x_1^\rho+a_2x_2^{\rho}+\ldots+a_nx_n^{\rho}\right)^{1/\rho},  a_i>0, \rho \not =0,$
+* $u_6(x_1,x_2)=v(x_1)+x_2$, $v(\cdot)$ is increasing and differentiable,
+* $u_7(x_1,x_2,\ldots,x_n)=3-\sum_{i\in\{1\ldots n\}} a_i(x_i-b_i)^2, a_i,b_i>0$:
 
 ## Derivatives
 
@@ -27,8 +27,6 @@ Calculate first and second derivatives. Notice that functions $u_3$ and $u_4$ mi
 ## Convexity and Concavity
 
 Find conditions on parameters that make functions (weakly) convex or concave (not always possible!). Start with $a_i=1$ and $b_i=0$ if it helps. 
-
 ## Constrained Optimization
 
-Maximize each utility function subject to $p_1 x_1+p_2 x_2+...+p_N x_N=m$. Explain why extremum that you found must be a maximum and not a minimum. This might or might not involve second derivatives.
-
+Maximize each utility function subject to $p_1 x_1+p_2 x_2+...+p_n x_n=m$; $x_i\geq 0$, $m>0$, $p_i>0 \forall i$. Explain why the extremum that you found must be a maximum and not a minimum. This might or might not involve second derivatives.

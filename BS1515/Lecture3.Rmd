@@ -29,16 +29,16 @@ We defined
 
 Today
 
-- functions of $\mathbb{R}\rightarrow \mathbb{R}$
+- functions defined on $\mathbb{R}\rightarrow \mathbb{R}$
 - derivatives
 - integrals
 
 ## Functions
 
-Any rule that assigns an element of *domain* set to the element of *codomain* set.
+Any rule that assigns to each element of the *domain* exactly one element of the *codomain*.
 
 - Examples: $y(x)=x^2$; metric; preference.
-- Graph: $g(x,y)=1$ iff $y=f(x)$ means g(x,y) is the graph of $f(x)$. Subgraph: everything below the graph. Supergraph: everything above the graph.
+- Graph of $f$: the set $\{(x,y): y=f(x)\}$. Subgraph (hypograph): everything on or below the graph. Supergraph (epigraph): everything on or above the graph.
 - If you have multiple values for the same *argument*, this is *correspondence*, not a function!
 - If you don't have a value for a certain argument, the function is *not well-defined*.
 
@@ -46,7 +46,7 @@ Any rule that assigns an element of *domain* set to the element of *codomain* se
 
 Demand: $Q(p):\mathbb{R}_{+}\rightarrow \mathbb{R}_{+}$.
 
-Inverse demand: $P(q)=Q^{-1}(p)=\{p:Q(p)=q\}$.
+Inverse demand: $P(q)=Q^{-1}(q)$, the $p$ such that $Q(p)=q$ (unique if demand is strictly decreasing).
 
 Total revenue: $TR(q)=q \cdot P(q)$.
 
@@ -54,25 +54,25 @@ Total cost: $TC(q)=F+VC(q):\mathbb{R}_{+}\rightarrow \mathbb{R}_{+}$.
 
 Profit: $\Pi(q)=TR(q)-TC(q)$.
 
-How would we choose output?..
+How would we choose output?
 
 ## What Kind of Functions Are There
 
 *Continuous*: a small change, left or right, does not change the value much.
 
-*Monotone*: an increase in argument leads to an increase in the result, same as *increasing*. *Monotone decreasing* is opposite.
+*Strictly increasing*: $x_1>x_2 \Rightarrow f(x_1)>f(x_2)$. *Strictly decreasing* is the opposite. *Monotone* means either increasing or decreasing.
 
-*Weakly* monotone: $x_1>x_2 \Rightarrow f(x_1)\geq f(x_2)$.
+*Weakly* increasing: $x_1>x_2 \Rightarrow f(x_1)\geq f(x_2)$.
 
-Demand: probably decreasing? If not monotone decreasing, hard to invert.
+Demand: probably decreasing? If not strictly decreasing, hard to invert.
 
 Continuous? Maybe...
 
-Total cost: probably increasing?..
+Total cost: probably increasing?
 
 ## Plot Functions
 
-```{tikz,fig.alt="Choosing a point by pointing at the graph", fig.ext='png'}
+```{tikz,fig.alt="Total revenue q(4-q) and total cost q^2/4 plotted against q", fig.ext='png'}
 
 \centering \begin{tikzpicture}[x=1.6cm,y=1.6cm]
 \draw[->] (0,0)--(4.1,0) node[right] {$q$};
@@ -93,19 +93,17 @@ Total cost: probably increasing?..
 
 *Infinitesimal calculus* is about studying small changes. Differential calculus: study what changes if we have a small change in the argument. Integral calculus: how do these changes accumulate.
 
-*Derivative* of a function is the slope of the function.
+*Derivative* of a function at a point is the slope of the tangent line to its graph at that point.
 
-*Integral* of a function is the area of the function's subgraph above zero (can be negative if the graph is below zero!)
+*Integral* of a function is the *signed* area between its graph and the horizontal axis: area above the axis counts as positive, area below counts as negative.
 
-Based on the concept of *limit*. A set of points $\{a_i\}$ is a *sequence* if
-- $i\in \{1,2,...\}$ 
-- order matters.
+Based on the concept of *limit*. A *sequence* $\{a_i\}$ is an ordered list $a_1,a_2,a_3,\ldots$ indexed by $i\in\{1,2,\ldots\}$ (values may repeat). 
 
-Sequences might have limit points. $A$ is a *limit point* of $\{a_i\}$ if $B_\varepsilon(A)$ contains an infinity of points of $\{a_i\}$ for all $\varepsilon$.
+Sequences might have limit points. $A$ is a *limit point* of $\{a_i\}$ if for every $\varepsilon>0$, $a_i\in B_\varepsilon(A)$ for infinitely many indices $i$.
 
-Point $A$ is a *limit* of $\{a_i\}$ if $\neg B_\varepsilon(A) \bigcap \{a_i\}$ is finite for all $\varepsilon$.
+Point $A$ is a *limit* of $\{a_i\}$ if for every $\varepsilon>0$, $a_i\notin B_\varepsilon(A)$ for only finitely many indices $i$.
 
-A sequence is decreasing if $a_{i+1}\leq a_i$.
+A sequence is decreasing if $\forall i\geq 1, a_{i+1}\leq a_i$.
 
 ## Limit Exercises
 
@@ -113,13 +111,13 @@ Prove: a decreasing bounded sequence has a limit.
 
 Prove: an increasing bounded sequence has a limit.
 
-Prove: $\{1,0,1,0,1,0,...\}$ does not have a limit.
+Prove: $\{1,0,1,0,1,0,\ldots\}$ does not have a limit.
 
-Prove: $\left\{\frac{1}{1},\frac{1}{2},\frac{1}{3},..\right\}$ has a limit.
+Prove: $\left\{\frac{1}{1},\frac{1}{2},\frac{1}{3},\ldots\right\}$ has a limit.
 
 Useful to know:
 
-- $\lim (a_n+b_n)=\lim a_n+\lim b_n$ as long as all are well defined
+- $\lim (a_n+b_n)=\lim a_n+\lim b_n$ as long as all exist
 
 - $\lim c\cdot a_n=c\cdot \lim a_n$
 
@@ -129,7 +127,7 @@ Prove: if $f()$ is continuous, $\lim f(a_n)=f(\lim a_n)$: continuous functions p
 
 \[f'(x)=\lim_{\Delta\rightarrow 0} \frac{f(x+\Delta)-f(x)}{\Delta}\]
 
-- as $\Delta\rightarrow 0$: take every $\Delta_n \rightarrow 0$
+- as $\Delta\rightarrow 0$: take every $\Delta_n \rightarrow 0,\Delta_n \not =0$
 - your $\frac{f(x+\Delta_n)-f(x)}{\Delta_n}$ must have the same limit, denoted by $f'(x)$.
 
 Example: $f(x)=x$ - what's the limit?
@@ -148,13 +146,13 @@ Imagine you know $f'(x)$ and $g'(x)$ and you need to find the derivative of $f(x
 
 \[\left(f(x)g(x)\right)'=f'(x)g(x)+g'(x)f(x)\]
 
-Prove: You know $x'=1$ and $(x^{n})'=nx^{n-1}$ for integer $n\geq 2$. Prove that $(x^{n+1})'=(n+1)x^{n}$.
+Prove: You know $x'=1$ and $(x^{n})'=nx^{n-1}$ for integer $n\geq 1$. Prove that $(x^{n+1})'=(n+1)x^{n}$.
 
 Prove: $(f(x)g(x)h(x))'=f'(x)g(x)h(x)+f(x)g'(x)h(x)+f(x)g(x)h'(x)$.
 
 Note that if you take $g(x)=1/f(x)$, you have $f(x)g(x)=1$.
 
-Prove: $(1/f(x))'=\frac{-f'(x)}{(f(x))^2}$.
+Prove: $(1/f(x))'=\frac{-f'(x)}{(f(x))^2}$. Do you need an assumption on $f(x)$?
 
 ## Composition of functions
 
@@ -162,9 +160,9 @@ Imagine you have $g(f(x))$, and you know $f'(x)$ and $g'(y)$. Then
 
 \[\left(g(f(x)) \right)'=g'(f(x))f'(x).\]
 
-Prove: $\left(\frac{1}{f(x)}\right)'=-\frac{1}{(f(x))^2}f'(x)$
+Prove using the chain rule: $\left(\frac{1}{f(x)}\right)'=-\frac{1}{(f(x))^2}f'(x)$
 
-Prove: $\left(\frac{g(x)}{f(x)}\right)'=\frac{f'(x)g(x)-g(x)f'(x)}{(f(x))^2}$
+Prove: $\left(\frac{g(x)}{f(x)}\right)'=\frac{f(x)g'(x)-g(x)f'(x)}{(f(x))^2}$
 
 Remember: $g(y)$ is an inverse of $y=f(x)$ if $g(f(x))=x$.
 
@@ -176,30 +174,32 @@ Prove: $(e^x)'=e^x$ knowing $e=\lim_{t\rightarrow 0} \left(1+t\right)^{1/t}$.
 
 Prove: $(a^x)'=\ln a\cdot a^x$.
 
-Prove: $(\ln x)'=1/x$ using the inverse function derivative formula..
+Prove: $(\ln x)'=1/x$ using the inverse function derivative formula.
 
 ## Example
 
 \[TR(q)=q\cdot (4-q), TC(q)=q^2/4 \Rightarrow \Pi(q)=4q-q^2-q^2/4.\]
 
-Imagine you are in the optimal point. What should be the derivative of the profit? Zero!
+Imagine you are at an (interior) optimal point. What should be the derivative of the profit? Zero!
 
 - If it is positive, produce a bit more, increase profits!
 - If it is negative, produce a bit less, increase profits!
 
-$\Pi'(q)=4-q^* 5/2=0$ so $q^*=8/5.$
+$\Pi'(q)=4-5/2q^* =0$ so $q^*=8/5.$
 
 We will expand on optimization next week.
 
 ## Implicit Function Theorem
 
-If $f(x,y)=0$ can't be solved for an analytical solution, as long as $f'_y(x,y)$ is not zero and derivatives are continuous, there is a local $\phi(x)$ such that $f(x,\phi(x))=0$ and $y^*=\phi(x^*$ in the neighborhood of $(x^*,y^*)$.
+Suppose $f(x^*,y^*)=0$, but we can't solve $f(x,y)=0$ explicitly for $y$. ($f'_x$ and $f'_y$ denote derivatives with respect to one variable, holding the other fixed.) As long as $f'_y(x^*,y^*)\neq 0$ and the derivatives are continuous, there is a function $\phi(x)$, defined near $x^*$, such that $f(x,\phi(x))=0$ and $y^*=\phi(x^*)$.
 
 Example: let $f(x,y)=\sqrt{x^2+y^2}-1$. Then there are two solutions at $x^*=1/2$, one is $y^*=\frac{\sqrt{3}}{2}$ and another at $y^*=\frac{-\sqrt{3}}{2}$, so there is no *function* that would tell what happens to the solution if we change $x$. But there is a function near $(1/2,\sqrt{3}/2)$ and another near $(1/2,-\sqrt{3}/2)$.
 
 For such a $\phi(x)$, it should work that $f(x,\phi(x))=0$. Take a derivative with respect to $x$ of both sides:
 \[f'_x(x,\phi(x))+f'_y(x,\phi(x))\phi'(x)=0,\]
-so $\phi'(x)=-\frac{f'_x(x,\phi(x))}{f'_y(x,\phi(x))}.$ Since the right-hand side is continuous, this differential equation has a solution.
+so $\phi'(x)=-\frac{f'_x(x,\phi(x))}{f'_y(x,\phi(x))}$. Since the right-hand side is continuous, this differential equation has a solution.
+
+At $x^*=1$, $y^*=0$ we have $f'_y=0$, and there is no such function: for $x$ slightly above 1 there is no solution, and for $x$ slightly below 1 there are two.
 
 ## Integrals
 
@@ -209,7 +209,7 @@ Example: speed as a function of time. Derivative is acceleration; integral is di
 
 *Indefinite* integral is $\int f(x) dx$: defined up to a constant. *Definite* integral has limits: $\int_a^b f(x) dx$. *Improper* might have an infinity on one of the sides.
 
-Example: if $MC(q)=a+bq$, $TC(q)=aq+b/2 q^2+c$ --- fixed costs are impossible to deduce from MC!
+Example: if $MC(q)=a+bq$, $TC(q)=aq+\frac{b}{2} q^2+c$ --- fixed costs are impossible to deduce from MC!
 
 ## Rules for integrals
 
@@ -217,11 +217,11 @@ Example: if $MC(q)=a+bq$, $TC(q)=aq+b/2 q^2+c$ --- fixed costs are impossible to
 
 \[\int x^n dx=\frac{1}{n+1} x^{n+1}+C, n\not =-1.\]
 
-\[\int 1/x dx=ln x +C.\]
+\[\int 1/x dx=\ln |x| +C.\]
 
 \[\int e^x dx=e^x +C.\]
 
-\[\int a^x dx=\frac{1}{\ln a}a^x +C.\]
+\[\int a^x dx=\frac{1}{\ln a}a^x +C, a>0, a\not =1.\]
 
 ## Integration by Substitution
 
@@ -242,25 +242,25 @@ so if you have to find $\int u'(x)v(x) dx$ you can use
 
 Example:
 
-\[\int \frac{ln (x)}{x^2}dx\]
+\[\int \frac{\ln (x)}{x^2}dx\]
 
 Observe that $\ln'(x)=1/x$ so let $u'(x)=\frac{1}{x^2}$ and $v(x)=\ln(x)$, then
 \[u(x)=-1/x, v'(x)=1/x\]
 and
-\[\int \frac{\ln (x)}{x^2}dx=\ln(x)\frac{-1}{x}+C-\int \frac{-1}{x}\frac{1}{x}=-\frac{\ln (x)+1}{x}+C\]
+\[\int \frac{\ln (x)}{x^2}dx=\ln(x)\frac{-1}{x}+C-\int \frac{-1}{x}\frac{1}{x}dx=-\frac{\ln (x)+1}{x}+C\]
 
 ## Examples
 
 Consider a sphere of radius $R$. What is the volume of this sphere?
 
-Answer: if we slice it by circles, each circle has an area of $\pi r^2$ for some r. What kind of $r$s do we see? Draw the sphere around $0$, take $x\in [-R,R]$. Take the set $\{(x,y,z)|x=x_0\}$; it's a circle of radius $r=\sqrt{R^2-x_0^2}$. Let us add these circles together as a function of x:
+Answer: if we slice it by circles, each circle has an area of $\pi r^2$ for some r. What kind of $r$s do we see? Draw the sphere around $0$, take $x\in [-R,R]$. Take the set $\{(x,y,z)|x=x_0,x^2+y^2+z^2\leq R^2\}$; it's a disk of radius $r=\sqrt{R^2-x_0^2}$. Let us add these disks together as a function of x:
 \[\int_{-R}^R \pi (R^2-x^2) dx\]
 The indefinite integral is $\pi (R^2 x-x^3/3)+C$; taken from $-R$ to $R$ you get
 \[\pi (\frac{2}{3}R^3-(-\frac{2}{3}R^3))=\frac{4}{3}\pi R^3.\]
 
 ## Useful Ideas
 
-Continuous functions on an interval are integrable.
+Continuous functions on closed intervals are integrable.
 
 \[\int_a^b f(x) dx= F(b)-F(a).\]
 
@@ -268,7 +268,7 @@ Continuous functions on an interval are integrable.
 
 \[\left(\int_a^b f(x) dx\right)'_a=-F'(a)=-f(a).\]
 
-\[\left(\int_a^b f(t,x) dx\right)'_a=\int_a^b f'_t(t,x)dx.\]
+\[\left(\int_a^b f(t,x) dx\right)'_t=\int_a^b f'_t(t,x)dx.\]
 
 All of these need technical assumptions but if (a) your functions are continuous and (b) you are on an interval, you should be fine.
 
@@ -276,8 +276,8 @@ All of these need technical assumptions but if (a) your functions are continuous
 
 ## Summary for Today
 
-- Derivatives: an increase in a function
+- Derivatives: a rate of change in a function
 
 - Integrals: a sum over values of the function
 
-- We will be using them for things
+- We will be using them for optimization next week

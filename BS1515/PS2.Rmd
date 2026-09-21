@@ -11,14 +11,14 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ## Systems of Equations using Matrix Inversion
-Solve Systems of Equations problem in PS1 by inverting matrices where possible, and explain why some matrices cannot be inverted.
+Solve Systems of Equations problems in PS1 by inverting matrices where possible, and explain why some matrices cannot be inverted.
 
 ## Range and Null Space
 Let $A=\begin{bmatrix}2 & 3 & 5 \\ -4 & 2 & 3 \end{bmatrix}.$
 
 - Verify that $v=\begin{bmatrix}−1/16 \\ −13/8 \\ 1\end{bmatrix}$ is an element of the null space of this matrix. Are there any others?
-- Verify that only zero vector is in $A$'s left null space (such a space that consists only of null vector is known as a *trivial* space).
-- What does this imply about this matrix' rank, column space, and row space?
+- Verify that only zero vector is in $A$'s left null space (such a space that consists only of zero vector is known as a *trivial* space).
+- What does this imply about this matrix's rank, column space, and row space?
 
 ## Matrix Operations
 
@@ -51,9 +51,9 @@ E=\begin{bmatrix}
 0 & 0 & -3
 \end{bmatrix}\]
 
-- Solve for $AB,BA,AC,CA,AD,DA,AE,EA,BC,CB,BD,DB,BE,EB,CD,DC,CE,EC,DE,ED$
-- Is it true that $PQ$=$QP$ for a pair of square matrices $P$ and $Q$?
-- Verify that $P^TQ^T=(QP)^T$
+- Compute $AB,BA,AC,CA,AD,DA,AE,EA,BC,CB,BD,DB,BE,EB,CD,DC,CE,EC,DE,ED$
+- Is it true that $PQ$=$QP$ for any pair of square matrices $P$ and $Q$?
+- Verify that $P^TQ^T=(QP)^T$ 
 - Calculate determinants of all these matrices.
 - Which matrices have inverses? Find them using Gaussian Elimination.
 - Calculate these matrices’ eigenvalues and eigenvectors.

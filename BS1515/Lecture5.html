@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Sergey V. Popov" />
-  <meta name="date" content="2026-09-19" />
+  <meta name="date" content="2026-09-21" />
   <title>BS 1515 Lecture 5: Constrained Optimization</title>
   <style type="text/css">
 code{white-space: pre-wrap;}
@@ -399,13 +399,13 @@ list-style-type: none;
   <p class="author">
 Sergey V. Popov
   </p>
-  <p class="date">2026-09-19</p>
+  <p class="date">2026-09-21</p>
 </div>
 <div id="last-time" class="slide section level2">
 <h1>Last Time</h1>
 <ul>
 <li>Maxima, minima, inflection points</li>
-<li>interior and corner solution</li>
+<li>interior and corner solutions</li>
 </ul>
 <p>Today: constrained optimization</p>
 <p>Why do we care about constrained optimization:</p>
@@ -423,11 +423,13 @@ interesting</p></li>
 make you happier: <span class="math inline">\(u&#39;_L(L,S)&gt;0\)</span>, <span class="math inline">\(u&#39;_S(L,S)&gt;0\)</span>. You have the budget
 of 8 hours a day. How do you choose?</p>
 <p>Economists: you have the utility function <span class="math inline">\(u(L,S)\)</span>, maximize it.</p>
-<p><span class="math inline">\(\max_{L,S} u(L,S)\)</span></p>
-<p>No interior solution: <span class="math inline">\(u&#39;_L(L,S)&gt;0\)</span>, <span class="math inline">\(u&#39;_S(L,S)&gt;0\)</span>. Must be a boundary
-solution!</p>
-<p><span class="math inline">\(L=8-S\)</span> so <span class="math inline">\(\max_S u(8-S,S)\)</span>. Take derivative: <span class="math display">\[-u&#39;_L(8-S,S)+u_S(8-S,S)=0 \Leftrightarrow
-u&#39;_L(8-S,S)=u&#39;_S(8-S,S).\]</span></p>
+<p><span class="math inline">\(\max_{L,S} u(L,S) \text{ s.t. } L+S\leq
+8.\)</span></p>
+<p>Since <span class="math inline">\(u&#39;_L&gt;0\)</span> and <span class="math inline">\(u&#39;_S&gt;0\)</span>, you will use all your
+time: the constraint binds, <span class="math inline">\(L+S=8\)</span>.
+(The optimum may also be at a corner, <span class="math inline">\(S=0\)</span> or <span class="math inline">\(S=8\)</span>, so check those too.)</p>
+<p><span class="math inline">\(L=8-S\)</span> so <span class="math inline">\(\max_S u(8-S,S)\)</span>. Take a derivative: <span class="math display">\[-u&#39;_L(8-S,S)+u&#39;_S(8-S,S)=0
+\Leftrightarrow u&#39;_L(8-S,S)=u&#39;_S(8-S,S).\]</span></p>
 <ul>
 <li><span class="math inline">\(u(L,S) = L +S^2\)</span></li>
 <li><span class="math inline">\(u(L,S) = L^{2/3} S^{1/3}\)</span></li>
@@ -435,8 +437,8 @@ u&#39;_L(8-S,S)=u&#39;_S(8-S,S).\]</span></p>
 \sqrt{L}+2\sqrt{S}\)</span>.</li>
 </ul>
 </div>
-<div id="generic-problem-border-constraint" class="slide section level2">
-<h1>Generic Problem: Border Constraint</h1>
+<div id="generic-problem-equality-constraint" class="slide section level2">
+<h1>Generic Problem: Equality Constraint</h1>
 <p><span class="math display">\[\max_{x,y} u(x,y)\text{ s.t.
 }f(x,y)=C\]</span></p>
 <p>What if you cannot solve for <span class="math inline">\(y\)</span>
@@ -446,23 +448,22 @@ as a function of <span class="math inline">\(x\)</span>?</p>
 f&#39;_y(x,y)\)</span>.</p>
 <p>Instead of maximizing <span class="math inline">\(u(x,y)\)</span>,
 look for extrema of</p>
-<p><span class="math display">\[L(x,y,\lambda)=u(x,y)-\lambda
+<p><span class="math display">\[\mathcal{L}(x,y,\lambda)=u(x,y)-\lambda
 [f(x,y)-C]\]</span></p>
 <p>choosing <span class="math inline">\(x,y,\lambda\)</span> - we are
-looking for max wrt <span class="math inline">\(x,y\)</span> and min wrt
-<span class="math inline">\(\lambda\)</span>. First order conditions
-are</p>
-<p><span class="math display">\[L&#39;_x=0: u&#39;_x(x,y)-\lambda
-f&#39;_x(x,y)=0\]</span> <span class="math display">\[L&#39;_y=0:
-u&#39;_y(x,y)-\lambda f&#39;_y(x,y)=0\]</span> <span class="math display">\[L&#39;_\lambda=0: f(x,y)-C=0\]</span></p>
+looking for max wrt <span class="math inline">\(x,y,\)</span> and <span class="math inline">\(\lambda\)</span>. First order conditions are</p>
+<p><span class="math display">\[\mathcal{L}&#39;_x=0:
+u&#39;_x(x,y)-\lambda f&#39;_x(x,y)=0\]</span> <span class="math display">\[\mathcal{L}&#39;_y=0: u&#39;_y(x,y)-\lambda
+f&#39;_y(x,y)=0\]</span> <span class="math display">\[\mathcal{L}&#39;_\lambda=0:
+f(x,y)-C=0\]</span></p>
 </div>
 <div id="envelope-theorem" class="slide section level2">
 <h1>Envelope Theorem</h1>
-<p><span class="math display">\[\mathbb{L}(x,y,\lambda)=u(x,y)-\lambda
+<p><span class="math display">\[\mathcal{L}(x,y,\lambda)=u(x,y)-\lambda
 [f(x,y)-C]\]</span></p>
 <p>Imagine we have solutions <span class="math inline">\(x(C),y(C),\lambda(C)\)</span>, then we can obtain
 a utility function of <span class="math inline">\(C\)</span></p>
-<p><span class="math display">\[u(C)=u(x(C),y(C))=\mathbb{L}(x(C),y(C),\lambda(C))=\]</span><span class="math display">\[\quad =u(x(C),y(C))-\lambda(C)
+<p><span class="math display">\[u(C)=u(x(C),y(C))=\mathcal{L}(x(C),y(C),\lambda(C))=\]</span><span class="math display">\[\quad =u(x(C),y(C))-\lambda(C)
 \overbrace{[f(x(C),y(C))-C]}^{=0}\]</span></p>
 <p>Take a derivative with respect to <span class="math inline">\(C\)</span>:</p>
 <p><span class="math display">\[u&#39;_C=u&#39;_x\cdot
@@ -474,11 +475,12 @@ x&#39;_C+f&#39;_y \cdot y&#39;_C-1]\]</span></p>
 f&#39;_x]\cdot x&#39;_C+[u&#39;_y-\lambda f&#39;_y]\cdot
 y&#39;_C-\lambda[-1]=\lambda.\]</span></p>
 <p>Interpretation: <span class="math inline">\(\lambda\)</span>, the
-Lagrange multiplier, is the “price” of an extra unit of <span class="math inline">\(u(\cdot,\cdot)\)</span> if the constraint is
+Lagrange multiplier, is the “gain” of an extra unit of <span class="math inline">\(u(\cdot,\cdot)\)</span> if the constraint is
 relaxed (<span class="math inline">\(C\)</span> increases). Zero means
 constraint does not matter locally.</p>
-<p>Lesson: When taking derivatives with respect to parameters, just take
-derivative of the Lagrange function.</p>
+<p>Lesson: When taking derivatives of the optimal value with respect to
+parameters, just take the derivative of the Lagrange function, holding
+the choice variables at their optimal values.</p>
 </div>
 <div id="example" class="slide section level2">
 <h1>Example</h1>
@@ -487,7 +489,7 @@ labour <span class="math inline">\(L\)</span> and capital <span class="math inli
 <p><span class="math display">\[\min_{L,K} rK+wL \text{ s.t. }
 F(K,L)=Q.\]</span></p>
 <p>The Lagrange function is</p>
-<p><span class="math display">\[\mathbb{L}(L,K,\lambda)=rK+wL-\lambda(F(K,L)-Q).\]</span></p>
+<p><span class="math display">\[\mathcal{L}(L,K,\lambda)=rK+wL-\lambda(F(K,L)-Q).\]</span></p>
 <p>Imagine we have the solution (will depend on the shape of <span class="math inline">\(F(\cdot)\)</span>)</p>
 <ul>
 <li>Example: <span class="math inline">\(F(K,L)=a
@@ -506,9 +508,11 @@ C\]</span></p>
 <span class="math inline">\(f&#39;_y(x,y)=\lambda
 g&#39;_y(x,y)\)</span>.</p>
 <p>Inequality: <span class="math inline">\(\lambda\)</span> cannot be
-negative! Zero if constraint does not bind, or positive.</p>
+negative! It is zero if the constraint does not bind, and can be
+positive only if it binds: <span class="math inline">\(\lambda\,[f(x,y)-C]=0\)</span> (<em>complementary
+slackness</em>).</p>
 <p>Prove: if constraint is <span class="math inline">\(f(x,y)\geq
-С\)</span>, <span class="math inline">\(\lambda\)</span> must be zero or
+C\)</span>, <span class="math inline">\(\lambda\)</span> must be zero or
 negative.</p>
 <p>Example: <span class="math inline">\(\max_{x,y} -(x-5)^2-(y-x)^2
 \text{ s.t. } x+y\leq 7\)</span>.</p>
@@ -517,8 +521,7 @@ constraints?</p>
 </div>
 <div id="multiple-constraints" class="slide section level2">
 <h1>Multiple Constraints</h1>
-<p>If you have two variables and two constraints, and they both
-bind:</p>
+<p>If you have two variables and two constraints:</p>
 <ul>
 <li>Equality constraints: <span class="math inline">\((x,y)\)</span>
 that satisfy both could be unique</li>
@@ -536,11 +539,9 @@ that satisfy both could be unique</li>
 <p>People have utility over consumption <span class="math inline">\(C\)</span> and kids <span class="math inline">\(K\)</span>: <span class="math inline">\(u(C,K)\)</span></p>
 <p>They are constrained by income <span class="math inline">\(p C+m
 K\leq wL\)</span>, where <span class="math inline">\(L\)</span> is how
-much time you work,</p>
+much time they work.</p>
 <p>They are constrained by time <span class="math inline">\(T(L,K) \leq
-24\)</span>. How to pick <span class="math inline">\(K\)</span> and
-<span class="math inline">\(C\)</span>?</p>
-<p><span class="math display">\[\mathbb{L}(C,K,L,\lambda,\mu)=u(C,K)-\lambda(pC+mK-wL)-\mu(T(L,K)-24).\]</span></p>
+24\)</span>. How to pick <span class="math inline">\(C\)</span>, <span class="math inline">\(K\)</span> and <span class="math inline">\(L\)</span>? <span class="math display">\[\mathbb{L}(C,K,L,\lambda,\mu)=u(C,K)-\lambda(pC+mK-wL)-\mu(T(L,K)-24).\]</span></p>
 <p>First-order conditions: <span class="math display">\[\mathbb{L}&#39;_C=u&#39;_C(C,K)-\lambda
 p=0.\]</span> <span class="math display">\[\mathbb{L}&#39;_L=\lambda
 w-\mu T&#39;_L(L,K)=0.\]</span> <span class="math display">\[\mathbb{L}&#39;_K=u&#39;_K(C,K)-\lambda m-\mu
@@ -554,12 +555,13 @@ T&#39;_K(L,K)=0.\]</span></p>
 u&#39;_C(C,K)}{pT&#39;_L(L,K)}.\]</span> <span class="math display">\[\mathbb{L}&#39;_K=u&#39;_K(C,K)-\lambda m-\mu
 T&#39;_K(L,K)=0.\Rightarrow\]</span><span class="math display">\[\Rightarrow
 \frac{u&#39;_K(C,K)}{u&#39;_C(C,K)}=\frac{m}{p}+\frac{w}{p}\frac{T&#39;_K(L,K)}{T&#39;_L(L,K)}.\]</span></p>
-<p>What would you do if you had two consumable goods, <span class="math inline">\(x_1\)</span> an <span class="math inline">\(x_2\)</span>?</p>
+<p>What would you do if you had two consumable goods, <span class="math inline">\(x_1\)</span> and <span class="math inline">\(x_2\)</span>?</p>
 </div>
 <div id="sufficient-conditions" class="slide section level2">
 <h1>Sufficient Conditions</h1>
-<p>To warrant maximum/minimum, need to check convexity/concavity.</p>
-<p>For one dimension: check second derivative</p>
+<p>To guarantee a maximum/minimum, need to check
+concavity/convexity.</p>
+<p>For one dimension: check second derivative.</p>
 <p>For two dimensions: check second derivatives and
 cross-derivatives.</p>
 <p>For three dimensions: same + check if going in all 3 variables away
@@ -567,13 +569,13 @@ from the extremum leads to opposite sign.</p>
 </div>
 <div id="quadratic-forms" class="slide section level2">
 <h1>Quadratic Forms</h1>
-<p>Imagine we are dealing with <span class="math inline">\(f(x)=C+wx+\frac{1}{2}x^TAx\)</span>. If it was
+<p>Imagine we are dealing with <span class="math inline">\(f(x)=C+w^Tx+\frac{1}{2}x^TAx\)</span>. If it was
 one-dimensional, we’d have <span class="math inline">\(f&#39;(x)=w+ax\)</span> and <span class="math inline">\(f&#39;&#39;(x)=a\)</span>. If we knew that <span class="math inline">\(a&gt;0\)</span>, we could say that <span class="math inline">\(x^*=-\frac{w}{a}\)</span> is a local minimum.</p>
 <p>For a matrix of second derivatives, we’d need a way of saying that
 <span class="math inline">\(A\)</span> makes any deviation from <span class="math inline">\(x^*\)</span> higher.</p>
 <p>Or <span class="math inline">\((x-x^*)^TA(x-x^*)&gt;0\)</span>. This
 is called <em>positive definite</em> — see Lecture 2.</p>
-<p>For maximum of <span class="math inline">\(f(x,y)\)</span>, need to
+<p>For maximum of <span class="math inline">\(f(x)\)</span>, need to
 check if <span class="math inline">\(A\)</span> is <em>negative
 definite</em>.</p>
 </div>
@@ -583,18 +585,15 @@ definite</em>.</p>
 f(x_1,x_2...x_N)\)</span>: write out the <em>Hessian matrix</em></p>
 <p><span class="math display">\[H=\begin{bmatrix}
     f_{11}&#39;&#39; &amp; f_{12}&#39;&#39;&amp; \cdots &amp;
-f_{N1}&#39;&#39;\\
+f_{1N}&#39;&#39;\\
     f_{21}&#39;&#39; &amp; f_{22}&#39;&#39;&amp; \cdots &amp;
-f_{N2}&#39;&#39;\\
-    \vdots &amp; \vdots &amp;                             &amp; \ddots
-&amp; \vdots\\
-    f_{1N}&#39;&#39; &amp; f_{2N}&#39;&#39;&amp; \cdots &amp;
+f_{2N}&#39;&#39;\\
+    \vdots &amp; \vdots &amp;      \ddots &amp; \vdots\\
+    f_{N1}&#39;&#39; &amp; f_{N2}&#39;&#39;&amp; \cdots &amp;
 f_{NN}&#39;&#39;
 \end{bmatrix}\]</span></p>
-<p>Minimum is unique if this matrix is <em>positive
-(semi)definite</em>.</p>
-<p>Maximum is unique if this matrix is <em>negative
-(semi)definite</em>.</p>
+<p>Minimum is unique if this matrix is <em>positive definite</em>.</p>
+<p>Maximum is unique if this matrix is <em>negative definite</em>.</p>
 </div>
 <div id="example-2" class="slide section level2">
 <h1>Example</h1>
@@ -602,13 +601,13 @@ f_{NN}&#39;&#39;
 y\)</span> subject to <span class="math inline">\(p_x x+p_y
 y=m\)</span>. The Lagrangean is <span class="math display">\[\mathbb{L}(x,y,\lambda)=u(x,y)-\lambda(p_x x+p_y
 y-m)\]</span> First order conditions are <span class="math display">\[\mathbb{L}&#39;_x=\frac{A}{x}-\lambda p_x=0
-\Rightarrow \lambda=\frac{x p_x}{A}.\]</span> <span class="math display">\[\mathbb{L}&#39;_x=\frac{B}{y}-\lambda p_y=0
-\Rightarrow \lambda=\frac{y p_y}{B}.\]</span></p>
-<p>Therefore <span class="math inline">\(\frac{x p_x}{A}=\frac{y
-p_y}{B}\)</span>. Substitute to the budget constraint: <span class="math display">\[p_x x+\frac{B}{A} p_x x = m \Rightarrow
+\Rightarrow \lambda={A}\frac{x p_x}.\]</span> <span class="math display">\[\mathbb{L}&#39;_x=\frac{B}{y}-\lambda p_y=0
+\Rightarrow \lambda={B}\frac{y p_y}.\]</span></p>
+<p>Therefore <span class="math inline">\(\frac{A}{x p_x}=\frac{B}{y
+p_y}\)</span>. Substitute to the budget constraint: <span class="math display">\[p_x x+\frac{B}{A} p_x x = m \Rightarrow
 x=\frac{1}{1+B/A}\frac{m}{p_x}=\frac{A}{A+B}\frac{m}{p_x}.\]</span></p>
 <p>Similarly <span class="math inline">\(y=\frac{B}{A+B}
-\frac{m}{p}\)</span>.</p>
+\frac{m}{p_y}\)</span>.</p>
 </div>
 <div id="example---concavity" class="slide section level2">
 <h1>Example - Concavity</h1>
@@ -620,28 +619,32 @@ y-m)\]</span></p>
     -p_x &amp; -p_y &amp; 0
 \end{bmatrix}\]</span></p>
 </div>
-<div id="checking-for-negative-semidefiniteness" class="slide section level2">
-<h1>Checking for Negative Semidefiniteness</h1>
-<ul>
-<li>Diagonal elements are negative where nonzero? Yes!</li>
-<li>Second minors are positive where nonzero? Yes!</li>
-<li>Determinant of the whole thing is zero? This is ok!</li>
-</ul>
-<p>So yes, we found the maximum.</p>
+<div id="checking-the-second-order-condition" class="slide section level2">
+<h1>Checking the Second-Order Condition</h1>
+<p>With 2 variables and 1 constraint, a point satisfying the first-order
+conditions is a local maximum if the determinant of the bordered Hessian
+is positive (and a local minimum if it is negative).</p>
+<p>Here <span class="math inline">\(\det
+H=\frac{A}{x^2}p_y^2+\frac{B}{y^2}p_x^2&gt;0\)</span>, so yes, we found
+the maximum.</p>
+<p>Shortcut: <span class="math inline">\(u\)</span> is concave (since
+<span class="math inline">\(A,B&gt;0\)</span>) and the constraint is
+linear, so any point satisfying the first-order conditions is a
+maximum.</p>
 </div>
 <div id="for-now" class="slide section level2">
 <h1>For now</h1>
 <p>Solve for demand</p>
 <ul>
-<li><span class="math inline">\(u(x_1,x_2,x_3..x_N)=a_1\ln(x_1)+a_2
+<li><span class="math inline">\(u(x_1,x_2,x_3..x_n)=a_1\ln(x_1)+a_2
 \ln(x_2)+...+a_n \ln(x_n)\)</span></li>
-<li><span class="math inline">\(u(x_1,x_2,x_3..x_N)=(a_1x_1^\rho+a_2
-x_2^\rho+...+a_n x_n^\rho)^{1/\rho}\)</span>, <span class="math inline">\(\rho&lt;1\)</span></li>
-<li><span class="math inline">\(u(x_1,x_2,x_3..x_N)=a_1
+<li><span class="math inline">\(u(x_1,x_2,x_3..x_n)=(a_1x_1^\rho+a_2
+x_2^\rho+...+a_n x_n^\rho)^{1/\rho}\)</span>, <span class="math inline">\(\rho&lt;1\)</span>, <span class="math inline">\(\rho\not=0\)</span></li>
+<li><span class="math inline">\(u(x_1,x_2,x_3..x_n)=a_1
 x_1+a_2x_2+...+a_nx_n\)</span></li>
-<li><span class="math inline">\(u(x_1,x_2,x_3..x_N)=\min(a_1x_1,a_2x_2,...,a_nx_n)\)</span>
+<li><span class="math inline">\(u(x_1,x_2,x_3..x_n)=\min(a_1x_1,a_2x_2,...,a_nx_n)\)</span>
 (hint: minimum does not have a derivative in a lot of places)</li>
-<li><span class="math inline">\(u(x_1,x_2,x_3..x_N)=\max(a_1x_1,a_2x_2,...,a_nx_n)\)</span>
+<li><span class="math inline">\(u(x_1,x_2,x_3..x_n)=\max(a_1x_1,a_2x_2,...,a_nx_n)\)</span>
 (hint: maximum does not have a derivative in a lot of places)</li>
 </ul>
 <p>where <span class="math inline">\(a_i&gt;0\)</span> for <span class="math inline">\(i\in \{1,..n\}\)</span>, and the budget constraint
@@ -655,10 +658,12 @@ x_n=m.\]</span></p>
 </div>
 <div id="today" class="slide section level2">
 <h1>Today</h1>
-<p>We learned - Lagrange approach to optimization - How to check for
-optimum (almost: need to know how to find the determinant of the
-matrix)</p>
-<p>Next time: Homework!</p>
+<p>We learned</p>
+<ul>
+<li>Lagrange approach to constrainted optimization</li>
+<li>How to check for what kind of optimum we found</li>
+</ul>
+<p>Next time: In-Class Test!</p>
 </div>
 
   <!-- dynamically load mathjax for compatibility with self-contained -->

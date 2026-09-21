@@ -13,7 +13,7 @@
 
 <meta name="date" content="2026-09-21" />
 
-<title>Problem Set 5: Multidimensional Optimization</title>
+<title>BS 1515 Tutorial 2: Optimization</title>
 
 <script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
 // be compatible with the behavior of Pandoc < 2.8).
@@ -351,44 +351,145 @@ display: none;
 
 
 
-<h1 class="title toc-ignore">Problem Set 5: Multidimensional
-Optimization</h1>
+<h1 class="title toc-ignore">BS 1515 Tutorial 2: Optimization</h1>
 <h4 class="author">Sergey V. Popov</h4>
 <h4 class="date">2026-09-21</h4>
 
 </div>
 
 
-<p>For the following functions (you will meet them again and again in
-your second and third years):</p>
-<ul>
-<li><span class="math inline">\(u_1(x_1,x_2,\ldots,x_n)=a_1x_1+a_2x_2+\ldots+a_n
-x_n,  a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_2(x_1,x_2,\ldots,x_n)=x_1^{a_1}x_2^{a_2}\ldots
-x_n^{a_n},  a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_3(x_1,x_2,\ldots,x_n)=\min\left\{a_1x_1+b_1,a_2x_2+b_2,\ldots,a_Nx_N+b_N\right\},
-a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_4(x_1,x_2,\ldots,x_n)=\max\left\{a_1x_1+b_1,a_2x_2+b_2,\ldots,a_Nx_N+b_N\right\},
-a_i&gt;0,\)</span></li>
-<li><span class="math inline">\(u_5(x_1,x_2,\ldots,x_n)=\left(a_1x_1^\rho+a_2x_2^{\rho}+\ldots+a_nx_n^{\rho}\right)^{1/\rho},  a_i&gt;0,
-\rho \not =0,\)</span></li>
-<li><span class="math inline">\(u_6(x_1,x_2)=v(x_1)+x_2\)</span>, <span class="math inline">\(v(\cdot)\)</span> is increasing and
-differentiable,</li>
-<li><span class="math inline">\(u_7(x_1,x_2,\ldots,x_n)=3-\sum_{i\in\{1\ldots n\}}
-a_i(x_i-b_i)^2, a_i,b_i&gt;0\)</span>:</li>
-</ul>
-<div id="derivatives" class="section level2">
-<h2>Derivatives</h2>
-<p>Calculate first and second derivatives. Notice that functions <span class="math inline">\(u_3\)</span> and <span class="math inline">\(u_4\)</span> might not be differentiable.</p>
+<div id="timing-overview" class="section level2">
+<h2>Timing overview</h2>
+<table>
+<colgroup>
+<col width="33%" />
+<col width="33%" />
+<col width="33%" />
+</colgroup>
+<thead>
+<tr class="header">
+<th>Time</th>
+<th>Segment</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>0–5</td>
+<td>FOC/SOC recap</td>
+<td>L4</td>
+</tr>
+<tr class="even">
+<td>5–20</td>
+<td>Fence problem (single-variable, constrained by substitution)</td>
+<td>PS4</td>
+</tr>
+<tr class="odd">
+<td>20–35</td>
+<td>Tin-can problem (single-variable, real minimisation)</td>
+<td>PS4</td>
+</tr>
+<tr class="even">
+<td>35–47</td>
+<td>Multivariable example: when do FOCs fail to give a max?</td>
+<td>L4, tying back to L2</td>
+</tr>
+<tr class="odd">
+<td>47–50</td>
+<td>Wrap-up / preview</td>
+<td>—</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Opening recap (5 min, board only, no new problem):</strong>
+Write the three-line logic from L4: if <span class="math inline">\(f&#39;(x^*)&gt;0\)</span> you can improve by
+moving right; if <span class="math inline">\(f&#39;(x^*)&lt;0\)</span>
+you can improve by moving left; so an interior maximum needs <span class="math inline">\(f&#39;(x^*)=0\)</span>. Then <span class="math inline">\(f&#39;&#39;(x^*)&lt;0\)</span> confirms a max,
+<span class="math inline">\(f&#39;&#39;(x^*)&gt;0\)</span> confirms a
+min, <span class="math inline">\(f&#39;&#39;(x^*)=0\)</span> needs more
+work (inflection). This is the template for both problems below.</p>
+<hr />
+<div id="problem-2.1-fenced-rectangle-15-min" class="section level3">
+<h3>Problem 2.1 (Fenced rectangle) — 15 min</h3>
+<p>You have 50 metres of fence. What rectangle shape maximises the
+enclosed area?</p>
+<p><strong>Solution.</strong> Let the sides be <span class="math inline">\(x\)</span> and <span class="math inline">\(y\)</span>. The perimeter constraint is <span class="math inline">\(2x+2y=50\Rightarrow y=25-x\)</span> (this
+substitution is exactly the “solve the constraint, plug in” trick from
+L1 on equations). Area as a function of <span class="math inline">\(x\)</span> alone: <span class="math display">\[A(x)=x(25-x)=25x-x^2,\qquad x\in[0,25].\]</span>
+FOC: <span class="math inline">\(A&#39;(x)=25-2x=0\Rightarrow
+x^*=12.5.\)</span> SOC: <span class="math inline">\(A&#39;&#39;(x)=-2&lt;0\)</span>, so this is a
+maximum. Then <span class="math inline">\(y^*=25-12.5=12.5\)</span>:
+<strong>the optimal rectangle is a square</strong>, <span class="math inline">\(12.5\text{m}\times12.5\text{m}\)</span>, giving
+area <span class="math inline">\(156.25\text{ m}^2\)</span>.</p>
+<p><em>Discussion prompt:</em> ask why we didn’t need to check the
+endpoints <span class="math inline">\(x=0,25\)</span> — because <span class="math inline">\(A(0)=A(25)=0\)</span>, clearly worse, and <span class="math inline">\(A\)</span> is concave (a single interior critical
+point of a concave function on an interval is automatically the global
+max, per the Weierstrass + concavity argument from L4).</p>
+<hr />
 </div>
-<div id="convexity-and-concavity" class="section level2">
-<h2>Convexity and Concavity</h2>
-<p>Find conditions on parameters that make functions (weakly) convex or
-concave (not always possible!). Start with <span class="math inline">\(a_i=1\)</span> and <span class="math inline">\(b_i=0\)</span> if it helps. ## Constrained
-Optimization</p>
-<p>Maximize each utility function subject to <span class="math inline">\(p_1 x_1+p_2 x_2+...+p_n x_n=m\)</span>; <span class="math inline">\(x_i\geq 0\)</span>, <span class="math inline">\(m&gt;0\)</span>, <span class="math inline">\(p_i&gt;0 \forall i\)</span>. Explain why the
-extremum that you found must be a maximum and not a minimum. This might
-or might not involve second derivatives.</p>
+<div id="problem-2.2-minimal-material-can-15-min" class="section level3">
+<h3>Problem 2.2 (Minimal-material can) — 15 min</h3>
+<p>Design a cylindrical can to hold 1 litre (<span class="math inline">\(1000\text{ cm}^3\)</span>). What shape minimises
+the material used (total surface area)?</p>
+<p><strong>Solution.</strong> Let radius <span class="math inline">\(r\)</span>, height <span class="math inline">\(h\)</span>. Volume constraint: <span class="math inline">\(\pi r^2 h = 1000 \Rightarrow h = \dfrac{1000}{\pi
+r^2}\)</span>.</p>
+<p>Surface area (top + bottom + side): <span class="math display">\[S(r)
+= 2\pi r^2 + 2\pi r h = 2\pi r^2 + 2\pi r\cdot\frac{1000}{\pi r^2} =
+2\pi r^2 + \frac{2000}{r}.\]</span></p>
+<p>FOC: <span class="math inline">\(S&#39;(r) = 4\pi r -
+\dfrac{2000}{r^2} = 0 \;\Rightarrow\; 4\pi r^3 = 2000 \;\Rightarrow\;
+r^3 = \dfrac{500}{\pi}\;\Rightarrow\;
+r^*=\left(\dfrac{500}{\pi}\right)^{1/3}\approx 5.42\text{
+cm}.\)</span></p>
+<p>SOC: <span class="math inline">\(S&#39;&#39;(r) = 4\pi +
+\dfrac{4000}{r^3} &gt; 0\)</span> for all <span class="math inline">\(r&gt;0\)</span>, confirming a minimum.</p>
+<p><strong>Neat result:</strong> check that <span class="math inline">\(h^*=2r^*\)</span>. Since <span class="math inline">\(h=1000/(\pi r^2)\)</span> and we need <span class="math inline">\(2r=1000/(\pi r^2)\iff 2\pi r^3=1000\iff
+r^3=500/\pi\)</span> — exactly the FOC condition. So <em>the optimal can
+has height equal to its diameter</em>, <span class="math inline">\(h^*\approx10.84\)</span> cm. This is a good
+“surprising clean fact” to leave students with.</p>
+<hr />
+</div>
+<div id="problem-2.3-when-first-order-conditions-arent-enough-multivariable-12-min" class="section level3">
+<h3>Problem 2.3 (When first-order conditions aren’t enough —
+multivariable) — 12 min</h3>
+<p>Consider <span class="math inline">\(f(x,y)=-x^2-y^2+3xy\)</span>.
+Verify <span class="math inline">\((0,0)\)</span> satisfies the
+first-order conditions. Is it a maximum?</p>
+<p><strong>Solution.</strong> <span class="math inline">\(f&#39;_x=-2x+3y,\; f&#39;_y=-2y+3x\)</span>. At
+<span class="math inline">\((0,0)\)</span>: both are <span class="math inline">\(0\)</span> — FOCs hold.</p>
+<p>Check own second partials: <span class="math inline">\(f&#39;&#39;_{xx}=-2&lt;0\)</span>, <span class="math inline">\(f&#39;&#39;_{yy}=-2&lt;0\)</span> — looks concave
+in each direction separately. But this is <strong>not
+sufficient</strong> in two dimensions; the cross-partial can
+dominate.</p>
+<p>Direct check: <span class="math inline">\(f(t,t) =
+-t^2-t^2+3t^2=t^2&gt;f(0,0)=0\)</span> for all <span class="math inline">\(t\neq0\)</span>. So moving along the diagonal
+<span class="math inline">\(x=y\)</span>, the function
+<em>increases</em> — <span class="math inline">\((0,0)\)</span> is
+<strong>not</strong> a maximum.</p>
+<p><strong>Why the algebra predicted this (ties to L2):</strong> the
+Hessian is <span class="math inline">\(H=\begin{bmatrix}-2&amp;3\\3&amp;-2\end{bmatrix}\)</span>.
+For a maximum we need <span class="math inline">\(H\)</span> negative
+definite: <span class="math inline">\(\det H&gt;0\)</span> together with
+<span class="math inline">\(f&#39;&#39;_{xx}&lt;0\)</span>. Here <span class="math inline">\(\det H = (-2)(-2)-(3)(3)=4-9=-5&lt;0\)</span> —
+fails. Equivalently, the eigenvalues solve <span class="math inline">\((-2-\lambda)^2-9=0\Rightarrow\lambda=1\)</span> or
+<span class="math inline">\(\lambda=-5\)</span>: one positive, one
+negative eigenvalue. A symmetric matrix with eigenvalues of mixed sign
+is neither positive nor negative definite — <span class="math inline">\((0,0)\)</span> is a <strong>saddle
+point</strong>.</p>
+<p><em>Board tip:</em> this is a great moment to connect explicitly back
+to Lecture 2’s determinant/eigenvalue tests for definiteness — the exact
+same machinery from Tutorial 1’s Problem 1.4/1.5 block is what tells you
+a critical point is <em>not</em> an extremum here.</p>
+<hr />
+</div>
+</div>
+<div id="wrap-up-3-min" class="section level2">
+<h2>Wrap-up (3 min)</h2>
+<p>One-line summary: single-variable optimization needs <span class="math inline">\(f&#39;=0\)</span> then a sign check on <span class="math inline">\(f&#39;&#39;\)</span>; multivariable needs
+<em>all</em> partials <span class="math inline">\(=0\)</span>, then the
+<em>whole</em> Hessian checked for definiteness, not just the diagonal.
+Preview: “next week, most interesting economic problems add a constraint
+— budgets, time, resources — that’s Lagrange multipliers.”</p>
 </div>
 
 
