@@ -15,13 +15,13 @@ knitr::opts_chunk$set(echo = FALSE)
 
 We as economists:
 
-- Describe what people do with allocation of resources (empirics)
+- Describe what people do with the allocation of resources (empirics)
 
-- Developing stories about why they behave (theory)
+- Develop stories about why they behave that way (theory)
 
 Both of these require math:
 
-- why data methods applied to data produce meaningful results (empirics)
+- why statistical methods applied to data produce meaningful results (empirics)
 
 - why assumptions about individual behavior lead to predictions (theory)
 
@@ -29,11 +29,11 @@ Math is how economists argue.
 
 ## Math
 
-Math studies logic applied to things.
+Math studies what follows logically from precise assumptions.
 
 - Agents behaving optimally: What's an agent? How do they choose? What's the difference between optimal and not optimal? How do agents interact?
-- Things being random: what things? If one thing happened, can another thing happen at the same time? If one thing happened, do we know if another might happen more likely?
-- Countries developing: what resources they use? how do they combine? why different countries use similar resources with drastically different results?
+- Things being random: what things? If one thing happened, can another thing happen at the same time? If one thing happened, does that make another thing more likely?
+- Countries developing: what resources do they use? How are they combined? why do different countries get drastically different results from similar resources?
 
 Things we study today will apply to other parts of this course, and will be useful for other courses as well.
 
@@ -42,31 +42,32 @@ Things we study today will apply to other parts of this course, and will be usef
 April 2, 2025: Trump imposed tariffs on all other countries
 
 - minimum 10%
-- more at countries with trade deficit in goods but not services
-- planning to abolish income tax, use tariff income instead
+- higher rates for countries with a large trade deficit in goods, services trade ignored
+- suggested to abolish income tax, use tariff income instead
 
 Questions:
 
 - How is it supposed to work?
 - Need to think about foreign producers and consumers
 - Need to think about domestic producers and consumers
-- Where does the tax formula come from
+- Where does the tax formula come from?
 
 Need to argue precisely! (or cause markets to collapse)
 
 ## Sets
 
-The fundamental of calculus is a *set*, containing *elements*.
+The fundamental object of mathematics is a *set*, containing *elements*.
 
+- Set of numbers $\{1,2,3\}$.
 - Set of students $\{\text{John},\text{Megan},\text{Dylan},\text{Susie}...\}$.
 - Set of students in this classroom.
-- Set of students who is supposed in this classroom.
+- Set of students who are supposed in this classroom.
 
 An object can be *in* a set ($a \in A$) or *not in* ($a \not \in A$).
 
 If all elements of set $B$ are in set $A$, $B$ is a *subset* of $A$: $B \subseteq A$; $A$ is a *superset* of $B$.
 
-If there are elements in $A$ that are not in $B$, $B$ is a *proper subset* of $A$: $B \subset A$, and $A$ is a *proper superset* of $B$.
+If there are elements in $A$ that are not in subset $B$, $B$ is a *proper subset* of $A$: $B \subset A$, and $A$ is a *proper superset* of $B$.
 
 *Empty set* containing no elements is $\emptyset=\{\}$. *Singleton* set contains one element.
 
@@ -75,13 +76,14 @@ If there are elements in $A$ that are not in $B$, $B$ is a *proper subset* of $A
 When shopping, people have *budgets* (say £100/week) and decide on a shopping basket
 
 - set of all shopping baskets
+- set of affordable shopping baskets (the budget set)
 
 When choosing where to study, pupils choose
 
-- the set of university to apply - rules restrict
+- the set of university to apply - rules restrict it
 - school to attend
 
-When deciding on the stock/bond portfolio
+When deciding on a stock/bond portfolio
 
 - proportions of assets
 - amount of money to invest
@@ -90,16 +92,16 @@ When deciding on the stock/bond portfolio
 
 We can manipulate sets:
 
-- A *complement* of $A$ denoted as $\neg A= \{a: a \not \in A\}$
+- A *complement* of $A$ denoted as $\neg A= \{a: a \not \in A\}$ - need to know *what else* - all sets need to have a *space* $S$
 - *union* of $A$ and $B$ denoted as $A \cup B=\{a \in A: a \in B\}$. 
-- *intersection* of $A$ and $B$ denoted as $A \cap B= \{a\in A: a \in B\}$. 
+- *intersection* of $A$ and $B$ denoted as $A \cap B= \{a\in A \text{ or } a \in B\}$. 
 - *subtraction* of $B$ from $A$ denoted as $A \setminus B=\{a \in A : a \not \in B\}$.
 
 $\land$ means AND. $\lor$ means OR. $\Rightarrow$ means part on the left implies part on the right. $\Leftrightarrow$ means when left part holds, right part holds, and vice versa.
 
 Prove: $A \setminus B = A \cap \neg B$.
 
-Prove: $A \cap B \subseteq A \cup B$. When can we claim that $A \cup B \subset A \cap B$?
+Prove: $A \cap B \subseteq A \cup B$. When can we claim that $A \cup B \subseteq A \cap B$?
 
 Prove: $A \cup B = (A \cap B) \cup (A \setminus B) \cup (B \setminus A)$.
 
@@ -107,41 +109,42 @@ Prove: $A \cup B = (A \cap B) \cup (A \setminus B) \cup (B \setminus A)$.
 
 ```{r,engine='tikz',fig.alt="Two overlapping sets to illustrate the operations with sets"}
 \begin{tikzpicture}
- \draw[fill=red!40!white, draw=black, fill opacity=0.3] (0,0) circle (0.6cm) node[yshift=-1cm, color=red!40!white, fill opacity=1] {$A$};
+\draw (-1,-1.4) rectangle (2,0.9) node[below left] {$S$};
+ \draw[fill=red!70!black, draw=black, fill opacity=0.3] (0,0) circle (0.6cm) node[yshift=-1cm, color=red!40!white, fill opacity=1] {$A$};
  \draw[fill=green!40!black, draw=black, fill opacity=0.3] (1,0) circle (0.6cm) node[yshift=-1cm, color=green!40!black, fill opacity=1] {$B$};
 \end{tikzpicture}
 ```
 
-*Space* is important!
+*Space* $S$ is important!
 
 ## Exercises for Sets
 
-Consider a 52-cards standard deck. A poker hand is 5 cards drawn from this deck at random. Verify claims:
+Consider a standard 52-cardsdeck. A poker hand is 5 cards drawn from this deck at random. Verify claims:
 
-- The set of poker hands featuring three of a kind is a subset of a set of poker hands featuring a pair.
+- The set of poker hands featuring three of a kind is a subset of the set of poker hands featuring a pair.
 
-- The set of poker hands featuring two pairs is a subset of a set of poker hands featuring a pair.
+- The set of poker hands featuring two pairs is a subset of the set of poker hands featuring a pair.
 
-- The set of poker hands featuring a straight (cards in sequence of rank ignoring suites) and the set of poker hands featuring a pair do not overlap.
+- The set of poker hands featuring a straight (cards in sequence of rank ignoring suits) and the set of poker hands featuring a pair do not overlap.
 
 - The set of poker hands featuring a flush (5 cards of the same suit) and the set of poker hands containing a straight do not overlap.
 
-- The set of poker hands containing full house is an intersection of hands containing three of a kind and hands that contain a pair.
+- The set of poker hands containing a full house is an intersection of hands containing three of a kind and hands that contain a pair.
 
 ## Functions
 
-*Function* $f:A\rightarrow B$ is a rule that gives an element of $B$ for every element of $A$.
+*Function* $f:A\rightarrow B$ is a rule that gives exactly one element of $B$ for every element of $A$.
 
 $f(x)=2x+3$ is an example of $f:\mathbb{R}\rightarrow \mathbb{R}$.
 
-$F(x,y)=0$ is an *implicit function*.
+$F(x,y)=0$ can define an *implicit function* of $y(x)$ or of $x(y)$.
 
 - Not always a "true" function that gives you $y$ of $x$!
 - $F(x,y)=y-2x-3=0$ gives you a function $y=2x+3$.
 - $F(x,y)=y^2-x=0$ gives you two values of $y$ for each value of $x\geq 0$.
 - We'll come back to these later.
 
-*One-to-one* function: for each element of $A$ you get a *unique* element of $B$.
+*One-to-one* function: for each element of $B$ you get a distinct element of $A$.
 
 *Onto* function: for each $b\in B$ there is an  $a\in A$ that gives $f(a)=b$.
 
@@ -155,20 +158,20 @@ If both, function is *invertible*. $f(x)=x^2$ is invertible when defined on $\ma
 
 - $f(x)=a+bx$ is invertible if $b\not =0$.
 
-Why invertibility matters?
+Why does invertibility matter?
 
 - If we have a function from unobservables to data, we want to infer unobservables from data
 
 ## Real numbers
-*Naturals* $\mathbb{N}=\{1,2,3,..\}$
+*Naturals* $\mathbb{N}=\{1,2,3,\ldots\}$
 
 *Integers* $\mathbb{Z}=\mathbb{N}\cup\{0\}\cup(-\mathbb{N})$
 
-*Rationals* $\mathbb{Q}=\{a/b: a, b\in \mathbb{N}\}$
+*Rationals* $\mathbb{Q}=\{a/b: a, a\in \mathbb{Z}, b\in \mathbb{N}\}$
 
-*Reals* $\mathbb{R}$ are different: includes $\mathbb{Q}$ and *irrationals* such as $\sqrt{2}$. Reals have a property that  $\forall X,Y \text{ such that }\forall x \in X \text{ and }\forall y \in Y x<y \Rightarrow \exists z:x<z<y$.
+*Reals* $\mathbb{R}$ are different: includes $\mathbb{Q}$ and *irrationals* such as $\sqrt{2}$. Reals is a set that has a *separability* property that  $\forall X,Y\subset A \text{ such that }\forall x \in X \text{ and }\forall y \in Y x<y \Rightarrow \exists z\in A :x\leq z\leq y$.
 
-Notice that $\mathbb{Q}$ does not have this property: $X=\{t:t^2<2\}$ and $Y=\{t:t^2>2\}$ are not separated by any $z \in \mathbb{Q}$!
+Notice that $\mathbb{Q}$ does not have this property: $X=\{t\in\mathbb{Q}:t\leq 0 \text{ or } t^2<2\}$ and $Y=\{t\in\mathbb{Q}:t>0,\ t^2>2\}$ are not separated by any $z \in \mathbb{Q}$ (the only number between them is $\sqrt{2}$)!
 
 *Euclidean space* $\mathbb{R}^N$ for $N\in \mathbb{N}$.
 
@@ -178,9 +181,11 @@ Metrics must be
 
 (a) positive: $d(x,y)\geq 0$;
 
-(b) symmetric: $d(x,y)=d(y,x)$; and
+(b) symmetric: $d(x,y)=d(y,x)$;
 
-(c) $d(x,y)\leq d(x,z)+d(z,y)$ - triangular inequality.
+(c) $d(x,y)\leq d(x,z)+d(z,y)$ - triangular inequality; and
+
+(d) $d(x,x)=0$.
 
 ## Important Reals
 
@@ -192,11 +197,11 @@ Neither can be represented as a solution to a polynomial equation with integer c
 
 ## Countable Sets
 
-Set is *countable* if there is an invertible function from the set to $\mathbb{N}$.
+Set is *finite* if it is empty or there is an invertible function from the set to $\{1,2,\ldots,n\}$ for some $n\in\mathbb{N}$.
 
-Set is *finite* if there is no onto function from $\mathbb{N}$ to the set.
+  Set is *countable* if it is finite or there is an invertible function from the set to $\mathbb{N}$.
 
-Set is *uncountable* otherwise.
+  Set is *uncountable* if it is not countable.
 
 Prove: $\mathbb{Q}$ is countable. (hard!)
 
@@ -206,7 +211,7 @@ Prove: $\mathbb{R}$ is uncountable. (hard!)
 
 Open $\varepsilon$-ball around $x$: $B_\varepsilon(x)=\{t:d(x,t)<\varepsilon\}$.
 
-A set $A$ is *open* in space *S* with metric $d(x,y)$ if $\forall x \in A \exists \varepsilon>0: B_{\varepsilon}(x) \subset A$.
+A set $A$ is *open* in space *S* with metric $d(x,y)$ if $\forall x \in A \exists \varepsilon>0: B_{\varepsilon}(x) \subseteq A$.
 
 A set $A$ is *closed* if complement of $A$, $\neg A=S\setminus A$, is open.
 
@@ -221,11 +226,11 @@ Prove: An empty set $\emptyset$ is both closed and open in $S$.
 
 ## Order and Intervals
 
-Some spaces are *ordered*: there is a function $R(x,y)$ such that $R(x,y)=TRUE$ or $R(x,y)=FALSE$ for $x,y \in S$.
+Some spaces are *ordered*: there is a relation $R(x,y)$, TRUE or FALSE for each $x,y \in S$, that is transitive ($R(x,y)$ and $R(y,z)$ imply $R(x,z)$). It is a *complete* order if for any $x,y$ at least one of $R(x,y)$, $R(y,x)$ holds; otherwise it is *partial*.
 
-- $\mathbb{R}$ is ordered with respect to ``bigger than'' order $>$
-- $\mathbb{R^2}$ is partially ordered with respect to $>(x,y)=TRUE$ if $x_1>y_1\land x_2>y_2$.
-- If you have a *utility function* over your *consumption bundles*, your preference relation is ordered.
+- $\mathbb{R}$ is ordered with respect to "bigger than" order $>$
+- $\mathbb{R}^2$ is partially ordered with respect to $>(x,y)=TRUE$ if $x_1>y_1\land x_2>y_2$.
+- If you have a *utility function* over your *consumption bundles*, your preference relation is complete and ordered.
 
 Interval $(a,b) \subseteq S$ is $\{x:a<x<b\}$. Interval $[a,b] \subseteq S$ is $\{x:a\leq x \leq b\}$.
 
@@ -247,9 +252,9 @@ Prove: an intersection of two convex sets is convex.
 
 Prove: empty set is convex.
 
-Prove: any single element set is convex.
+Prove: any singleton is convex.
 
-Prove: the space set is convex.
+Prove: $\mathbb{R}^N$ is convex.
 
 ## Equalities and Inequalities
 
@@ -275,7 +280,7 @@ Plot it:
 \end{tikzpicture}
 ```
 
-Is that an open set? Now do the same with equality.
+Is that an open set?
 
 ## System of Inequalities
 
@@ -323,7 +328,7 @@ Plot it:
 \draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
 \begin{scope}
 \clip (-4,-2) rectangle (4,2);
- \draw[draw=red!40!white, thick, dashed] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
+ \draw[draw=red!40!white, thick] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
  \end{scope}
 \end{tikzpicture}
 ```
@@ -349,8 +354,8 @@ Plot it:
 \draw[] (-0.1,\x)--(0.1,\x) node[right] {$\x$};
 \begin{scope}
 \clip (-4,-2) rectangle (4,2);
- \draw[draw=red!40!white, thick, dashed] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
- \draw[draw=green!40!white, thick, dashed] (-3,5)--(5,-3)--(4,4);
+ \draw[draw=red!40!white, thick] (-6,4.5)--(6,-1.5)--(6,-6)--(-6,-6);
+ \draw[draw=green!40!white, thick] (-3,5)--(5,-3)--(4,4);
  \end{scope}
 \end{tikzpicture}
 ```
@@ -365,13 +370,13 @@ Answer 1: $3p-20=60-p$ so $4p=80$ and $p=20$ and $Q=60-20=40$.
 
 Answer 2: solve a system of $Q=60-p$ and $Q=3p-20$.
 
-Now you know: how do we know there is a solution?..
+Now you know: how do we know there is a solution?
 
 ## Continuous Functions
 
-A function $f:D\rightarrow E$ is *continuous* at $x$ if for every $\varepsilon>0$ there is a $\delta>0$ such that for all $x'\in B_\varepsilon(x)$ it holds that $f(x') \in B_\delta (f(x))$.
+A function $f:D\rightarrow E$ is *continuous* at $x$ if for every $\varepsilon>0$ there is a $\delta>0$ such that for all $x'\in B_\delta(x)$ it holds that $f(x') \in B_\varepsilon (f(x))$.
 
-*Intermediary Value Theorem*: For continuous function $f(\cdot)$, if $f(a)=f_1$ and $f(b)=f_2$, there is $x$ in $[a,b]$ such that $f(x)=f$ for every $f$ in $[f_1,f_2]$.
+Intermediate Value Theorem*: If $f(\cdot)$ is continuous on $[a,b]$, then for every value $c$ between $f(a)$ and $f(b)$ there is an $x\in[a,b]$ such that $f(x)=c$.
 
 Important part: $f(\cdot)$ is *continuous*: no jumps!
 
@@ -381,14 +386,21 @@ Good news for us: can establish that an equation/system of equations has a solut
 
 ## Maximum Theorem
 
-Let $f(x,y)$ be continuous function on a compact set. Then $max_x f(x,y)$ exists and is continuous in $y$.
+Let $f(x,y)$ be continuous function with $x$ on a compact set $X$. Then $\max_x f(x,y)$ exists and is continuous in $y$.
 
 Extends to multiple dimensions and constraints.
 
-*Compact* means contains all limits. Closed and bounded in $\mathbb{R}^N$, but not enough for $\mathbb{R}^\infty$!
+*Compact* means every covering by open sets has a finite subcovering. Closed and bounded in $\mathbb{R}^N$, but not enough for $\mathbb{R}^\infty$!
 
 Good news for us: people maximizing utility will choose something as long as their constraints make sense.
 
-## Plan for next week
+## Summary
 
-We will talk more about derivatives and how do we use them for optimization. We will use the notions of functions and sets from this lecture.
+This week:
+- We introduced the concepts of sets, spaces, and functions
+- We talked about how are they related to equations and systems
+
+Next week:
+- Multi-dimensional spaces
+- Linear functions and systems
+- Matrices and vectors

@@ -25,40 +25,40 @@ Why do we care about matrices
 
 -   Data is matrices
 
--   Matrix operations are faster on the computer, all algo trading and LLM stuff is a bunch of linear algebra
+-   Computers handle matrix operations very efficiently; machine learning and algorithmic trading rely heavily on linear algebra
 
 -   All smooth functions can be approximated by a linear (or quadratic) function locally
 
 ## Vectors
 
-Vector space: space where elements can be added and multiplied by a *scalar*.
+Vector space: space where elements can be added and multiplied by a *scalar* and results stay in the space.
 
 Vector axioms:
 
-- Associativity: $\mathbb{u}+(\mathbb{v}+\mathbb{w})=(\mathbb{u}+\mathbb{v})+\mathbb{w}$.
-- Commutativity: $\mathbb{u}+\mathbb{v}=\mathbb{v}+\mathbb{u}$.
-- There is a zero element: $\mathbb{u}+\mathbb{0}=\mathbb{u}$.
-- $\forall \mathbb{v}$ there is an additive inverse $\mathbb{-v}$: $\mathbb{v}+(\mathbb{-v})=0$.
-- Scalar multiplication is associative: $a(b\mathbb{v})=(ab)\mathbb{v}$.
-- Multiplying by 1 does not change anything: $1\mathbb{v}=\mathbb{v}$.
-- Distributivity wrt to vector addition: $a(\mathbb{v}+\mathbb{w})=a\mathbb{v}+a\mathbb{w}$.
-- Distributivity wrt to scalar multiplication: $(a+b)\mathbb{v}=a\mathbb{v}+b\mathbb{v}$.
+- Associativity: $\mathbf{u}+(\mathbf{v}+\mathbf{w})=(\mathbf{u}+\mathbf{v})+\mathbf{w}$.
+- Commutativity: $\mathbf{u}+\mathbf{v}=\mathbf{v}+\mathbf{u}$.
+- There is a zero element: $\mathbf{u}+\mathbf{0}=\mathbf{u}$.
+- $\forall \mathbf{v}$ there is an additive inverse $\mathbf{-v}$: $\mathbf{v}+(\mathbf{-v})=\mathbf{0}$.
+- Scalar multiplication is associative: $a(b\mathbf{v})=(ab)\mathbf{v}$.
+- Multiplying by 1 does not change anything: $1\mathbf{v}=\mathbf{v}$.
+- Distributivity wrt vector addition: $a(\mathbf{v}+\mathbf{w})=a\mathbf{v}+a\mathbf{w}$.
+- Distributivity wrt addition of scalars: $(a+b)\mathbf{v}=a\mathbf{v}+b\mathbf{v}$.
 
 ## Vectors
 
-Prove: $\mathbb{R}$ is a vector space.
+Prove: $\mathbf{R}$ is a vector space.
 
-Prove: $0\mathbb{v}=\mathbb{0}$.
+Prove: $0\mathbf{v}=\mathbf{0}$.
 
-Prove: $s\mathbb{0}=\mathbb{0}$.
+Prove: $s \mathbf{0}=\mathbf{0}$.
 
-Prove: $-1\mathbb{v}=\mathbb{-v}$.
+Prove: $-1\mathbf{v}=\mathbf{-v}$.
 
-Prove: $s\mathbb{v}=\mathbb{0}$ means either $s=0$ or $\mathbb{v}=\mathbb{0}$.
+Prove: $s\mathbf{v}=\mathbf{0}$ means either $s=0$ or $\mathbf{v}=\mathbf{0}$.
 
 ## Linear Algebra
 
-Most of the times vectors we are going to be working with are based on real numbers:
+Most of the time, the vectors we work with have real number entries:
 
 \[V=\begin{bmatrix}
     v_1 \\
@@ -89,7 +89,7 @@ Transpose: if $V$ is a row vector of length $N$,
     v_1 \\ v_2 \\ \vdots \\ v_N
 \end{bmatrix}\]
 
-Vector multiply: if $W$ is a row and $V$ is a column
+Vector multiply: if $W$ is a row and $V$ is a column both length $N$:
 \[WV=w_1v_1+w_2v_2+...+w_Nv_N.\]
 
 ## Matrices
@@ -101,11 +101,11 @@ Vector multiply: if $W$ is a row and $V$ is a column
     a_{M1} & a_{M2} & \cdots & a_{MN} 
 \end{bmatrix}\]
 
-$A$ is a $M\times N$ matrix. Square matrices are $N\times N$.
+$A$ is an $M\times N$ matrix. Square matrices are $N\times N$.
 
-- Row vectors are $1\times M$ matrices.
-- Column vectors are $N\times 1$ matrices.
-- Identity matrix $I_N$ is a $N\times N$ matrix with 1s on the diagonal and 0s outside:
+- Row vectors are $1\times N$ matrices.
+- Column vectors are $M\times 1$ matrices.
+- Identity matrix $I_N$ is an $N\times N$ matrix with 1s on the diagonal and 0s outside:
 
 \[I_N=\begin{bmatrix}
     1 & 0 & \cdots & 0 \\
@@ -115,6 +115,8 @@ $A$ is a $M\times N$ matrix. Square matrices are $N\times N$.
 \end{bmatrix}.\]
 
 ## Matrix as a Set of Vectors
+
+A *linear combination* of vectors $v_1,\ldots,v_K$ is any $c_1v_1+c_2v_2+\ldots+c_Kv_K$ with scalars $c_1,\ldots,c_K$.
 
 Let $A=\begin{bmatrix}
     a_{11} & a_{12} & \cdots & a_{1N} \\
@@ -129,7 +131,7 @@ Let $A=\begin{bmatrix}
     \vdots \\
     a_{M1}  
 \end{bmatrix}$, $\begin{bmatrix}
-    a_{21}  \\
+    a_{12}  \\
     a_{22}  \\
     \vdots \\
     a_{M2}  
@@ -145,7 +147,7 @@ Let $A=\begin{bmatrix}
 
 If $A$ is an $M\times N$ matrix,
 
-- can multiply by a $N$-long column vector $v$ on the right:
+- can multiply by an $N$-long column vector $v$ on the right:
 \[Av=\begin{bmatrix}
     a_{11} & a_{12} & \cdots & a_{1N} \\
     a_{21} & a_{22} & \cdots & a_{2N} \\
@@ -162,9 +164,9 @@ If $A$ is an $M\times N$ matrix,
     \vdots\\
     a_{M1}v_{1}+a_{M2}v_2+...+a_{MN}v_N \\  
 \end{bmatrix}.\]
-- can multiply by a $M$-long column vector $w$ on the left:
+- can multiply by a $M$-long row vector $w$ on the left:
 \[wA=\begin{bmatrix}
-    w_{1} &  w_{2} & \cdots    w_{M}  
+    w_{1} &  w_{2} & \cdots    & w_{M}  
 \end{bmatrix}\begin{bmatrix}
     a_{11} & a_{12} & \cdots & a_{1N} \\
     a_{21} & a_{22} & \cdots & a_{2N} \\
@@ -204,8 +206,8 @@ If $A$ is an $M\times N$ matrix,
  v <- cbind(c(2,1,3,1));
  w <- c(2,3,1);
  printmatrix<-function(m){write.table(format(m, justify="right"),row.names=F, col.names=F, quote=F)};
- printmatrix(w%*%A)
  printmatrix(A%*%v)
+ printmatrix(w%*%A)
  printmatrix(w%*%A%*%v)
  
 ```
@@ -214,10 +216,10 @@ If $A$ is an $M\times N$ matrix,
 
 Take $A$ - $M \times N$ matrix.
 
-- Column space, or range, of $A$ is the set of vectors $A x$ for $x$ being $N\times 1$-dimenstional vector; this is a subspace of a $M$-dimensional vector space.
-- Row space of $A$ is the set of vectors $wA$ for $w$ being $1\times M$-dimenstional vector; this is a subspace of a $N$-dimensional row vector space.
-- Null space of $A$, or *kernel*, is the set of $N\times 1$-dimensional vectors $z$ such that $Az=0$. Observe that every $z$ multiplied by anything from the column space is zero.
-- Left null space of $A$ is the set of $1\times M$-dimensional vectors $y$ such that $yA=0$. Observe that $y$ multiplied by anything from the row space is zero.
+- Column space, or range, of $A$ is the set of vectors $A x$ for all   $N\times 1$-dimenstional vectors $x$; this is a subspace of an $M$-dimensional vector space.
+- Row space of $A$ is the set of vectors $wA$ for all  $1\times M$-dimenstional vectors $w$; this is a subspace of an $N$-dimensional row vector space.
+- Null space of $A$, or *kernel*, is the set of $N\times 1$-dimensional vectors $z$ such that $Az=0$. Observe that every row of $A$ multiplied by $z$ gives zero, so $z$ is orthogonal to everything in the row space.
+- Left null space of $A$ is the set of $1\times M$-dimensional vectors $y$ such that $yA=0$. Observe that $y$ multiplied by every column of $A$ gives zero, so $y$ is orthogonal to everything in the column space.
 
 ## Systems of Linear Equations
 
@@ -269,10 +271,10 @@ Is it possible that there is no inverse? Yes. Consider $A=\begin{bmatrix}
 
 - Prove: any matrix that has a zero row or a zero column cannot be *invertible*.
 - Prove: any matrix that has two identical rows or columns cannot be invertible.
-- Prove: any matrix that has two rows (or columns) such as one is a scale multiple of another cannot be invertible.
-- Prove: any matrix that has a row (or columns) which is the sum of two other rows (or columns) cannot be invertible.
+- Prove: any matrix that has two rows (or columns) such that one is a scalar multiple of the other cannot be invertible.
+- Prove: any matrix that has a row (or column) which is the sum of two other rows (or columns) cannot be invertible.
 
-*Rank* of the matrix is the number of linearly independent rows (or columns). $N\times N$ matrices with rank $N$ are *full rank*. Only they are invertible.
+Vectors are *linearly independent* if none of them is a linear combination of the others. *Rank* of the matrix is the maximum number of linearly independent rows (equivalently, columns). $N\times N$ matrices with rank $N$ are *full rank*. Only they are invertible.
 
 ## Gaussian Elimination
 Imagine you want to invert matrix $A$. Write two matrices, $A$ and $I$, together
@@ -298,7 +300,7 @@ Multiply by scalars, add subtract rows of both matrices at the same time to obta
 \[\begin{bmatrix}
     1 & \frac{a_{12}}{a_{11}} & \frac{a_{13}}{a_{11}} \\
     0 & a_{22}-\frac{a_{21}a_{12}}{a_{11}} & a_{23}-\frac{a_{21} a_{13}}{a_{11}} \\
-    0 & a_{32}-\frac{a_{31}a_{13}}{a_{11}} & a_{33}-\frac{a_{31} a_{13}}{a_{11}} 
+    0 & a_{32}-\frac{a_{31}a_{12}}{a_{11}} & a_{33}-\frac{a_{31} a_{13}}{a_{11}} 
 \end{bmatrix}\begin{bmatrix}
     \frac{1}{a_{11}} & 0 & 0 \\
     -\frac{a_{21}}{a_{11}} & 1 & 0 \\
@@ -330,19 +332,19 @@ Generically, depends on the notion of the *determinant*.
 
 ## Determinant
 
-A *permutation* is a (finite) set of numbers where order matters. For a $N \times N$ matrix, take all permutations of $\{1,2,3,..N\}$, denote them $S_N$. Let $sgn(\sigma)$ denote the sign of permutation $\sigma\in S_N$: 
+A *permutation* is a (finite) set of numbers where order matters. For a $N \times N$ matrix, take all permutations of $\{1,2,3,..N\}$, denote them $S_N$. Let $\operatorname{sgn}(\sigma)$ denote the sign of permutation $\sigma\in S_N$: 
 
-* $+1$ is you can go from $\{1,2,..N\}$ to $\sigma$ in even number of steps, 
+* $+1$ if you can go from $\{1,2,..N\}$ to $\sigma$ in even number of swaps of two entries, 
 * and $-1$ otherwise.
 
 Then determinant of matrix $A$ is
-\[\det A=\sum_{\sigma\in S_N} sgn(\sigma) a_{1,\sigma_1} \cdot a_{2,\sigma_2} \cdot a_{3,\sigma_3} \cdot...\cdot a_{N,\sigma_N}.\]
-For a $2\times 2$ matrix,
+\[\det A=\sum_{\sigma\in S_N} \operatorname{sgn}(\sigma) a_{1,\sigma_1} \cdot a_{2,\sigma_2} \cdot a_{3,\sigma_3} \cdot...\cdot a_{N,\sigma_N}.\] For a $2\times 2$ matrix,
 \[\det \begin{bmatrix}
     a & b  \\
     c & d 
 \end{bmatrix} = ad-bc.\]
-If determinant is zero, matrix is not invertible.
+
+A matrix is invertible if and only if its determinant is not zero.
 
 - Prove: \[\det \begin{bmatrix}
     a & b & c \\
@@ -352,11 +354,11 @@ If determinant is zero, matrix is not invertible.
 
 ## Quadratic Forms
 
-Let $x$ be the column vector of $[x_1,x_2,..x_N]$. Consider a $N$-long row vector $w$. then
+Let $x$ be the column vector of $[x_1,x_2,..x_N]^T$. Consider a $N$-long row vector $w$. then
 \[wx=w_1x_1+w_2x_2+..+w_Nx_N\]
 is a *linear form*.
 
-Consider a *symmetric* square matrix $N\times N$ matrix $A$. Then
+Consider a *symmetric*  $N\times N$ matrix $A$. Then
 \[x^TAx=a_{11} x_1^2+2a_{12}x_1x_2+2a_{13}x_1x_3+...+a_{NN}x^2_N\]
 is a *quadratic form*. 
 
@@ -364,7 +366,7 @@ If your $A$ is not symmetric, then
 \[x^TAx=a_{11} x_1^2+(a_{21}+a_{12})x_1x_2+(a_{31}+a_{13})x_1x_3+...+a_{NN}x^2_N\]
 
 <!-- Observe that the derivative with respect to $x_i$ is a linear form -->
-<!-- \[2a_{1i}x_1+2a_{2i}x_2+...+2a_{ii}x_i+...+2a_{ii}x_N\] -->
+<!-- \[2a_{1i}x_1+2a_{2i}x_2+...+2a_{ii}x_i+...+2a_{Ni}x_N\] -->
 <!-- based on $A$'s $i$th column, and the second derivative with respect to $x_j$ is just $2a_{ij}$. -->
 
 ## Positive Definite
@@ -373,15 +375,16 @@ Any $A$ such that for all $x$ $x^TAx>0$ is called *positive definite*.
 
 
 To accomplish that:
+
 - need to have $e_i^TAe_i>0$ so all diagonal elements positive
-- need to have $(a e_i+be_j)^TA(ae_i+be_j)>0$ so all $2 \times 2$ submatrices positive definite
-- need to have $(a e_i+be_j+ce_k)^TA(ae_i+be_j+ce_k)>0$ so all $3 \times 3$ submatrices positive definite
+- need to have $(a e_i+be_j)^TA(ae_i+be_j)>0$ so all $2 \times 2$ *principal* submatrices (rows and columns $i,j$) are positive definite
+- need to have $(a e_i+be_j+ce_k)^TA(ae_i+be_j+ce_k)>0$ so all $3 \times 3$ principal submatrices positive definite...
 
-These submatrices are called *minors*.
+Determinants of these submatrices are called *principal minors*. The ones built from first $k$ rows and columns are *leading principal minors*.
 
-For positive definiteness, need to check $det()>0$ of principal minors. For semidefiniteness, need to check $det()\geq 0$ for all minors.
+For positive definiteness, need to check $det()>0$ of leading principal minors. For semidefiniteness, need to check $det()\geq 0$ for all principal minors, not just leading.
 
-For negative definiteness, signs need to alter, from -1 to 1 etc.
+For negative definiteness, signs need to alternate, starting  negative: $<0$ for $1\times1$, $>0$ for $2\times2$, $<0$ for $3\times3$, and so on.
 
 Why?
 
@@ -451,38 +454,38 @@ They
 - stretch them
 - change direction
 
-A vector $v\not =0_N$ that does not change direction (ok to go in the opposite direction) if changed by $A$ is an *eigenvector* of the matrix $A$:
+A vector $v\not =0_N$ that does not change direction (going in the opposite direction is OK)if multiplied by $A$ is an *eigenvector* of the matrix $A$:
 \[Av=\lambda v,\]
 and $\lambda$ is the *eigenvalue*.
 
 Claim: $det (A)=\lambda_1\lambda_2\lambda_3\cdot...\cdot \lambda_N$.
 
-So all minor determinants being positive checks that all $\lambda$ are positive, while switching signs verifies that $\lambda_i<0$ but $\lambda_i\lambda_j>0$ and $\lambda_i\lambda_j\lambda_k<0$ or that all $\lambda$s are negative.
+For a symmetric matrix: positive definite if and only if all eigenvalues are positive; negative definite if and only if all eigenvalues are negative. The minor test from the previous slide is a way to check this without computing the eigenvalues.
 
-How to find $\lambda$: observe that $(A-\lambda I_N)v=0_N$ which means that $\det(A-\lambda I_N)=0$ - this is a polynom in $\lambda$.
+How to find $\lambda$: observe that $(A-\lambda I_N)v=0_N$ with $v\neq 0_N$, so $A-\lambda I_N$ is not invertible and $\det(A-\lambda I_N)=0$. This is a polynomial in $\lambda$.
 
 ## Example
 
-Let $A=$\begin{bmatrix}
+Let $A=\begin{bmatrix}
     2 & 3  \\
     1 & 2  
-\end{bmatrix}
+\end{bmatrix}$
 
 Then your characteristic equation is \[\det \begin{bmatrix}
     2-\lambda & 3  \\
     1 & 2-\lambda  
 \end{bmatrix}=(2-\lambda)^2-3=0 \Rightarrow \lambda_1=2-\sqrt{3},\lambda_2=2+\sqrt{3}.\]
 
-This matrix is positive semidefinite: its eigenvalues are positive. For the eigenvalue $\lambda_2=2+\sqrt{3}$:
+Both eigenvalues are positive, but $A$ is not symmetric, so this tells us nothing about definiteness. In fact $x^TAx=2x_1^2+4x_1x_2+2x_2^2=2(x_1+x_2)^2$, which is $0$ at $x=(1,-1)$: $A$ is positive semidefinite, but not positive definite. For the eigenvalue $\lambda_2=2+\sqrt{3}$:
 \[\begin{bmatrix}
     2-\lambda_2 & 3\end{bmatrix}\begin{bmatrix}
-    1 \\ a\end{bmatrix}=-1\sqrt{3}+3a=0\Rightarrow a=\frac{\sqrt{3}}{3}.\]
+    1 \\ a\end{bmatrix}=-\sqrt{3}+3a=0\Rightarrow a=\frac{\sqrt{3}}{3}.\]
 So any vector proportional to $\begin{bmatrix}
     1 \\ \sqrt{3}/3 \end{bmatrix}$ is an eigenvector.
 
-## Orthonormal Eigenvector
+## Normalizing an Eigenvector
     
-To find a length $1$ eigenvector, (1) find the length of the one we have $\left(1^2+\left(\sqrt{3}/3\right)^2\right)=12/9$ and (2) then *normalize*:
+To find a length $1$ eigenvector, (1) find the length of the one we have $\sqrt{\left(1^2+\left(\sqrt{3}/3\right)^2\right)}=\sqrt{12/9}$ and (2) then *normalize*:
 \[\frac{1}{\sqrt{\frac{12}{9}}}\begin{bmatrix}
     1 \\ \sqrt{3}/3 \end{bmatrix} \rightarrow \begin{bmatrix}
     3/\sqrt{12} \\ \sqrt{3}/\sqrt{12}=\frac{1}{2} \end{bmatrix}=:v_2.\]
@@ -495,17 +498,17 @@ So the eigenvector is $v_1:=\begin{bmatrix}
     3/\sqrt{12} \\ -\sqrt{3}/\sqrt{12}=-\frac{1}{2}\end{bmatrix}.$ 
     Observe that $v_1^Tv_2=\frac{9}{12}-\frac{1}{4}=1/2$ - they are not orthogonal, but if the matrix is symmetric, they must be.
     
-- Verify: for $A=$\begin{bmatrix}
+- Verify: for $A=\begin{bmatrix}
     2 & 3  \\
     3 & 2  
-\end{bmatrix}eigenvalues have opposite signs, and eigenvectors are orthogonal.
+\end{bmatrix}$ eigenvalues have opposite signs, and eigenvectors are orthogonal.
     
 ## Spectral Theorem and Matrix Inversion
 
-If $A$ is symmetric, $\Lambda$ is a diagonal matrix of real eigenvalues, and $Q$ is a matrix where column $i$ is the eigenvector for eigenvalue $i$,
+If $A$ is symmetric, its eigenvalues are reals. $\Lambda$ is a diagonal matrix of real eigenvalues, and $Q$ is a matrix where column $i$ is the normalized eigenvector for eigenvalue $i$,
 \[A=Q\Lambda Q^T.\]
 
-This is a very strong result: it says that every quadratic form of a full rank symmetric matrix is a sum of $N$ parabolas. If all of them are convex, the result must be convex; if all of them are concave, the result must be concave.
+This is a very strong result: in the coordinates $y=Q^Tx$, every quadratic form of a symmetric matrix is a sum of $N$ parabolas, $x^TAx=\lambda_1y_1^2+\ldots+\lambda_Ny_N^2$. If all of them are convex, the result must be convex; if all of them are concave, the result must be concave.
 
 Observe that it is very easy to invert $\Lambda$: $\Lambda^{-1}$ is a diagonal matrix of $1/\lambda_i$. Observe also that $QQ^T=I$, so $Q$ is an inverse of $Q^T$, and vice versa. Therefore:
 \[Q^TA=\underbrace{Q^TQ}_{I_N}\Lambda Q^T \Rightarrow \Lambda^{-1} Q^T A = Q^T\Rightarrow \underbrace{Q \Lambda^{-1} Q^T}_{A^{-1}} A =I_N.\]

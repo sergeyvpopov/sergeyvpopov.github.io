@@ -6,7 +6,7 @@
   <meta http-equiv="Content-Style-Type" content="text/css" />
   <meta name="generator" content="pandoc" />
   <meta name="author" content="Sergey V. Popov" />
-  <meta name="date" content="2026-09-19" />
+  <meta name="date" content="2026-09-21" />
   <title>BS 1515 Lecture 2: Linear Algebra</title>
   <style type="text/css">
 code{white-space: pre-wrap;}
@@ -529,7 +529,7 @@ list-style-type: none;
   <p class="author">
 Sergey V. Popov
   </p>
-  <p class="date">2026-09-19</p>
+  <p class="date">2026-09-21</p>
 </div>
 <div id="last-time" class="slide section level2">
 <h1>Last Time</h1>
@@ -540,8 +540,8 @@ Sergey V. Popov
 <p>Why do we care about matrices</p>
 <ul>
 <li><p>Data is matrices</p></li>
-<li><p>Matrix operations are faster on the computer, all algo trading
-and LLM stuff is a bunch of linear algebra</p></li>
+<li><p>Computers handle matrix operations very efficiently; machine
+learning and algorithmic trading rely heavily on linear algebra</p></li>
 <li><p>All smooth functions can be approximated by a linear (or
 quadratic) function locally</p></li>
 </ul>
@@ -549,34 +549,35 @@ quadratic) function locally</p></li>
 <div id="vectors" class="slide section level2">
 <h1>Vectors</h1>
 <p>Vector space: space where elements can be added and multiplied by a
-<em>scalar</em>.</p>
+<em>scalar</em> and results stay in the space.</p>
 <p>Vector axioms:</p>
 <ul>
-<li>Associativity: <span class="math inline">\(\mathbb{u}+(\mathbb{v}+\mathbb{w})=(\mathbb{u}+\mathbb{v})+\mathbb{w}\)</span>.</li>
-<li>Commutativity: <span class="math inline">\(\mathbb{u}+\mathbb{v}=\mathbb{v}+\mathbb{u}\)</span>.</li>
-<li>There is a zero element: <span class="math inline">\(\mathbb{u}+\mathbb{0}=\mathbb{u}\)</span>.</li>
-<li><span class="math inline">\(\forall \mathbb{v}\)</span> there is an
-additive inverse <span class="math inline">\(\mathbb{-v}\)</span>: <span class="math inline">\(\mathbb{v}+(\mathbb{-v})=0\)</span>.</li>
-<li>Scalar multiplication is associative: <span class="math inline">\(a(b\mathbb{v})=(ab)\mathbb{v}\)</span>.</li>
-<li>Multiplying by 1 does not change anything: <span class="math inline">\(1\mathbb{v}=\mathbb{v}\)</span>.</li>
-<li>Distributivity wrt to vector addition: <span class="math inline">\(a(\mathbb{v}+\mathbb{w})=a\mathbb{v}+a\mathbb{w}\)</span>.</li>
-<li>Distributivity wrt to scalar multiplication: <span class="math inline">\((a+b)\mathbb{v}=a\mathbb{v}+b\mathbb{v}\)</span>.</li>
+<li>Associativity: <span class="math inline">\(\mathbf{u}+(\mathbf{v}+\mathbf{w})=(\mathbf{u}+\mathbf{v})+\mathbf{w}\)</span>.</li>
+<li>Commutativity: <span class="math inline">\(\mathbf{u}+\mathbf{v}=\mathbf{v}+\mathbf{u}\)</span>.</li>
+<li>There is a zero element: <span class="math inline">\(\mathbf{u}+\mathbf{0}=\mathbf{u}\)</span>.</li>
+<li><span class="math inline">\(\forall \mathbf{v}\)</span> there is an
+additive inverse <span class="math inline">\(\mathbf{-v}\)</span>: <span class="math inline">\(\mathbf{v}+(\mathbf{-v})=\mathbf{0}\)</span>.</li>
+<li>Scalar multiplication is associative: <span class="math inline">\(a(b\mathbf{v})=(ab)\mathbf{v}\)</span>.</li>
+<li>Multiplying by 1 does not change anything: <span class="math inline">\(1\mathbf{v}=\mathbf{v}\)</span>.</li>
+<li>Distributivity wrt vector addition: <span class="math inline">\(a(\mathbf{v}+\mathbf{w})=a\mathbf{v}+a\mathbf{w}\)</span>.</li>
+<li>Distributivity wrt addition of scalars: <span class="math inline">\((a+b)\mathbf{v}=a\mathbf{v}+b\mathbf{v}\)</span>.</li>
 </ul>
 </div>
 <div id="vectors-1" class="slide section level2">
 <h1>Vectors</h1>
-<p>Prove: <span class="math inline">\(\mathbb{R}\)</span> is a vector
+<p>Prove: <span class="math inline">\(\mathbf{R}\)</span> is a vector
 space.</p>
-<p>Prove: <span class="math inline">\(0\mathbb{v}=\mathbb{0}\)</span>.</p>
-<p>Prove: <span class="math inline">\(s\mathbb{0}=\mathbb{0}\)</span>.</p>
-<p>Prove: <span class="math inline">\(-1\mathbb{v}=\mathbb{-v}\)</span>.</p>
-<p>Prove: <span class="math inline">\(s\mathbb{v}=\mathbb{0}\)</span>
-means either <span class="math inline">\(s=0\)</span> or <span class="math inline">\(\mathbb{v}=\mathbb{0}\)</span>.</p>
+<p>Prove: <span class="math inline">\(0\mathbf{v}=\mathbf{0}\)</span>.</p>
+<p>Prove: <span class="math inline">\(s
+\mathbf{0}=\mathbf{0}\)</span>.</p>
+<p>Prove: <span class="math inline">\(-1\mathbf{v}=\mathbf{-v}\)</span>.</p>
+<p>Prove: <span class="math inline">\(s\mathbf{v}=\mathbf{0}\)</span>
+means either <span class="math inline">\(s=0\)</span> or <span class="math inline">\(\mathbf{v}=\mathbf{0}\)</span>.</p>
 </div>
 <div id="linear-algebra" class="slide section level2">
 <h1>Linear Algebra</h1>
-<p>Most of the times vectors we are going to be working with are based
-on real numbers:</p>
+<p>Most of the time, the vectors we work with have real number
+entries:</p>
 <p><span class="math display">\[V=\begin{bmatrix}
     v_1 \\
     v_2 \\
@@ -604,7 +605,7 @@ of length <span class="math inline">\(N\)</span>, <span class="math display">\[V
     v_1 \\ v_2 \\ \vdots \\ v_N
 \end{bmatrix}\]</span></p>
 <p>Vector multiply: if <span class="math inline">\(W\)</span> is a row
-and <span class="math inline">\(V\)</span> is a column <span class="math display">\[WV=w_1v_1+w_2v_2+...+w_Nv_N.\]</span></p>
+and <span class="math inline">\(V\)</span> is a column both length <span class="math inline">\(N\)</span>: <span class="math display">\[WV=w_1v_1+w_2v_2+...+w_Nv_N.\]</span></p>
 </div>
 <div id="matrices" class="slide section level2">
 <h1>Matrices</h1>
@@ -614,14 +615,14 @@ and <span class="math inline">\(V\)</span> is a column <span class="math display
     \vdots &amp; \vdots  &amp; \ddots &amp; \vdots\\
     a_{M1} &amp; a_{M2} &amp; \cdots &amp; a_{MN}
 \end{bmatrix}\]</span></p>
-<p><span class="math inline">\(A\)</span> is a <span class="math inline">\(M\times N\)</span> matrix. Square matrices are
+<p><span class="math inline">\(A\)</span> is an <span class="math inline">\(M\times N\)</span> matrix. Square matrices are
 <span class="math inline">\(N\times N\)</span>.</p>
 <ul>
-<li>Row vectors are <span class="math inline">\(1\times M\)</span>
+<li>Row vectors are <span class="math inline">\(1\times N\)</span>
 matrices.</li>
-<li>Column vectors are <span class="math inline">\(N\times 1\)</span>
+<li>Column vectors are <span class="math inline">\(M\times 1\)</span>
 matrices.</li>
-<li>Identity matrix <span class="math inline">\(I_N\)</span> is a <span class="math inline">\(N\times N\)</span> matrix with 1s on the diagonal
+<li>Identity matrix <span class="math inline">\(I_N\)</span> is an <span class="math inline">\(N\times N\)</span> matrix with 1s on the diagonal
 and 0s outside:</li>
 </ul>
 <p><span class="math display">\[I_N=\begin{bmatrix}
@@ -633,6 +634,8 @@ and 0s outside:</li>
 </div>
 <div id="matrix-as-a-set-of-vectors" class="slide section level2">
 <h1>Matrix as a Set of Vectors</h1>
+<p>A <em>linear combination</em> of vectors <span class="math inline">\(v_1,\ldots,v_K\)</span> is any <span class="math inline">\(c_1v_1+c_2v_2+\ldots+c_Kv_K\)</span> with scalars
+<span class="math inline">\(c_1,\ldots,c_K\)</span>.</p>
 <p>Let <span class="math inline">\(A=\begin{bmatrix}
     a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1N} \\
     a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2N} \\
@@ -647,7 +650,7 @@ obtained as a linear combination of <span class="math inline">\(\begin{bmatrix}
   \vdots \\
   a_{M1}
 \end{bmatrix}\)</span>, <span class="math inline">\(\begin{bmatrix}
-  a_{21}  \\
+  a_{12}  \\
   a_{22}  \\
   \vdots \\
   a_{M2}
@@ -665,8 +668,8 @@ combinations of rows.</li>
 <h1>Matrix Multiplication</h1>
 <p>If <span class="math inline">\(A\)</span> is an <span class="math inline">\(M\times N\)</span> matrix,</p>
 <ul>
-<li>can multiply by a <span class="math inline">\(N\)</span>-long column
-vector <span class="math inline">\(v\)</span> on the right: <span class="math display">\[Av=\begin{bmatrix}
+<li>can multiply by an <span class="math inline">\(N\)</span>-long
+column vector <span class="math inline">\(v\)</span> on the right: <span class="math display">\[Av=\begin{bmatrix}
   a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1N} \\
   a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2N} \\
   \vdots &amp; \vdots  &amp; \ddots &amp; \vdots\\
@@ -682,9 +685,9 @@ vector <span class="math inline">\(v\)</span> on the right: <span class="math di
   \vdots\\
   a_{M1}v_{1}+a_{M2}v_2+...+a_{MN}v_N \\  
 \end{bmatrix}.\]</span></li>
-<li>can multiply by a <span class="math inline">\(M\)</span>-long column
+<li>can multiply by a <span class="math inline">\(M\)</span>-long row
 vector <span class="math inline">\(w\)</span> on the left: <span class="math display">\[wA=\begin{bmatrix}
-  w_{1} &amp;  w_{2} &amp; \cdots    w_{M}  
+  w_{1} &amp;  w_{2} &amp; \cdots    &amp; w_{M}  
 \end{bmatrix}\begin{bmatrix}
   a_{11} &amp; a_{12} &amp; \cdots &amp; a_{1N} \\
   a_{21} &amp; a_{22} &amp; \cdots &amp; a_{2N} \\
@@ -729,12 +732,12 @@ N\)</span> matrix).</li>
 <span id="cb1-2"><a href="#cb1-2" tabindex="-1"></a> v <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">3</span>,<span class="dv">1</span>));</span>
 <span id="cb1-3"><a href="#cb1-3" tabindex="-1"></a> w <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>,<span class="dv">3</span>,<span class="dv">1</span>);</span>
 <span id="cb1-4"><a href="#cb1-4" tabindex="-1"></a> printmatrix<span class="ot">&lt;-</span><span class="cf">function</span>(m){<span class="fu">write.table</span>(<span class="fu">format</span>(m, <span class="at">justify=</span><span class="st">&quot;right&quot;</span>),<span class="at">row.names=</span>F, <span class="at">col.names=</span>F, <span class="at">quote=</span>F)};</span>
-<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a> <span class="fu">printmatrix</span>(w<span class="sc">%*%</span>A)</span></code></pre></div>
-<pre><code>##  3  4 -1  3</code></pre>
-<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a> <span class="fu">printmatrix</span>(A<span class="sc">%*%</span>v)</span></code></pre></div>
+<span id="cb1-5"><a href="#cb1-5" tabindex="-1"></a> <span class="fu">printmatrix</span>(A<span class="sc">%*%</span>v)</span></code></pre></div>
 <pre><code>## 13
 ## -3
 ## -7</code></pre>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a> <span class="fu">printmatrix</span>(w<span class="sc">%*%</span>A)</span></code></pre></div>
+<pre><code>##  3  4 -1  3</code></pre>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a> <span class="fu">printmatrix</span>(w<span class="sc">%*%</span>A<span class="sc">%*%</span>v)</span></code></pre></div>
 <pre><code>## 10</code></pre>
 </div>
@@ -743,23 +746,21 @@ N\)</span> matrix).</li>
 <p>Take <span class="math inline">\(A\)</span> - <span class="math inline">\(M \times N\)</span> matrix.</p>
 <ul>
 <li>Column space, or range, of <span class="math inline">\(A\)</span> is
-the set of vectors <span class="math inline">\(A x\)</span> for <span class="math inline">\(x\)</span> being <span class="math inline">\(N\times 1\)</span>-dimenstional vector; this is a
-subspace of a <span class="math inline">\(M\)</span>-dimensional vector
-space.</li>
+the set of vectors <span class="math inline">\(A x\)</span> for all
+<span class="math inline">\(N\times 1\)</span>-dimenstional vectors
+<span class="math inline">\(x\)</span>; this is a subspace of an <span class="math inline">\(M\)</span>-dimensional vector space.</li>
 <li>Row space of <span class="math inline">\(A\)</span> is the set of
-vectors <span class="math inline">\(wA\)</span> for <span class="math inline">\(w\)</span> being <span class="math inline">\(1\times M\)</span>-dimenstional vector; this is a
-subspace of a <span class="math inline">\(N\)</span>-dimensional row
-vector space.</li>
+vectors <span class="math inline">\(wA\)</span> for all <span class="math inline">\(1\times M\)</span>-dimenstional vectors <span class="math inline">\(w\)</span>; this is a subspace of an <span class="math inline">\(N\)</span>-dimensional row vector space.</li>
 <li>Null space of <span class="math inline">\(A\)</span>, or
 <em>kernel</em>, is the set of <span class="math inline">\(N\times
 1\)</span>-dimensional vectors <span class="math inline">\(z\)</span>
 such that <span class="math inline">\(Az=0\)</span>. Observe that every
-<span class="math inline">\(z\)</span> multiplied by anything from the
-column space is zero.</li>
+row of <span class="math inline">\(A\)</span> multiplied by <span class="math inline">\(z\)</span> gives zero, so <span class="math inline">\(z\)</span> is orthogonal to everything in the row
+space.</li>
 <li>Left null space of <span class="math inline">\(A\)</span> is the set
 of <span class="math inline">\(1\times M\)</span>-dimensional vectors
-<span class="math inline">\(y\)</span> such that <span class="math inline">\(yA=0\)</span>. Observe that <span class="math inline">\(y\)</span> multiplied by anything from the row
-space is zero.</li>
+<span class="math inline">\(y\)</span> such that <span class="math inline">\(yA=0\)</span>. Observe that <span class="math inline">\(y\)</span> multiplied by every column of <span class="math inline">\(A\)</span> gives zero, so <span class="math inline">\(y\)</span> is orthogonal to everything in the
+column space.</li>
 </ul>
 </div>
 <div id="systems-of-linear-equations" class="slide section level2">
@@ -812,15 +813,15 @@ won’t get <span class="math inline">\(I_2\)</span>.</p>
 <em>invertible</em>.</li>
 <li>Prove: any matrix that has two identical rows or columns cannot be
 invertible.</li>
-<li>Prove: any matrix that has two rows (or columns) such as one is a
-scale multiple of another cannot be invertible.</li>
+<li>Prove: any matrix that has two rows (or columns) such that one is a
+scalar multiple of the other cannot be invertible.</li>
 <li>Prove: any matrix that has a row (or column) which is the sum of two
 other rows (or columns) cannot be invertible.</li>
 </ul>
-<p><em>Rank</em> of the matrix is the number of linearly independent
-rows (or columns). <span class="math inline">\(N\times N\)</span>
-matrices with rank <span class="math inline">\(N\)</span> are <em>full
-rank</em>. Only they are invertible.</p>
+<p>Vectors are <em>linearly independent</em> if none of them is a linear
+combination of the others. <em>Rank</em> of the matrix is the maximum
+number of linearly independent rows (equivalently, columns). <span class="math inline">\(N\times N\)</span> matrices with rank <span class="math inline">\(N\)</span> are <em>full rank</em>. Only they are
+invertible.</p>
 </div>
 <div id="gaussian-elimination" class="slide section level2">
 <h1>Gaussian Elimination</h1>
@@ -845,7 +846,7 @@ matrices at the same time to obtain an <span class="math inline">\(I\)</span> ma
     1 &amp; \frac{a_{12}}{a_{11}} &amp; \frac{a_{13}}{a_{11}} \\
     0 &amp; a_{22}-\frac{a_{21}a_{12}}{a_{11}} &amp; a_{23}-\frac{a_{21}
 a_{13}}{a_{11}} \\
-    0 &amp; a_{32}-\frac{a_{31}a_{13}}{a_{11}} &amp; a_{33}-\frac{a_{31}
+    0 &amp; a_{32}-\frac{a_{31}a_{12}}{a_{11}} &amp; a_{33}-\frac{a_{31}
 a_{13}}{a_{11}}
 \end{bmatrix}\begin{bmatrix}
     \frac{1}{a_{11}} &amp; 0 &amp; 0 \\
@@ -876,21 +877,23 @@ a_{13}}{a_{11}}
 <h1>Determinant</h1>
 <p>A <em>permutation</em> is a (finite) set of numbers where order
 matters. For a <span class="math inline">\(N \times N\)</span> matrix,
-take all permutations of <span class="math inline">\(\{1,2,3,..N\}\)</span>, denote them <span class="math inline">\(S_N\)</span>. Let <span class="math inline">\(sgn(\sigma)\)</span> denote the sign of
-permutation <span class="math inline">\(\sigma\in S_N\)</span>:</p>
+take all permutations of <span class="math inline">\(\{1,2,3,..N\}\)</span>, denote them <span class="math inline">\(S_N\)</span>. Let <span class="math inline">\(\operatorname{sgn}(\sigma)\)</span> denote the
+sign of permutation <span class="math inline">\(\sigma\in
+S_N\)</span>:</p>
 <ul>
-<li><span class="math inline">\(+1\)</span> is you can go from <span class="math inline">\(\{1,2,..N\}\)</span> to <span class="math inline">\(\sigma\)</span> in even number of steps,</li>
+<li><span class="math inline">\(+1\)</span> if you can go from <span class="math inline">\(\{1,2,..N\}\)</span> to <span class="math inline">\(\sigma\)</span> in even number of swaps of two
+entries,</li>
 <li>and <span class="math inline">\(-1\)</span> otherwise.</li>
 </ul>
 <p>Then determinant of matrix <span class="math inline">\(A\)</span> is
-<span class="math display">\[\det A=\sum_{\sigma\in S_N} sgn(\sigma)
-a_{1,\sigma_1} \cdot a_{2,\sigma_2} \cdot a_{3,\sigma_3} \cdot...\cdot
-a_{N,\sigma_N}.\]</span> For a <span class="math inline">\(2\times
-2\)</span> matrix, <span class="math display">\[\det \begin{bmatrix}
+<span class="math display">\[\det A=\sum_{\sigma\in S_N}
+\operatorname{sgn}(\sigma) a_{1,\sigma_1} \cdot a_{2,\sigma_2} \cdot
+a_{3,\sigma_3} \cdot...\cdot a_{N,\sigma_N}.\]</span> For a <span class="math inline">\(2\times 2\)</span> matrix, <span class="math display">\[\det \begin{bmatrix}
     a &amp; b  \\
     c &amp; d
-\end{bmatrix} = ad-bc.\]</span> If determinant is zero, matrix is not
-invertible.</p>
+\end{bmatrix} = ad-bc.\]</span></p>
+<p>A matrix is invertible if and only if its determinant is not
+zero.</p>
 <ul>
 <li>Prove: <span class="math display">\[\det \begin{bmatrix}
   a &amp; b &amp; c \\
@@ -902,33 +905,43 @@ invertible.</p>
 <div id="quadratic-forms" class="slide section level2">
 <h1>Quadratic Forms</h1>
 <p>Let <span class="math inline">\(x\)</span> be the column vector of
-<span class="math inline">\([x_1,x_2,..x_N]\)</span>. Consider a <span class="math inline">\(N\)</span>-long row vector <span class="math inline">\(w\)</span>. then <span class="math display">\[wx=w_1x_1+w_2x_2+..+w_Nx_N\]</span> is a
+<span class="math inline">\([x_1,x_2,..x_N]^T\)</span>. Consider a <span class="math inline">\(N\)</span>-long row vector <span class="math inline">\(w\)</span>. then <span class="math display">\[wx=w_1x_1+w_2x_2+..+w_Nx_N\]</span> is a
 <em>linear form</em>.</p>
-<p>Consider a <em>symmetric</em> square matrix <span class="math inline">\(N\times N\)</span> matrix <span class="math inline">\(A\)</span>. Then <span class="math display">\[x^TAx=a_{11}
+<p>Consider a <em>symmetric</em> <span class="math inline">\(N\times
+N\)</span> matrix <span class="math inline">\(A\)</span>. Then <span class="math display">\[x^TAx=a_{11}
 x_1^2+2a_{12}x_1x_2+2a_{13}x_1x_3+...+a_{NN}x^2_N\]</span> is a
 <em>quadratic form</em>.</p>
 <p>If your <span class="math inline">\(A\)</span> is not symmetric, then
 <span class="math display">\[x^TAx=a_{11}
 x_1^2+(a_{21}+a_{12})x_1x_2+(a_{31}+a_{13})x_1x_3+...+a_{NN}x^2_N\]</span></p>
 <!-- Observe that the derivative with respect to $x_i$ is a linear form -->
-<!-- \[2a_{1i}x_1+2a_{2i}x_2+...+2a_{ii}x_i+...+2a_{ii}x_N\] -->
+<!-- \[2a_{1i}x_1+2a_{2i}x_2+...+2a_{ii}x_i+...+2a_{Ni}x_N\] -->
 <!-- based on $A$'s $i$th column, and the second derivative with respect to $x_j$ is just $2a_{ij}$. -->
 </div>
 <div id="positive-definite" class="slide section level2">
 <h1>Positive Definite</h1>
 <p>Any <span class="math inline">\(A\)</span> such that for all <span class="math inline">\(x\)</span> <span class="math inline">\(x^TAx&gt;0\)</span> is called <em>positive
 definite</em>.</p>
-<p>To accomplish that: - need to have <span class="math inline">\(e_i^TAe_i&gt;0\)</span> so all diagonal elements
-positive - need to have <span class="math inline">\((a
-e_i+be_j)^TA(ae_i+be_j)&gt;0\)</span> so all <span class="math inline">\(2 \times 2\)</span> submatrices positive definite
-- need to have <span class="math inline">\((a
-e_i+be_j+ce_k)^TA(ae_i+be_j+ce_k)&gt;0\)</span> so all <span class="math inline">\(3 \times 3\)</span> submatrices positive
-definite</p>
-<p>These submatrices are called <em>minors</em>.</p>
-<p>For positive definiteness, need to check <span class="math inline">\(det()&gt;0\)</span> of principal minors. For
-semidefiniteness, need to check <span class="math inline">\(det()\geq
-0\)</span> for all minors.</p>
-<p>For negative definiteness, signs need to alter, from -1 to 1 etc.</p>
+<p>To accomplish that:</p>
+<ul>
+<li>need to have <span class="math inline">\(e_i^TAe_i&gt;0\)</span> so
+all diagonal elements positive</li>
+<li>need to have <span class="math inline">\((a
+e_i+be_j)^TA(ae_i+be_j)&gt;0\)</span> so all <span class="math inline">\(2 \times 2\)</span> <em>principal</em> submatrices
+(rows and columns <span class="math inline">\(i,j\)</span>) are positive
+definite</li>
+<li>need to have <span class="math inline">\((a
+e_i+be_j+ce_k)^TA(ae_i+be_j+ce_k)&gt;0\)</span> so all <span class="math inline">\(3 \times 3\)</span> principal submatrices positive
+definite…</li>
+</ul>
+<p>Determinants of these submatrices are called <em>principal
+minors</em>. The ones built from first <span class="math inline">\(k\)</span> rows and columns are <em>leading
+principal minors</em>.</p>
+<p>For positive definiteness, need to check <span class="math inline">\(det()&gt;0\)</span> of leading principal minors.
+For semidefiniteness, need to check <span class="math inline">\(det()\geq 0\)</span> for all principal minors, not
+just leading.</p>
+<p>For negative definiteness, signs need to alternate, starting
+negative: <span class="math inline">\(&lt;0\)</span> for <span class="math inline">\(1\times1\)</span>, <span class="math inline">\(&gt;0\)</span> for <span class="math inline">\(2\times2\)</span>, <span class="math inline">\(&lt;0\)</span> for <span class="math inline">\(3\times3\)</span>, and so on.</p>
 <p>Why?</p>
 </div>
 <div id="matrix-is-a-transformation-of-a-vector" class="slide section level2">
@@ -955,44 +968,44 @@ semidefiniteness, need to check <span class="math inline">\(det()\geq
 <li>change direction</li>
 </ul>
 <p>A vector <span class="math inline">\(v\not =0_N\)</span> that does
-not change direction (ok to go in the opposite direction) if changed by
-<span class="math inline">\(A\)</span> is an <em>eigenvector</em> of the
-matrix <span class="math inline">\(A\)</span>: <span class="math display">\[Av=\lambda v,\]</span> and <span class="math inline">\(\lambda\)</span> is the <em>eigenvalue</em>.</p>
+not change direction (going in the opposite direction is OK)if
+multiplied by <span class="math inline">\(A\)</span> is an
+<em>eigenvector</em> of the matrix <span class="math inline">\(A\)</span>: <span class="math display">\[Av=\lambda v,\]</span> and <span class="math inline">\(\lambda\)</span> is the <em>eigenvalue</em>.</p>
 <p>Claim: <span class="math inline">\(det
 (A)=\lambda_1\lambda_2\lambda_3\cdot...\cdot \lambda_N\)</span>.</p>
-<p>So all minor determinants being positive checks that all <span class="math inline">\(\lambda\)</span> are positive, while switching
-signs verifies that <span class="math inline">\(\lambda_i&lt;0\)</span>
-but <span class="math inline">\(\lambda_i\lambda_j&gt;0\)</span> and
-<span class="math inline">\(\lambda_i\lambda_j\lambda_k&lt;0\)</span> or
-that all <span class="math inline">\(\lambda\)</span>s are negative.</p>
+<p>For a symmetric matrix: positive definite if and only if all
+eigenvalues are positive; negative definite if and only if all
+eigenvalues are negative. The minor test from the previous slide is a
+way to check this without computing the eigenvalues.</p>
 <p>How to find <span class="math inline">\(\lambda\)</span>: observe
-that <span class="math inline">\((A-\lambda I_N)v=0_N\)</span> which
-means that <span class="math inline">\(\det(A-\lambda I_N)=0\)</span> -
-this is a polynom in <span class="math inline">\(\lambda\)</span>.</p>
+that <span class="math inline">\((A-\lambda I_N)v=0_N\)</span> with
+<span class="math inline">\(v\neq 0_N\)</span>, so <span class="math inline">\(A-\lambda I_N\)</span> is not invertible and <span class="math inline">\(\det(A-\lambda I_N)=0\)</span>. This is a
+polynomial in <span class="math inline">\(\lambda\)</span>.</p>
 </div>
 <div id="example-1" class="slide section level2">
 <h1>Example</h1>
-Let <span class="math inline">\(A=\)</span>
-<span class="math display">\[\begin{bmatrix}
+<p>Let <span class="math inline">\(A=\begin{bmatrix}
     2 &amp; 3  \\
-    1 &amp; 2  
-\end{bmatrix}\]</span>
+    1 &amp; 2
+\end{bmatrix}\)</span></p>
 <p>Then your characteristic equation is <span class="math display">\[\det \begin{bmatrix}
     2-\lambda &amp; 3  \\
     1 &amp; 2-\lambda  
 \end{bmatrix}=(2-\lambda)^2-3=0 \Rightarrow
 \lambda_1=2-\sqrt{3},\lambda_2=2+\sqrt{3}.\]</span></p>
-<p>This matrix is positive semidefinite: its eigenvalues are positive.
-For the eigenvalue <span class="math inline">\(\lambda_2=2+\sqrt{3}\)</span>: <span class="math display">\[\begin{bmatrix}
+<p>Both eigenvalues are positive, but <span class="math inline">\(A\)</span> is not symmetric, so this tells us
+nothing about definiteness. In fact <span class="math inline">\(x^TAx=2x_1^2+4x_1x_2+2x_2^2=2(x_1+x_2)^2\)</span>,
+which is <span class="math inline">\(0\)</span> at <span class="math inline">\(x=(1,-1)\)</span>: <span class="math inline">\(A\)</span> is positive semidefinite, but not
+positive definite. For the eigenvalue <span class="math inline">\(\lambda_2=2+\sqrt{3}\)</span>: <span class="math display">\[\begin{bmatrix}
     2-\lambda_2 &amp; 3\end{bmatrix}\begin{bmatrix}
-    1 \\ a\end{bmatrix}=-1\sqrt{3}+3a=0\Rightarrow
+    1 \\ a\end{bmatrix}=-\sqrt{3}+3a=0\Rightarrow
 a=\frac{\sqrt{3}}{3}.\]</span> So any vector proportional to <span class="math inline">\(\begin{bmatrix}
     1 \\ \sqrt{3}/3 \end{bmatrix}\)</span> is an eigenvector.</p>
 </div>
-<div id="orthonormal-eigenvector" class="slide section level2">
-<h1>Orthonormal Eigenvector</h1>
+<div id="normalizing-an-eigenvector" class="slide section level2">
+<h1>Normalizing an Eigenvector</h1>
 <p>To find a length <span class="math inline">\(1\)</span> eigenvector,
-(1) find the length of the one we have <span class="math inline">\(\left(1^2+\left(\sqrt{3}/3\right)^2\right)=12/9\)</span>
+(1) find the length of the one we have <span class="math inline">\(\sqrt{\left(1^2+\left(\sqrt{3}/3\right)^2\right)}=\sqrt{12/9}\)</span>
 and (2) then <em>normalize</em>: <span class="math display">\[\frac{1}{\sqrt{\frac{12}{9}}}\begin{bmatrix}
     1 \\ \sqrt{3}/3 \end{bmatrix} \rightarrow \begin{bmatrix}
     3/\sqrt{12} \\ \sqrt{3}/\sqrt{12}=\frac{1}{2}
@@ -1007,24 +1020,24 @@ a=\frac{-\sqrt{3}}{3}.\]</span> So the eigenvector is <span class="math inline">
 they are not orthogonal, but if the matrix is symmetric, they must
 be.</p>
 <ul>
-<li>Verify: for <span class="math inline">\(A=\)</span>
-<span class="math display">\[\begin{bmatrix}
+<li>Verify: for <span class="math inline">\(A=\begin{bmatrix}
   2 &amp; 3  \\
-  3 &amp; 2  
-\end{bmatrix}\]</span>
-eigenvalues have opposite signs, and eigenvectors are orthogonal.</li>
+  3 &amp; 2
+\end{bmatrix}\)</span> eigenvalues have opposite signs, and eigenvectors
+are orthogonal.</li>
 </ul>
 </div>
 <div id="spectral-theorem-and-matrix-inversion" class="slide section level2">
 <h1>Spectral Theorem and Matrix Inversion</h1>
-<p>If <span class="math inline">\(A\)</span> is symmetric, <span class="math inline">\(\Lambda\)</span> is a diagonal matrix of real
-eigenvalues, and <span class="math inline">\(Q\)</span> is a matrix
-where column <span class="math inline">\(i\)</span> is the eigenvector
-for eigenvalue <span class="math inline">\(i\)</span>, <span class="math display">\[A=Q\Lambda Q^T.\]</span></p>
-<p>This is a very strong result: it says that every quadratic form of a
-full rank symmetric matrix is a sum of <span class="math inline">\(N\)</span> parabolas. If all of them are convex,
-the result must be convex; if all of them are concave, the result must
-be concave.</p>
+<p>If <span class="math inline">\(A\)</span> is symmetric, its
+eigenvalues are reals. <span class="math inline">\(\Lambda\)</span> is a
+diagonal matrix of real eigenvalues, and <span class="math inline">\(Q\)</span> is a matrix where column <span class="math inline">\(i\)</span> is the normalized eigenvector for
+eigenvalue <span class="math inline">\(i\)</span>, <span class="math display">\[A=Q\Lambda Q^T.\]</span></p>
+<p>This is a very strong result: in the coordinates <span class="math inline">\(y=Q^Tx\)</span>, every quadratic form of a
+symmetric matrix is a sum of <span class="math inline">\(N\)</span>
+parabolas, <span class="math inline">\(x^TAx=\lambda_1y_1^2+\ldots+\lambda_Ny_N^2\)</span>.
+If all of them are convex, the result must be convex; if all of them are
+concave, the result must be concave.</p>
 <p>Observe that it is very easy to invert <span class="math inline">\(\Lambda\)</span>: <span class="math inline">\(\Lambda^{-1}\)</span> is a diagonal matrix of
 <span class="math inline">\(1/\lambda_i\)</span>. Observe also that
 <span class="math inline">\(QQ^T=I\)</span>, so <span class="math inline">\(Q\)</span> is an inverse of <span class="math inline">\(Q^T\)</span>, and vice versa. Therefore: <span class="math display">\[Q^TA=\underbrace{Q^TQ}_{I_N}\Lambda Q^T
