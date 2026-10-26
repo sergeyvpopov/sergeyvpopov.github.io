@@ -1,0 +1,3181 @@
+
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>BS1515 Math Homework Generator</title>
+
+  <!-- ✅ MathJax -->
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    body {
+      font-family: Arial;
+      margin: 40px;
+      max-width: 850px;
+    }
+
+    button {
+      padding: 10px 20px;
+      margin-bottom: 20px;
+      margin-right: 10px;
+    }
+
+    .problem {
+      border: 1px solid #ccc;
+      padding: 15px;
+      margin: 20px 0;
+      border-radius: 8px;
+      page-break-inside: avoid;
+    }
+
+    .solution {
+      background: #f4f4f4;
+      padding: 12px 15px;
+      margin-top: 10px;
+      display: none;
+      white-space: pre-wrap;
+      line-height: 1.6;
+      border-left: 3px solid #999;
+      overflow-x: auto;
+    }
+
+    .ref {
+      font-size: 13px;
+      color: #555;
+      margin: 12px 0 14px;
+      line-height: 1.6;
+      border-top: 1px dashed #ddd;
+      padding-top: 8px;
+    }
+    .ref a { color: #2c6aa8; }
+    .ref a.yt { color: #c0392b; text-decoration: none; font-size: 11px; }
+    .tag { color: #999; font-size: 12px; font-weight: normal; }
+    .hint { color: #555; font-size: 14px; }
+    .seedbox { white-space: nowrap; }
+    .seedbox input { padding: 8px; font-size: 14px; width: 7em; }
+
+    @media print {
+      button, .seedbox { display: none; }
+      .solution { display: block !important; }
+    }
+  </style>
+</head>
+
+<body>
+
+<h1>BS1515 Homework Generator</h1>
+
+<p>This is LLM-generated, so there will be mistakes in the solutions. You get 4 questions, solve them, then see if it is consistent with the provided solution. If not, email Sergey at popovs@cardiff.ac.uk, you might have found a bug!</p>
+
+
+<button onclick="generate()">Generate Homework</button>
+<button onclick="window.print()">Print</button>
+<span class="seedbox">or load homework # <input id="seedIn" inputmode="numeric" size="8" onkeydown="if(event.key==='Enter')loadSeed()"> <button onclick="loadSeed()">Load</button></span>
+
+<div id="output"></div>
+
+<script>
+
+// =========================
+// HELPERS
+// =========================
+// Seeded random numbers (mulberry32) so a homework number always regenerates the same questions
+const GENERATOR_VERSION = 'v3';
+function mulberry32(a){ return function(){ a|=0; a=a+0x6D2B79F5|0; let t=Math.imul(a^a>>>15,1|a); t=t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+let rng = mulberry32(Date.now()%2147483647);
+function rand(a,b){ return Math.floor(rng()*(b-a+1))+a }
+function random(arr){ return arr[Math.floor(rng()*arr.length)] }
+
+// GCD (always returns a non-negative value)
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); return b===0?a:gcd(b,a%b); }
+
+// Render cx^n cleanly: omits coefficient 1, omits ^1
+function xpow(c,n){ const xs=n===1?'x':'x^{'+n+'}'; return c===1?xs:c+xs; }
+// Render (fracTeX string coef) * x^n, suppressing coef when it equals '1'
+function coefXpow(coef,n){ const xs=n===1?'x':'x^{'+n+'}'; return coef==='1'?xs:coef+xs; }
+// Render linear term cx or cy in LaTeX, suppressing coefficient 1
+function linx(c){ return c===1?'x':c+'x'; }
+function liny(c){ return c===1?'y':c+'y'; }
+
+// Render an integer fraction num/denom as LaTeX, fully reduced.
+// e.g. fracTeX(4,6) → '\frac{2}{3}', fracTeX(-3,6) → '-\frac{1}{2}', fracTeX(6,3) → '2'
+function fracTeX(num,denom){
+  if(denom < 0){ num=-num; denom=-denom; }
+  if(num===0) return '0';
+  const g = gcd(Math.abs(num), denom);
+  const n = num/g, d = denom/g;
+  if(d===1) return `${n}`;
+  const sign = n<0 ? '-' : '';
+  return `${sign}\\frac{${Math.abs(n)}}{${d}}`;
+}
+
+// Coefficient string in front of a factor: '1' → '', '-1' → '-'
+function cf(s){ return s==='1' ? '' : (s==='-1' ? '-' : s); }
+// Signed term for appending: term(3,'x') → '+ 3x', term(-1,'x') → '- x', term(-4,'') → '- 4'
+function term(c,v){
+  if(c===0) return '';
+  const a=Math.abs(c);
+  const body=(a===1 && v!=='') ? v : a+v;
+  return (c<0?'- ':'+ ')+body;
+}
+// Leading term: lead(1,'x') → 'x', lead(-1,'x') → '-x', lead(3,'x') → '3x'
+function lead(c,v){
+  if(v==='') return ''+c;
+  if(c===1) return v;
+  if(c===-1) return '-'+v;
+  return c+v;
+}
+// Polynomial from [[coef,'monomial'],...], skipping zero coefficients
+function poly(terms){
+  let out='';
+  for(const [c,v] of terms){
+    if(c===0) continue;
+    out += (out==='') ? lead(c,v) : ' '+term(c,v);
+  }
+  return out==='' ? '0' : out;
+}
+// Wrap negatives in brackets: paren(-3) → '(-3)'
+function paren(n){ return (typeof n==='number' && n<0) ? `(${n})` : `${n}`; }
+// LaTeX pmatrix from a 2-D array of strings/numbers
+function pmat(rows){ return '\\begin{pmatrix}'+rows.map(r=>r.join('&')).join('\\\\')+'\\end{pmatrix}'; }
+// Simplify sqrt(n) → [k,m] with sqrt(n) = k*sqrt(m)
+function sqrtParts(n){ let k=1,m=n; for(let f=2;f*f<=m;f++){ while(m%(f*f)===0){ m/=f*f; k*=f; } } return [k,m]; }
+function surdTeX(n){ const [k,m]=sqrtParts(n); if(m===1) return ''+k; return (k===1?'':k)+'\\sqrt{'+m+'}'; }
+function isSquare(n){ const r=Math.round(Math.sqrt(n)); return r*r===n; }
+// Decimal for display (up to 3 dp, trailing zeros removed)
+function dec(x){ return (+x.toFixed(3)).toString(); }
+function det3(M){
+  return M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1])
+       - M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0])
+       + M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0]);
+}
+
+// ---- Exact rational arithmetic (for Gaussian elimination, boundary search, etc.) ----
+class Fr {
+  constructor(n,d=1){
+    if(d<0){ n=-n; d=-d; }
+    const g = gcd(n,d) || 1;
+    this.n = n/g; this.d = d/g;
+  }
+  add(o){ o=F(o); return new Fr(this.n*o.d+o.n*this.d, this.d*o.d); }
+  sub(o){ o=F(o); return new Fr(this.n*o.d-o.n*this.d, this.d*o.d); }
+  mul(o){ o=F(o); return new Fr(this.n*o.n, this.d*o.d); }
+  div(o){ o=F(o); return new Fr(this.n*o.d, this.d*o.n); }
+  neg(){ return new Fr(-this.n, this.d); }
+  isZero(){ return this.n===0; }
+  sign(){ return Math.sign(this.n); }
+  eq(o){ o=F(o); return this.n===o.n && this.d===o.d; }
+  cmp(o){ o=F(o); return Math.sign(this.n*o.d - o.n*this.d); }
+  num(){ return this.n/this.d; }
+  tex(){ return fracTeX(this.n, this.d); }
+}
+function F(x){ return x instanceof Fr ? x : new Fr(x,1); }
+function frMat(rows){ return pmat(rows.map(r=>r.map(v=>F(v).tex()))); }
+function pt(x,y){ return `\\left(${F(x).tex()},\\,${F(y).tex()}\\right)`; }
+
+// =========================
+// LECTURE BANKS
+// =========================
+
+const lectureBanks = {
+
+L1: [
+  /* Unit disk */
+  () => ({
+    q:`Prove that \\(A = \\{(x,y): x^2 + y^2 < 1\\}\\) is open.`,
+    s:`<strong>Lecture 1 — Open sets</strong>
+
+Let \\(f(x,y)=x^2+y^2\\), which is continuous (a sum of continuous functions).
+
+\\[
+A = f^{-1}\\left((-\\infty,1)\\right)
+\\]
+
+Since \\((-\\infty,1)\\) is an open interval and \\(f\\) is continuous, the preimage \\(A\\) is open.
+
+Directly from the definition: if \\(a\\in A\\) is at distance \\(d<1\\) from the origin, the ball \\(B_\\varepsilon(a)\\) with \\(\\varepsilon=1-d\\) lies inside \\(A\\) by the triangle inequality.`
+  }),
+
+  /* Half-plane */
+  () => {
+    let a = rand(1,4), b = rand(1,4), c = rand(5,20);
+    let ax = a===1?'x':`${a}x`, by = b===1?'y':`${b}y`;
+    return {
+      q:`Prove that \\(A = \\{(x,y): ${ax} + ${by} < ${c}\\}\\) is open.`,
+      s:`<strong>Lecture 1 — Open sets</strong>
+
+Let \\(f(x,y)=${ax}+${by}\\), which is continuous (a linear function).
+
+\\[
+A = f^{-1}\\left((-\\infty,${c})\\right)
+\\]
+
+Since \\((-\\infty,${c})\\) is an open interval and \\(f\\) is continuous, the preimage \\(A\\) is open.`
+    }
+  },
+
+  /* Ball of radius r */
+  () => {
+    let r = rand(2,6);
+    let r2 = r*r;
+    return {
+      q:`Prove that \\(B = \\{(x,y): x^2+y^2 < ${r2}\\}\\) is open.`,
+      s:`<strong>Lecture 1 — Open sets</strong>
+
+Let \\(f(x,y)=x^2+y^2\\), which is continuous.
+
+\\[
+B = f^{-1}\\left((-\\infty,${r2})\\right)
+\\]
+
+This is the open ball of radius \\(${r}\\) centred at the origin. Since \\((-\\infty,${r2})\\) is open and \\(f\\) is continuous, \\(B\\) is open.`
+    }
+  },
+
+  /* Closed half-plane: closed, not open */
+  () => {
+    let a=rand(1,4), b=rand(1,4), c=rand(2,12);
+    const px = fracTeX(c,a);
+    const aeps = a===1 ? '\\varepsilon' : `${a}\\varepsilon`;
+    return {
+      q:`Prove that \\(C=\\{(x,y): ${linx(a)}+${liny(b)}\\le ${c}\\}\\) is closed in \\(\\mathbb{R}^2\\). Is it also open?`,
+      s:`<strong>Lecture 1 — Closed sets</strong>
+
+Let \\(f(x,y)=${linx(a)}+${liny(b)}\\), which is continuous. Then
+
+\\[
+C=f^{-1}\\left((-\\infty,${c}]\\right)
+\\]
+
+The interval \\((-\\infty,${c}]\\) is closed (its complement \\((${c},\\infty)\\) is open), and the preimage of a closed set under a continuous function is closed. Equivalently, the complement \\(\\{${linx(a)}+${liny(b)}>${c}\\}\\) is open. So \\(C\\) is closed.
+
+<strong>Not open:</strong> the point \\(\\left(${px},0\\right)\\) lies in \\(C\\) (it is on the line \\(${linx(a)}+${liny(b)}=${c}\\)), but every ball around it contains points \\(\\left(${px}+\\varepsilon,0\\right)\\) where \\(${linx(a)}+${liny(b)}=${c}+${aeps}>${c}\\), and these are outside \\(C\\).`
+    };
+  },
+
+  /* Open / closed / bounded / compact / convex / Weierstrass — mock-exam style */
+  () => {
+    const kind = rand(1,6);
+    const k = rand(1,3), mY = rand(1,4);
+    const fTeX = `f(x,y)=x^2-${k===1?'':k}xy-${mY===1?'':mY}y`;
+    let S, ans;
+    if(kind===1){
+      const r=rand(2,5), r2=r*r;
+      S = `\\{(x,y): x^2+y^2<${r2}\\}`;
+      ans = `<strong>Open:</strong> yes. \\(S=g^{-1}((-\\infty,${r2}))\\) for the continuous \\(g(x,y)=x^2+y^2\\). Directly: a point at distance \\(d<${r}\\) from the origin has the ball of radius \\(${r}-d\\) inside \\(S\\).
+
+<strong>Closed:</strong> no. \\((${r},0)\\notin S\\), but every ball around it contains \\((${r}-\\varepsilon,0)\\in S\\), so the complement is not open.
+
+<strong>Bounded:</strong> yes, \\(S\\) sits inside the ball of radius \\(${r}\\). <strong>Compact:</strong> no, because it is not closed.
+
+<strong>Convex:</strong> yes. For \\(z_1,z_2\\in S\\) and \\(t\\in[0,1]\\), the triangle inequality gives \\(\\|tz_1+(1-t)z_2\\|\\le t\\|z_1\\|+(1-t)\\|z_2\\|<${r}\\).
+
+<strong>Max/min of \\(f\\):</strong> Weierstrass does <em>not</em> apply (not compact), so existence is not guaranteed by the theorem.`;
+    } else if(kind===2){
+      const r=rand(2,5), r2=r*r;
+      S = `\\{(x,y): x^2+y^2\\le ${r2}\\}\\cap\\{(x,y): y\\ge 0\\}`;
+      ans = `<strong>Closed:</strong> yes. Both \\(\\{x^2+y^2\\le ${r2}\\}\\) and \\(\\{y\\ge0\\}\\) are preimages of closed intervals under continuous functions, hence closed, and an intersection of closed sets is closed. (Equivalently, the complement \\(\\{x^2+y^2>${r2}\\}\\cup\\{y<0\\}\\) is a union of open sets, hence open.)
+
+<strong>Open:</strong> no. \\((0,0)\\in S\\), but every ball around it contains \\((0,-\\varepsilon)\\notin S\\).
+
+<strong>Bounded:</strong> yes, \\(-${r}\\le x\\le ${r}\\), \\(0\\le y\\le ${r}\\). <strong>Compact:</strong> yes, it is closed and bounded in \\(\\mathbb{R}^2\\).
+
+<strong>Convex:</strong> yes, as the intersection of two convex sets (a disk and a half-plane).
+
+<strong>Max/min of \\(f\\):</strong> yes, both exist. \\(f\\) is a polynomial and hence continuous, and \\(S\\) is compact, so the Weierstrass theorem applies.`;
+    } else if(kind===3){
+      const r=rand(2,5), r2=r*r;
+      S = `\\{(x,y): x^2+y^2\\ge ${r2}\\}`;
+      ans = `<strong>Closed:</strong> yes, \\(S=g^{-1}([${r2},\\infty))\\) for the continuous \\(g=x^2+y^2\\).
+
+<strong>Open:</strong> no. \\((${r},0)\\in S\\) but \\((${r}-\\varepsilon,0)\\notin S\\) for every small \\(\\varepsilon>0\\).
+
+<strong>Bounded:</strong> no, \\((n,0)\\in S\\) for every \\(n\\ge ${r}\\). <strong>Compact:</strong> no.
+
+<strong>Convex:</strong> no. \\((${r},0)\\) and \\((-${r},0)\\) are in \\(S\\) but their midpoint \\((0,0)\\) is not.
+
+<strong>Max/min of \\(f\\):</strong> Weierstrass does not apply. In fact \\(f(0,y)=-${mY===1?'':mY}y\\) is unbounded above and below along the \\(y\\)-axis, so neither exists.`;
+    } else if(kind===4){
+      const p1=rand(1,5), p2=rand(1,5), m=rand(10,40);
+      S = `\\{(x,y): x\\ge 0,\\ y\\ge 0,\\ ${linx(p1)}+${liny(p2)}\\le ${m}\\}`;
+      ans = `(This is a budget set.)
+
+<strong>Closed:</strong> yes, an intersection of three closed half-planes.
+
+<strong>Open:</strong> no. \\((0,0)\\in S\\) but \\((-\\varepsilon,0)\\notin S\\).
+
+<strong>Bounded:</strong> yes, \\(0\\le x\\le ${fracTeX(m,p1)}\\) and \\(0\\le y\\le ${fracTeX(m,p2)}\\). <strong>Compact:</strong> yes (closed and bounded).
+
+<strong>Convex:</strong> yes. Each half-plane is convex (a linear inequality is preserved under convex combinations), and an intersection of convex sets is convex.
+
+<strong>Max/min of \\(f\\):</strong> yes, both exist by Weierstrass (continuous \\(f\\), compact \\(S\\)).`;
+    } else if(kind===5){
+      const c=rand(1,6);
+      S = `\\{(x,y): x\\ge 0,\\ xy\\ge ${c}\\}`;
+      ans = `<strong>Closed:</strong> yes, the intersection of \\(\\{x\\ge0\\}\\) and \\(g^{-1}([${c},\\infty))\\) with \\(g=xy\\) continuous. Note that every point of \\(S\\) has \\(x>0\\) and \\(y>0\\).
+
+<strong>Open:</strong> no. \\((1,${c})\\in S\\) but \\((1,${c}-\\varepsilon)\\notin S\\).
+
+<strong>Bounded:</strong> no, \\((n,${c})\\in S\\) for all \\(n\\ge1\\). <strong>Compact:</strong> no.
+
+<strong>Convex:</strong> yes. On \\(x,y>0\\), \\(S=\\{\\ln x+\\ln y\\ge \\ln ${c}\\}\\) is an upper level set of the concave function \\(\\ln x+\\ln y\\). For \\(z_1,z_2\\in S\\): \\(h(tz_1+(1-t)z_2)\\ge t\\,h(z_1)+(1-t)h(z_2)\\ge \\ln ${c}\\).
+
+<strong>Max/min of \\(f\\):</strong> Weierstrass does not apply, so existence is not guaranteed.`;
+    } else {
+      const p=rand(-3,1), q=rand(p+1,p+4);
+      S = `\\{(x,y): ${p}\\lt x\\le ${q}\\}`;
+      ans = `<strong>Open:</strong> no. \\((${q},0)\\in S\\), but every ball around it contains \\((${q}+\\varepsilon,0)\\notin S\\).
+
+<strong>Closed:</strong> no. \\((${p},0)\\notin S\\), but every ball around it contains \\((${p}+\\varepsilon,0)\\in S\\), so the complement is not open. The set is <em>neither</em> open nor closed.
+
+<strong>Bounded:</strong> no (\\(y\\) is unrestricted). <strong>Compact:</strong> no.
+
+<strong>Convex:</strong> yes. If \\(${p}\\lt x_1,x_2\\le ${q}\\), then \\(${p}\\lt tx_1+(1-t)x_2\\le ${q}\\).
+
+<strong>Max/min of \\(f\\):</strong> Weierstrass does not apply, so existence is not guaranteed.`;
+    }
+    return {
+      q:`Let \\(S=${S}\\subset\\mathbb{R}^2\\).
+(a) Is \\(S\\) open? Closed?
+(b) Is \\(S\\) bounded? Compact?
+(c) Is \\(S\\) convex?
+(d) Does \\(${fTeX}\\) attain a maximum and a minimum on \\(S\\)? How do you know? (No need to find them.)`,
+      s:`<strong>Lecture 1 — Open, closed, compact and convex sets</strong>
+
+${ans}`
+    };
+  },
+
+  /* Convexity of upper contour sets (PS1) */
+  () => {
+    let p=rand(1,4), q; do{ q=rand(1,4); }while(q===p);
+    const kind=rand(1,4);
+    let uTeX, uVal, ans;
+    const upper = `\\{(x,y)\\in\\mathbb{R}^2_+: u(x,y)>u(${p},${q})\\}`;
+    if(kind===1){
+      const A=random([2,3,4,5,6]), B=random([2,3,4,5,6]);
+      const a=`0.${A}`, b=`0.${B}`;
+      uTeX=`u(x,y)=x^{${a}}y^{${b}}`; uVal=`${p}^{${a}}\\cdot ${q}^{${b}}`;
+      ans = `<strong>Convex.</strong> Points in the set have \\(u>0\\), so \\(x,y>0\\), and taking logs, the set is \\(\\{h(x,y)>k\\}\\) with \\(h=${a}\\ln x+${b}\\ln y\\) and \\(k=\\ln u(${p},${q})\\).
+
+\\(h\\) is concave: \\(h_{xx}=-\\frac{${a}}{x^2}<0\\), \\(h_{yy}=-\\frac{${b}}{y^2}<0\\), \\(h_{xy}=0\\).
+
+For \\(z_1,z_2\\) in the set and \\(t\\in[0,1]\\): \\(h(tz_1+(1-t)z_2)\\ge t\\,h(z_1)+(1-t)\\,h(z_2)>k\\). So the convex combination is in the set.`;
+    } else if(kind===2){
+      uTeX=`u(x,y)=\\sqrt{x}+\\sqrt{y}`; uVal=`\\sqrt{${p}}+\\sqrt{${q}}`;
+      ans = `<strong>Convex.</strong> \\(u\\) is concave: \\(\\sqrt{x}\\) has second derivative \\(-\\frac14x^{-3/2}<0\\), and a sum of concave functions is concave.
+
+For \\(z_1,z_2\\) in the set and \\(t\\in[0,1]\\): \\(u(tz_1+(1-t)z_2)\\ge t\\,u(z_1)+(1-t)\\,u(z_2)>u(${p},${q})\\).
+
+An upper contour set of a concave function is convex.`;
+    } else if(kind===3){
+      uTeX=`u(x,y)=x+\\ln y`; uVal=`${p}+\\ln ${q}`;
+      ans = `<strong>Convex.</strong> \\(u\\) is concave on \\(y>0\\): \\(x\\) is linear and \\(\\ln y\\) has second derivative \\(-1/y^2<0\\).
+
+For \\(z_1,z_2\\) in the set: \\(u(tz_1+(1-t)z_2)\\ge t\\,u(z_1)+(1-t)\\,u(z_2)>u(${p},${q})\\). So the set is convex.`;
+    } else {
+      const s=p+q, val=p*p+q*q;
+      uTeX=`u(x,y)=x^2+y^2`; uVal=`${val}`;
+      ans = `<strong>Not convex.</strong> Counterexample: \\((${s},0)\\) and \\((0,${s})\\) are both in the set, since \\(${s}^2=${s*s}>${val}\\).
+
+Their midpoint \\(\\left(${fracTeX(s,2)},${fracTeX(s,2)}\\right)\\) gives \\(u=${fracTeX(s*s,2)}<${val}\\), so it is not in the set.
+
+(The set is everything outside a circle; its <em>complement</em> in \\(\\mathbb{R}^2_+\\) is the convex one.)`;
+    }
+    return {
+      q:`Let \\(${uTeX}\\). Plot the set \\(${upper}\\), where \\(u(${p},${q})=${uVal}\\). Is it convex? Prove it or give a counterexample.`,
+      s:`<strong>Lecture 1 — Convex sets</strong>
+
+${ans}`
+    };
+  },
+
+  /* 2×2 linear systems: unique / none / infinitely many (PS1) */
+  () => {
+    const kind = random(['unique','unique','none','many']);
+    if(kind==='unique'){
+      let a,b,c,d,det;
+      do{ a=rand(1,5); b=rand(1,5); c=rand(1,5); d=rand(1,5); det=a*d-b*c; }while(det===0);
+      const x0=rand(-3,4), y0=rand(-3,4);
+      const e1=a*x0+b*y0, e2=c*x0+d*y0;
+      return {
+        q:`Plot and solve the system
+\\[
+\\begin{cases} ${linx(a)}+${liny(b)}=${e1}\\\\ ${linx(c)}+${liny(d)}=${e2}\\end{cases}
+\\]
+Does it have one solution, none, or infinitely many?`,
+        s:`<strong>Lecture 1 — Systems of equations</strong>
+
+The lines have slopes \\(-${fracTeX(a,b)}\\) and \\(-${fracTeX(c,d)}\\). These are different (\\(${a}\\cdot${d}-${b}\\cdot${c}=${det}\\neq0\\)), so the lines cross exactly once: <strong>one solution</strong>.
+
+Eliminate \\(y\\): multiply the first equation by \\(${d}\\) and the second by \\(${b}\\), then subtract:
+
+\\[
+(${a}\\cdot${d}-${c}\\cdot${b})\\,x=${e1}\\cdot${d}-${paren(e2)}\\cdot${b}
+\\implies ${lead(det,'x')}=${e1*d-e2*b}\\implies x=${x0}
+\\]
+
+Substitute back: \\(${b===1?'':b}y=${e1}-${a}\\cdot${paren(x0)}=${e1-a*x0}\\implies y=${y0}\\).
+
+Solution: \\((x,y)=(${x0},${y0})\\).`
+      };
+    } else {
+      const a=rand(1,5), b=rand(1,5), k=rand(2,3), e1=rand(1,9);
+      const e2 = kind==='many' ? k*e1 : k*e1 + random([-3,-2,-1,1,2,3]);
+      const head = `Plot and solve the system
+\\[
+\\begin{cases} ${linx(a)}+${liny(b)}=${e1}\\\\ ${linx(k*a)}+${liny(k*b)}=${e2}\\end{cases}
+\\]
+Does it have one solution, none, or infinitely many?`;
+      if(kind==='none'){
+        return { q:head, s:`<strong>Lecture 1 — Systems of equations</strong>
+
+Multiply the first equation by \\(${k}\\): \\(${linx(k*a)}+${liny(k*b)}=${k*e1}\\).
+
+The second equation says the same left-hand side equals \\(${e2}\\neq${k*e1}\\). This is a contradiction, so there is <strong>no solution</strong>.
+
+Geometrically, the two lines are parallel (same slope \\(-${fracTeX(a,b)}\\)) with different intercepts. Equivalently, \\(\\det\\begin{pmatrix}${a}&${b}\\\\${k*a}&${k*b}\\end{pmatrix}=0\\) and the system is inconsistent.` };
+      }
+      const yExpr = b===1 ? `${e1}-${a===1?'':a}t` : `\\frac{${e1}-${a===1?'':a}t}{${b}}`;
+      return { q:head, s:`<strong>Lecture 1 — Systems of equations</strong>
+
+The second equation is exactly \\(${k}\\times\\) the first, so it carries no new information. Both equations describe the same line, and there are <strong>infinitely many solutions</strong>:
+
+\\[
+\\{(x,y): x=t,\\ y=${yExpr},\\ t\\in\\mathbb{R}\\}
+\\]
+
+The determinant \\(${a}\\cdot${k*b}-${b}\\cdot${k*a}=0\\), so the coefficient matrix is not invertible.` };
+    }
+  },
+
+  /* Supply and demand (Lecture 1 example) */
+  () => {
+    const s=rand(2,5), b=rand(1,4), p=rand(5,25);
+    const d0 = rand(5, s*p-5);
+    const Q = s*p-d0, a = Q + b*p;
+    return {
+      q:`Supply is \\(Q=${s}p-${d0}\\) and demand is \\(Q=${a}-${b===1?'':b}p\\). Find the equilibrium price and quantity. Why is the equilibrium unique?`,
+      s:`<strong>Lecture 1 — Equations (supply and demand)</strong>
+
+Set supply equal to demand:
+
+\\[
+${s}p-${d0}=${a}-${b===1?'':b}p\\implies ${s+b}p=${a+d0}\\implies p^*=${p}
+\\]
+
+Then \\(Q^*=${s}\\cdot${p}-${d0}=${Q}\\) (check: \\(${a}-${b}\\cdot${p}=${Q}\\) ✓).
+
+Uniqueness: supply is strictly increasing and demand strictly decreasing in \\(p\\), so the two lines (different slopes) cross exactly once.`
+    };
+  }
+],
+
+L2: [
+  /* Determinant */
+  () => {
+    let a=rand(1,5), b=rand(1,5), c=rand(1,5),
+        d=rand(1,5), e=rand(1,5), f=rand(1,5),
+        g=rand(1,5), h=rand(1,5), i=rand(1,5);
+
+    let minor1 = e*i - f*h;
+    let minor2 = d*i - f*g;
+    let minor3 = d*h - e*g;
+    let det = a*minor1 - b*minor2 + c*minor3;
+
+    return {
+      q:`Compute
+      \\[
+      \\det
+      \\begin{pmatrix}
+      ${a}&${b}&${c}\\\\
+      ${d}&${e}&${f}\\\\
+      ${g}&${h}&${i}
+      \\end{pmatrix}
+      \\]`,
+
+      s:`<strong>Lecture 2 — Determinants</strong>
+
+Expand along the first row:
+
+\\[
+\\det = ${a}(${e}\\cdot ${i}-${f}\\cdot ${h}) - ${b}(${d}\\cdot ${i}-${f}\\cdot ${g}) + ${c}(${d}\\cdot ${h}-${e}\\cdot ${g})
+\\]
+
+Evaluate each \\(2\\times2\\) minor:
+
+\\[
+= ${a}(${minor1}) - ${b}(${minor2}) + ${c}(${minor3}) = ${det}
+\\]`
+    }
+  },
+
+  /* Eigenvectors — randomised, non-symmetric */
+  () => {
+    // Build A = P diag(l1,l2) P^{-1} where P = [[2,1],[1,1]].
+    // This always gives eigenvectors (2,1) for l1 and (1,1) for l2 with integer matrix entries.
+    const pairs = [[3,1],[4,1],[4,2],[5,1],[5,2],[5,3],[6,2],[6,4],[7,3],[7,5]];
+    const [l1,l2] = random(pairs);
+    const diff = l1 - l2;
+    const a11 = 2*l1 - l2,  a12 = 2*(l2 - l1);
+    const a21 = l1 - l2,    a22 = 2*l2 - l1;
+    const tr = l1 + l2, det = l1 * l2;
+    return {
+      q:`Find the eigenvalues and eigenvectors of
+\\[
+A=\\begin{pmatrix}${a11}&${a12}\\\\${a21}&${a22}\\end{pmatrix}
+\\]`,
+      s:`<strong>Lecture 2 — Eigenvalues and eigenvectors</strong>
+
+Characteristic equation (using \\(\\text{tr}(A)=${tr}\\), \\(\\det(A)=${det}\\)):
+
+\\[
+\\lambda^2 - ${tr}\\lambda + ${det} = (\\lambda-${l1})(\\lambda-${l2}) = 0
+\\implies \\lambda = ${l1},\\,${l2}
+\\]
+
+For \\(\\lambda=${l1}\\): \\((A-${l1}I)v=0\\) gives rows \\([${diff},\\,${-2*diff}]\\), so \\(v_1=2v_2\\). Eigenvector: \\((2,1)\\)
+
+For \\(\\lambda=${l2}\\): \\((A-${l2}I)v=0\\) gives rows \\([${2*diff},\\,${-2*diff}]\\), so \\(v_1=v_2\\). Eigenvector: \\((1,1)\\)`
+    }
+  },
+
+  /* Eigenvectors — symmetric matrix [[p,q],[q,p]]; eigenvalues p±q, eigenvectors (1,±1) */
+  () => {
+    let p = rand(3,7), q = rand(1, Math.min(p-1, 4));
+    let l1 = p+q, l2 = p-q;
+    return {
+      q:`Find the eigenvalues and eigenvectors of
+\\[
+A=\\begin{pmatrix}${p}&${q}\\\\${q}&${p}\\end{pmatrix}
+\\]`,
+      s:`<strong>Lecture 2 — Eigenvalues and eigenvectors (symmetric matrix)</strong>
+
+Characteristic equation:
+
+\\[
+\\det(A-\\lambda I)=(${p}-\\lambda)^2-${q*q}=(${p}-\\lambda-${q})(${p}-\\lambda+${q})=0
+\\implies \\lambda=${l1}\\text{ or }\\lambda=${l2}
+\\]
+
+For \\(\\lambda=${l1}\\): \\((A-${l1}I)v=0\\) gives row \\([${-q},\\;${q}]\\), i.e. \\(v_1=v_2\\). Eigenvector: \\((1,1)\\)
+
+For \\(\\lambda=${l2}\\): \\((A-${l2}I)v=0\\) gives row \\([${q},\\;${q}]\\), i.e. \\(v_1=-v_2\\). Eigenvector: \\((1,-1)\\)
+
+Since \\(A\\) is symmetric the eigenvectors must be orthogonal — verify: \\((1,1)\\cdot(1,-1)=0\\) ✓`
+    }
+  },
+
+  /* Matrix inverse — 2×2, students first check invertibility via det */
+  () => {
+    let a,b,c,d,det;
+    let attempts = 0;
+    do {
+      a=rand(1,4); b=rand(1,4); c=rand(1,4); d=rand(1,4);
+      det = a*d - b*c;
+      attempts++;
+    } while(det===0 && attempts<200);
+
+    const d11=fracTeX(d,det),  d12=fracTeX(-b,det);
+    const d21=fracTeX(-c,det), d22=fracTeX(a,det);
+
+    return {
+      q:`Let \\(A=\\begin{pmatrix}${a}&${b}\\\\${c}&${d}\\end{pmatrix}\\). Check whether \\(A\\) is invertible, and if so find \\(A^{-1}\\).`,
+      s:`<strong>Lecture 2 — Matrix inverse</strong>
+
+Step 1 — Check invertibility:
+
+\\[
+\\det(A)=${a}\\cdot ${d}-${b}\\cdot ${c}=${det}
+\\]
+
+Since \\(\\det(A)=${det}\\neq 0\\), the matrix is invertible.
+
+Step 2 — Apply the \\(2\\times 2\\) inverse formula \\(A^{-1}=\\dfrac{1}{\\det A}\\begin{pmatrix}d&-b\\\\-c&a\\end{pmatrix}\\):
+
+\\[
+A^{-1}=\\frac{1}{${det}}\\begin{pmatrix}${d}&${-b}\\\\${-c}&${a}\\end{pmatrix}=\\begin{pmatrix}${d11}&${d12}\\\\${d21}&${d22}\\end{pmatrix}
+\\]
+
+Verify \\(A\\,A^{-1}=I_2\\): the \\((1,1)\\) entry is \\(\\dfrac{${a}\\cdot ${d}-${b}\\cdot ${c}}{${det}}=\\dfrac{${a*d-b*c}}{${det}}=1\\) ✓`
+    }
+  },
+
+  /* Solve a system by matrix inversion (PS2) */
+  () => {
+    let a,b,c,d,det;
+    do{ a=rand(1,5); b=rand(1,5); c=rand(1,5); d=rand(1,5); det=a*d-b*c; }while(det===0);
+    const x0=rand(-3,4), y0=rand(-3,4);
+    const e1=a*x0+b*y0, e2=c*x0+d*y0;
+    return {
+      q:`Write the system \\(\\begin{cases} ${linx(a)}+${liny(b)}=${e1}\\\\ ${linx(c)}+${liny(d)}=${e2}\\end{cases}\\) as \\(A\\mathbf{x}=\\mathbf{b}\\) and solve it by inverting \\(A\\).`,
+      s:`<strong>Lecture 2 — Solving systems by matrix inversion</strong>
+
+\\[
+A=${pmat([[a,b],[c,d]])},\\quad \\mathbf{b}=${pmat([[e1],[e2]])},\\quad \\det A=${a}\\cdot${d}-${b}\\cdot${c}=${det}\\neq0
+\\]
+
+\\[
+A^{-1}=\\frac{1}{${det}}${pmat([[d,-b],[-c,a]])}
+\\]
+
+\\[
+\\mathbf{x}=A^{-1}\\mathbf{b}=\\frac{1}{${det}}${pmat([[`${d}\\cdot${paren(e1)}-${b}\\cdot${paren(e2)}`],[`-${c}\\cdot${paren(e1)}+${a}\\cdot${paren(e2)}`]])}
+=\\frac{1}{${det}}${pmat([[d*e1-b*e2],[-c*e1+a*e2]])}=${pmat([[x0],[y0]])}
+\\]
+
+Check: \\(${a}\\cdot${paren(x0)}+${b}\\cdot${paren(y0)}=${e1}\\) ✓`
+    };
+  },
+
+  /* 3×3 inverse by Gaussian elimination (Homework 1 style) */
+  () => {
+    let A, det;
+    do{
+      A=[[rand(-2,4),rand(-2,3),rand(-2,3)],[rand(-2,3),rand(-2,4),rand(-2,3)],[rand(-2,3),rand(-2,3),rand(-2,4)]];
+      det=det3(A);
+    }while(det===0 || Math.abs(det)>16);
+
+    // Gauss–Jordan on [A | I] with exact fractions, logging each stage
+    let M = A.map(r=>r.map(v=>F(v)));
+    let I = [[1,0,0],[0,1,0],[0,0,1]].map(r=>r.map(v=>F(v)));
+    const aug = () => `\\left(\\begin{array}{ccc|ccc}${M.map((r,i)=>r.map(v=>v.tex()).concat(I[i].map(v=>v.tex())).join('&')).join('\\\\')}\\end{array}\\right)`;
+    const steps = [`Start from \\([A\\,|\\,I]\\):\n\\[${aug()}\\]`];
+    for(let col=0; col<3; col++){
+      const ops=[];
+      if(M[col][col].isZero()){
+        let r=col+1; while(M[r][col].isZero()) r++;
+        [M[col],M[r]]=[M[r],M[col]]; [I[col],I[r]]=[I[r],I[col]];
+        ops.push(`swap \\(R_${col+1}\\leftrightarrow R_${r+1}\\)`);
+      }
+      const p = M[col][col];
+      if(!p.eq(1)){
+        M[col]=M[col].map(v=>v.div(p)); I[col]=I[col].map(v=>v.div(p));
+        ops.push(`divide \\(R_${col+1}\\) by \\(${p.tex()}\\)`);
+      }
+      for(let r=0;r<3;r++){
+        if(r===col) continue;
+        const f=M[r][col];
+        if(f.isZero()) continue;
+        M[r]=M[r].map((v,j)=>v.sub(f.mul(M[col][j]))); I[r]=I[r].map((v,j)=>v.sub(f.mul(I[col][j])));
+        const fs = f.tex();
+        ops.push(f.sign()>0 ? `\\(R_${r+1}\\to R_${r+1}-${fs==='1'?'':fs}R_${col+1}\\)` : `\\(R_${r+1}\\to R_${r+1}+${cf(f.neg().tex())}R_${col+1}\\)`);
+      }
+      if(ops.length) steps.push(`Column ${col+1}: ${ops.join(', ')}:\n\\[${aug()}\\]`);
+    }
+    const inv = I;
+    return {
+      q:`Find the inverse of
+\\[
+A=${pmat(A)}
+\\]
+using Gaussian elimination.`,
+      s:`<strong>Lecture 2 — Inverse by Gaussian elimination</strong>
+
+First check invertibility (expanding along the first row): \\(\\det A=${det}\\neq0\\).
+
+${steps.join('\n\n')}
+
+So
+
+\\[
+A^{-1}=${frMat(inv)}
+\\]
+
+Check: the first row of \\(A\\) times the first column of \\(A^{-1}\\) is \\(${A[0].map((v,j)=>`${paren(v)}\\cdot${inv[j][0].n<0?'\\left('+inv[j][0].tex()+'\\right)':inv[j][0].tex()}`).join('+')}=1\\) ✓`
+    };
+  },
+
+  /* Null space, rank (PS2) */
+  () => {
+    let r1,r2,v;
+    do{
+      r1=[rand(-3,4),rand(-3,4),rand(-3,4)]; r2=[rand(-3,4),rand(-3,4),rand(-3,4)];
+      v=[r1[1]*r2[2]-r1[2]*r2[1], r1[2]*r2[0]-r1[0]*r2[2], r1[0]*r2[1]-r1[1]*r2[0]];
+    }while(v.every(t=>t===0) || r1.filter(t=>t!==0).length<2 || r2.filter(t=>t!==0).length<2);
+    const g=gcd(gcd(v[0],v[1]),v[2]); v=v.map(t=>t/g);
+    const firstNZ=v.find(t=>t!==0); if(firstNZ<0) v=v.map(t=>-t);
+    const dot=(r)=>r.map((a,i)=>`${paren(a)}\\cdot${paren(v[i])}`).join('+');
+    return {
+      q:`Let \\(A=${pmat([r1,r2])}\\). Find the null space of \\(A\\). What are the rank of \\(A\\), its column space, and its left null space?`,
+      s:`<strong>Lecture 2 — Range and null space</strong>
+
+The null space is all \\(v\\) with \\(Av=0\\), i.e. \\(v\\) orthogonal to both rows of \\(A\\). The rows are not proportional, so \\(\\text{rank}(A)=2\\). By rank–nullity the null space has dimension \\(3-2=1\\).
+
+A vector orthogonal to both rows is their cross product (or solve by elimination):
+
+\\[
+r_1\\times r_2=${pmat([[r1[1]*r2[2]-r1[2]*r2[1]],[r1[2]*r2[0]-r1[0]*r2[2]],[r1[0]*r2[1]-r1[1]*r2[0]]])}\\;\\propto\\;v=${pmat(v.map(t=>[t]))}
+\\]
+
+Check: \\(${dot(r1)}=0\\) and \\(${dot(r2)}=0\\) ✓
+
+Null space \\(=\\{t\\,v: t\\in\\mathbb{R}\\}\\), a line through the origin.
+
+Rank 2 equals the number of rows, so the column space is all of \\(\\mathbb{R}^2\\) and the left null space \\(\\{w: w^TA=0\\}\\) is trivial (only \\(w=0\\)).`
+    };
+  },
+
+  /* Matrix products: AB vs BA, transpose rule (PS2) */
+  () => {
+    let A,B,AB,BA;
+    do{
+      A=[[rand(-2,4),rand(-2,4)],[rand(-2,4),rand(-2,4)]];
+      B=[[rand(-2,4),rand(-2,4)],[rand(-2,4),rand(-2,4)]];
+      AB=[[A[0][0]*B[0][0]+A[0][1]*B[1][0], A[0][0]*B[0][1]+A[0][1]*B[1][1]],
+          [A[1][0]*B[0][0]+A[1][1]*B[1][0], A[1][0]*B[0][1]+A[1][1]*B[1][1]]];
+      BA=[[B[0][0]*A[0][0]+B[0][1]*A[1][0], B[0][0]*A[0][1]+B[0][1]*A[1][1]],
+          [B[1][0]*A[0][0]+B[1][1]*A[1][0], B[1][0]*A[0][1]+B[1][1]*A[1][1]]];
+    }while(JSON.stringify(AB)===JSON.stringify(BA));
+    const T=(M)=>[[M[0][0],M[1][0]],[M[0][1],M[1][1]]];
+    return {
+      q:`Let \\(A=${pmat(A)}\\) and \\(B=${pmat(B)}\\). Compute \\(AB\\) and \\(BA\\). Do \\(A\\) and \\(B\\) commute? Verify that \\(B^TA^T=(AB)^T\\).`,
+      s:`<strong>Lecture 2 — Matrix multiplication</strong>
+
+Entry \\((i,j)\\) of a product is row \\(i\\) of the left matrix times column \\(j\\) of the right one, e.g. \\((AB)_{11}=${A[0][0]}\\cdot${paren(B[0][0])}+${paren(A[0][1])}\\cdot${paren(B[1][0])}=${AB[0][0]}\\).
+
+\\[
+AB=${pmat(AB)},\\qquad BA=${pmat(BA)}
+\\]
+
+\\(AB\\neq BA\\), so they do <strong>not</strong> commute: matrix multiplication is not commutative in general.
+
+\\[
+B^TA^T=${pmat(T(B))}${pmat(T(A))}=${pmat(T(AB))}=(AB)^T\\ ✓
+\\]`
+    };
+  },
+
+  /* Quadratic form, inverse, eigenvalues, definiteness (Fall Exam resit style) */
+  () => {
+    let K,v1,v2,p,h,r,det;
+    do{ K=rand(0,9); v1=rand(-5,5); v2=rand(-5,5); p=rand(-6,6); h=random([-3,-2,-1,1,2,3]); r=rand(-6,6); det=p*r-h*h; }while(det===0 || p===0 || r===0);
+    const tr=p+r, D=tr*tr-4*det; // = (p-r)^2+4h^2 > 0
+    const fTeX = poly([[K,''],[p,'x^2'],[2*h,'xy'],[r,'y^2'],[v1,'x'],[v2,'y']]);
+    let lamTeX, vecTeX, cls;
+    if(isSquare(D)){
+      const s=Math.round(Math.sqrt(D));
+      const l1=new Fr(tr+s,2), l2=new Fr(tr-s,2);
+      lamTeX = `\\lambda_1=${l1.tex()},\\quad \\lambda_2=${l2.tex()}`;
+      const mk=(sg)=>{ let a=2*h, b=r-p+sg*s; const g=gcd(a,b)||1; a/=g; b/=g; if(a<0){a=-a;b=-b;} return `(${a},\\,${b})`; };
+      vecTeX = `v_1=${mk(1)},\\quad v_2=${mk(-1)}`;
+    } else {
+      const sq=surdTeX(D);
+      lamTeX = `\\lambda_{1,2}=\\frac{${tr}\\pm${sq}}{2}\\approx ${dec((tr+Math.sqrt(D))/2)},\\ ${dec((tr-Math.sqrt(D))/2)}`;
+      vecTeX = `v_{1,2}=\\left(${2*h},\\ ${r-p}\\pm${sq}\\right)`;
+    }
+    if(det<0) cls=`\\(\\det A=${det}<0\\): the eigenvalues have opposite signs, so \\(A\\) is <strong>indefinite</strong> (neither positive nor negative semidefinite).`;
+    else if(p>0) cls=`\\(\\det A=${det}>0\\) and \\(a_{11}=${p}>0\\): both eigenvalues are positive, so \\(A\\) is <strong>positive definite</strong>.`;
+    else cls=`\\(\\det A=${det}>0\\) and \\(a_{11}=${p}<0\\): both eigenvalues are negative, so \\(A\\) is <strong>negative definite</strong>.`;
+    return {
+      q:`Consider \\(f(x,y)=${fTeX}\\).
+(a) Write \\(f\\) as \\(f(x,y)=a+b^T\\begin{bmatrix}x\\\\y\\end{bmatrix}+\\begin{bmatrix}x&y\\end{bmatrix}A\\begin{bmatrix}x\\\\y\\end{bmatrix}\\). Why can \\(A\\) be taken symmetric?
+(b) Invert \\(A\\).
+(c) Find the eigenvalues and eigenvectors of \\(A\\). Is \\(A\\) positive or negative definite?`,
+      s:`<strong>Lecture 2 — Quadratic forms and definiteness</strong>
+
+(a) Only the sum \\(a_{12}+a_{21}\\) multiplies \\(xy\\), so many matrices give the same \\(f\\). Splitting the \\(xy\\) coefficient \\(${2*h}\\) equally makes \\(A\\) symmetric:
+
+\\[
+f(x,y)=${K}+\\begin{bmatrix}${v1}&${v2}\\end{bmatrix}\\begin{bmatrix}x\\\\y\\end{bmatrix}+\\begin{bmatrix}x&y\\end{bmatrix}${pmat([[p,h],[h,r]])}\\begin{bmatrix}x\\\\y\\end{bmatrix}
+\\]
+
+(b) \\(\\det A=${p}\\cdot${paren(r)}-${paren(h)}^2=${det}\\), so
+
+\\[
+A^{-1}=\\frac{1}{${det}}${pmat([[r,-h],[-h,p]])}=${pmat([[fracTeX(r,det),fracTeX(-h,det)],[fracTeX(-h,det),fracTeX(p,det)]])}
+\\]
+
+(c) \\(\\det(A-\\lambda I)=${poly([[1,'\\lambda^2'],[-tr,'\\lambda'],[det,'']])}=0\\), with discriminant \\(${tr}^2-4\\cdot${paren(det)}=${D}\\):
+
+\\[
+${lamTeX}
+\\]
+
+Eigenvectors from the first row \\((${p}-\\lambda)v_1+${paren(h)}v_2=0\\), i.e. \\(v\\propto(${h},\\ \\lambda-${paren(p)})\\), scaled by 2:
+
+\\[
+${vecTeX}
+\\]
+
+${cls}`
+    };
+  },
+
+  /* 3×3 definiteness by leading principal minors (Homework resit / mock style) */
+  () => {
+    let M, d1,d2,d3;
+    do{
+      const s=random([1,-1,0]);
+      const dg = () => s===0 ? random([-1,1])*rand(1,5) : s*rand(3,6);
+      const a=dg(), b=dg(), c=dg(), x=rand(-2,2), y=rand(-2,2), z=rand(-2,2);
+      M=[[a,x,y],[x,b,z],[y,z,c]];
+      d1=M[0][0]; d2=M[0][0]*M[1][1]-M[0][1]*M[1][0]; d3=det3(M);
+    }while(d1===0||d2===0||d3===0);
+    let cls;
+    if(d1>0&&d2>0&&d3>0) cls=`All three leading principal minors are positive, so \\(A\\) is <strong>positive definite</strong>.`;
+    else if(d1<0&&d2>0&&d3<0) cls=`The minors alternate in sign starting negative \\((-,+,-)\\), so \\(A\\) is <strong>negative definite</strong>.`;
+    else cls=`The signs \\((${d1>0?'+':'-'},${d2>0?'+':'-'},${d3>0?'+':'-'})\\) match neither \\((+,+,+)\\) nor \\((-,+,-)\\), and no minor is zero, so \\(A\\) is <strong>indefinite</strong>.`;
+    return {
+      q:`Is the symmetric matrix
+\\[
+A=${pmat(M)}
+\\]
+positive definite, negative definite, or neither?`,
+      s:`<strong>Lecture 2 — Definiteness (Sylvester's criterion)</strong>
+
+Compute the leading principal minors:
+
+\\[
+D_1=${d1},\\qquad D_2=\\det${pmat([[M[0][0],M[0][1]],[M[1][0],M[1][1]]])}=${d2},\\qquad D_3=\\det A=${d3}
+\\]
+
+${cls}
+
+(Positive definite: all \\(D_k>0\\). Negative definite: \\(D_1<0, D_2>0, D_3<0\\).)`
+    };
+  }
+],
+
+L3: [
+  /* Critical points of ln x - kx */
+  () => {
+    let k = rand(2,5);
+    return {
+      q:`Find critical points of \\(f(x)=\\ln x - ${k}x\\)`,
+      s:`<strong>Lecture 3 — Critical points</strong>
+
+Set \\(f'(x)=0\\):
+
+\\[
+f'(x)=\\frac{1}{x}-${k}=0 \\implies x=\\frac{1}{${k}}
+\\]
+
+Since \\(f''(x)=-\\frac{1}{x^2}<0\\), this is a maximum.`
+    }
+  },
+
+  /* Chain rule — sqrt */
+  () => ({
+    q:`Differentiate \\(f(x)=\\sqrt{x^2+1}\\)`,
+    s:`<strong>Lecture 3 — Differentiation (chain rule)</strong>
+
+Write \\(f(x)=(x^2+1)^{1/2}\\) and apply the chain rule:
+
+\\[
+f'(x)=\\frac{1}{2}(x^2+1)^{-1/2}\\cdot 2x = \\frac{x}{\\sqrt{x^2+1}}
+\\]`
+  }),
+
+  /* Product rule — x^n e^{kx} */
+  () => {
+    let n = rand(2,5), k = rand(2,6), nm1 = n-1;
+    return {
+      q:`Differentiate \\(f(x)=x^{${n}}e^{${k}x}\\)`,
+      s:`<strong>Lecture 3 — Differentiation (product rule)</strong>
+
+Let \\(u=x^{${n}}\\) and \\(v=e^{${k}x}\\), so \\(u'=${n}${xpow(1,nm1)}\\) and \\(v'=${k}e^{${k}x}\\).
+
+\\[
+f'(x)=u'v+uv'=${n}${xpow(1,nm1)}e^{${k}x}+${k}x^{${n}}e^{${k}x}
+\\]
+
+Factor out \\(${xpow(1,nm1)}e^{${k}x}\\):
+
+\\[
+f'(x)=${xpow(1,nm1)}e^{${k}x}\\left(${n}+${k}x\\right)
+\\]`
+    }
+  },
+
+  /* Quotient rule — (ax+b)/(cx+d) */
+  () => {
+    let a,b,c,d,top;
+    do{ a=rand(1,5); b=rand(1,8); c=rand(1,5); d=rand(1,8); top=a*d-b*c; }while(top===0);
+    let aStr = a===1 ? '' : `${a}`, cStr = c===1 ? '' : `${c}`;
+    return {
+      q:`Differentiate \\(f(x)=\\dfrac{${aStr}x+${b}}{${cStr}x+${d}}\\)`,
+      s:`<strong>Lecture 3 — Differentiation (quotient rule)</strong>
+
+Let \\(u=${aStr}x+${b}\\) and \\(v=${cStr}x+${d}\\), so \\(u'=${a}\\) and \\(v'=${c}\\).
+
+\\[
+f'(x)=\\frac{u'v-uv'}{v^2}=\\frac{${a}(${cStr}x+${d})-${c}(${aStr}x+${b})}{(${cStr}x+${d})^2}
+\\]
+
+The \\(x\\) terms cancel in the numerator:
+
+\\[
+f'(x)=\\frac{${a*d}-${b*c}}{(${cStr}x+${d})^2}=\\frac{${top}}{(${cStr}x+${d})^2}
+\\]`
+    }
+  },
+
+  /* Integral — indefinite, linear combination of two power terms */
+  () => {
+    let a=rand(1,5), n=rand(3,5), b=rand(1,6), m=rand(1,2);
+    let n1=n+1, m1=m+1;
+    let coefN = fracTeX(a,n1);
+    let coefM = fracTeX(b,m1);
+    let midA = a===1 ? `\\frac{x^{${n1}}}{${n1}}` : `${a}\\cdot\\frac{x^{${n1}}}{${n1}}`;
+    let midB = b===1 ? `\\frac{x^{${m1}}}{${m1}}` : `${b}\\cdot\\frac{x^{${m1}}}{${m1}}`;
+    return {
+      q:`Find \\(\\displaystyle\\int\\!\\left(${xpow(a,n)}+${xpow(b,m)}\\right)dx\\)`,
+      s:`<strong>Lecture 3 — Integration (power rule, indefinite)</strong>
+
+Apply \\(\\int x^k\\,dx=\\dfrac{x^{k+1}}{k+1}+C\\) term by term:
+
+\\[
+\\int\\!\\left(${xpow(a,n)}+${xpow(b,m)}\\right)dx
+= ${midA}+${midB}+C
+= ${coefXpow(coefN,n1)}+${coefXpow(coefM,m1)}+C
+\\]`
+    }
+  },
+
+  /* Integral — definite, power rule with explicit numerical answer */
+  () => {
+    let n=rand(2,4), lo=rand(0,2), hi=rand(lo+1,4);
+    let n1=n+1;
+    let Fhi=Math.pow(hi,n1), Flo=Math.pow(lo,n1);
+    let numResult=Fhi-Flo;
+    let resultTeX=fracTeX(numResult,n1);
+    let loTermTeX = lo===0 ? '0' : `\\frac{${lo}^{${n1}}}{${n1}}`;
+    return {
+      q:`Evaluate \\(\\displaystyle\\int_{${lo}}^{${hi}}x^{${n}}\\,dx\\)`,
+      s:`<strong>Lecture 3 — Integration (power rule, definite)</strong>
+
+Use the fundamental theorem \\(\\int_a^b f(x)\\,dx=F(b)-F(a)\\) where \\(F(x)=\\dfrac{x^{${n1}}}{${n1}}\\):
+
+\\[
+\\int_{${lo}}^{${hi}}x^{${n}}\\,dx=\\left[\\frac{x^{${n1}}}{${n1}}\\right]_{${lo}}^{${hi}}=\\frac{${hi}^{${n1}}}{${n1}}-${loTermTeX}=${lo===0?'':`\\frac{${Fhi}}{${n1}}-\\frac{${Flo}}{${n1}}=`}${resultTeX}
+\\]`
+    }
+  },
+
+  /* Integral — e^x and 1/x (indefinite), mirrors the two special rules in the lecture */
+  () => {
+    if(rng()<0.5){
+      let a=rand(1,4), b=rand(1,4), n=rand(1,3), n1=n+1;
+      let aStr=a===1?'':''+a, coefB=fracTeX(b,n1);
+      let exStr=`${aStr}e^x`, bxnStr=xpow(b,n);
+      let midB = b===1 ? `\\frac{x^{${n1}}}{${n1}}` : `${b}\\cdot\\frac{x^{${n1}}}{${n1}}`;
+      return {
+        q:`Find \\(\\displaystyle\\int\\!\\left(${exStr}+${bxnStr}\\right)dx\\)`,
+        s:`<strong>Lecture 3 — Integration (exponential + power)</strong>
+
+Using \\(\\int e^x\\,dx=e^x+C\\) and the power rule:
+
+\\[
+\\int\\!\\left(${exStr}+${bxnStr}\\right)dx=${exStr}+${midB}+C=${exStr}+${coefXpow(coefB,n1)}+C
+\\]`
+      };
+    } else {
+      let a=rand(1,4), b=rand(1,4), n=rand(1,3), n1=n+1;
+      let coefB=fracTeX(b,n1);
+      let recStr=a===1?`\\frac{1}{x}`:`\\frac{${a}}{x}`;
+      let alnStr=a===1?`\\ln x`:`${a}\\ln x`;
+      let bxnStr=xpow(b,n);
+      let midB = b===1 ? `\\frac{x^{${n1}}}{${n1}}` : `${b}\\cdot\\frac{x^{${n1}}}{${n1}}`;
+      return {
+        q:`Find \\(\\displaystyle\\int\\!\\left(${recStr}+${bxnStr}\\right)dx\\) for \\(x>0\\)`,
+        s:`<strong>Lecture 3 — Integration (reciprocal + power)</strong>
+
+Using \\(\\int\\frac{1}{x}\\,dx=\\ln x+C\\) (for \\(x>0\\)) and the power rule:
+
+\\[
+\\int\\!\\left(${recStr}+${bxnStr}\\right)dx=${alnStr}+${midB}+C=${alnStr}+${coefXpow(coefB,n1)}+C
+\\]`
+      };
+    }
+  },
+
+  /* Limit of a sequence with an epsilon–N argument (PS3) */
+  () => {
+    let a,b,c,d;
+    do{ a=rand(1,6); b=rand(-5,9); c=rand(1,6); d=rand(1,9); }while(b*c===a*d || b===0);
+    const num=b*c-a*d;
+    return {
+      q:`Find \\(\\displaystyle\\lim_{n\\to\\infty}a_n\\) for \\(a_n=\\dfrac{${poly([[a,'n'],[b,'']])}}{${poly([[c,'n'],[d,'']])}}\\), and prove it using the definition of a limit.`,
+      s:`<strong>Lecture 3 — Limits</strong>
+
+Divide the numerator and denominator by \\(n\\):
+
+\\[
+a_n=\\frac{${a}${term(b,'')}/n}{${c}${term(d,'')}/n}\\;\\to\\;${fracTeX(a,c)}
+\\]
+
+since \\(${Math.abs(b)}/n\\to0\\) and \\(${d}/n\\to0\\).
+
+<strong>Proof.</strong> Compute the distance to the limit:
+
+\\[
+a_n-${fracTeX(a,c)}=\\frac{${c===1?'':c}(${poly([[a,'n'],[b,'']])})-${a===1?'':a}(${poly([[c,'n'],[d,'']])})}{${c===1?'':c}(${poly([[c,'n'],[d,'']])})}=\\frac{${num}}{${c===1?'':c}(${poly([[c,'n'],[d,'']])})}
+\\]
+
+So \\(\\left|a_n-${fracTeX(a,c)}\\right|<\\dfrac{${Math.abs(num)}}{${c*c===1?'':c*c}n}\\). Given any \\(\\varepsilon>0\\), take \\(N>\\dfrac{${Math.abs(num)}}{${c*c===1?'':c*c}\\varepsilon}\\). Then for all \\(n>N\\), \\(a_n\\in B_\\varepsilon\\!\\left(${fracTeX(a,c)}\\right)\\). Only finitely many terms lie outside any \\(\\varepsilon\\)-ball, which is the definition of the limit.`
+    };
+  },
+
+  /* Integration by substitution — power (PS3: ∫5(x-4)√(x²-8x)dx) */
+  () => {
+    const a=rand(1,6), h=rand(1,5), p=random(['1/2',2,3]);
+    const inner=`x^2-${2*h}x`, aS=a===1?'':a;
+    if(p==='1/2'){
+      const coef=fracTeX(a,3);
+      return {
+        q:`Find \\(\\displaystyle\\int ${aS}(x-${h})\\sqrt{${inner}}\\,dx\\)`,
+        s:`<strong>Lecture 3 — Integration by substitution</strong>
+
+Let \\(u=${inner}\\). Then \\(du=(2x-${2*h})\\,dx=2(x-${h})\\,dx\\), so \\((x-${h})\\,dx=\\tfrac12du\\):
+
+\\[
+\\int ${aS}(x-${h})\\sqrt{${inner}}\\,dx=${cf(fracTeX(a,2))}\\int u^{1/2}\\,du=${cf(fracTeX(a,2))}\\cdot\\frac{2}{3}u^{3/2}+C=${cf(coef)}\\left(${inner}\\right)^{3/2}+C
+\\]`
+      };
+    }
+    const coef=fracTeX(a,2*(p+1));
+    return {
+      q:`Find \\(\\displaystyle\\int ${aS}(x-${h})\\left(${inner}\\right)^{${p}}dx\\)`,
+      s:`<strong>Lecture 3 — Integration by substitution</strong>
+
+Let \\(u=${inner}\\). Then \\(du=2(x-${h})\\,dx\\), so \\((x-${h})\\,dx=\\tfrac12du\\):
+
+\\[
+\\int ${aS}(x-${h})\\left(${inner}\\right)^{${p}}dx=${cf(fracTeX(a,2))}\\int u^{${p}}\\,du=${cf(fracTeX(a,2))}\\cdot\\frac{u^{${p+1}}}{${p+1}}+C=${cf(coef)}\\left(${inner}\\right)^{${p+1}}+C
+\\]`
+    };
+  },
+
+  /* Integration by substitution — exponential (PS3: ∫(7y-2y³)e^{y⁴-7y²}dy) */
+  () => {
+    const m=rand(1,4), k=rand(3,9);
+    const mS=m===1?'':m, res=fracTeX(-m,2);
+    return {
+      q:`Find \\(\\displaystyle\\int ${mS}(${k}x-2x^3)\\,e^{x^4-${k}x^2}\\,dx\\)`,
+      s:`<strong>Lecture 3 — Integration by substitution</strong>
+
+Let \\(u=x^4-${k}x^2\\). Then \\(du=(4x^3-${2*k}x)\\,dx=-2(${k}x-2x^3)\\,dx\\), so \\((${k}x-2x^3)\\,dx=-\\tfrac12du\\):
+
+\\[
+\\int ${mS}(${k}x-2x^3)\\,e^{x^4-${k}x^2}dx=${cf(res)}\\int e^u\\,du=${cf(res)}e^{x^4-${k}x^2}+C
+\\]
+
+Check by differentiating: \\(${cf(res)}e^{u}\\cdot(4x^3-${2*k}x)=${mS}(${k}x-2x^3)e^{u}\\) ✓`
+    };
+  },
+
+  /* Integration by parts (PS3: ∫(bx+c)e^{-2x}dx) */
+  () => {
+    const b=rand(1,5), c=rand(1,6), k=rand(2,3);
+    const bS=b===1?'':b;
+    return {
+      q:`Find \\(\\displaystyle\\int (${bS}x+${c})e^{-${k}x}\\,dx\\)`,
+      s:`<strong>Lecture 3 — Integration by parts</strong>
+
+Use \\(\\int v\\,u'\\,dx=uv-\\int u\\,v'\\,dx\\) with \\(v=${bS}x+${c}\\) (so \\(v'=${b}\\)) and \\(u'=e^{-${k}x}\\) (so \\(u=-\\frac{1}{${k}}e^{-${k}x}\\)):
+
+\\[
+\\int (${bS}x+${c})e^{-${k}x}dx=-\\frac{${bS}x+${c}}{${k}}e^{-${k}x}+\\frac{${b}}{${k}}\\int e^{-${k}x}dx
+=-\\frac{${bS}x+${c}}{${k}}e^{-${k}x}-\\frac{${b}}{${k*k}}e^{-${k}x}+C
+\\]
+
+Combine:
+
+\\[
+=-\\frac{e^{-${k}x}}{${k*k}}\\left(${k*b}x+${k*c+b}\\right)+C
+\\]`
+    };
+  },
+
+  /* Chain rule / reciprocal rule */
+  () => {
+    if(rng()<0.5){
+      const a=rand(1,3), b=rand(1,6), c=rand(1,9);
+      const g=poly([[a,'x^2'],[b,'x'],[c,'']]);
+      return {
+        q:`Differentiate \\(f(x)=\\ln\\left(${g}\\right)\\)`,
+        s:`<strong>Lecture 3 — Differentiation (chain rule)</strong>
+
+With outer function \\(\\ln(\\cdot)\\) and inner \\(g(x)=${g}\\), \\(g'(x)=${poly([[2*a,'x'],[b,'']])}\\):
+
+\\[
+f'(x)=\\frac{1}{g(x)}\\,g'(x)=\\frac{${poly([[2*a,'x'],[b,'']])}}{${g}}
+\\]`
+      };
+    }
+    const a=rand(1,5), b=rand(1,9);
+    const g=poly([[a,'x^2'],[b,'']]);
+    return {
+      q:`Differentiate \\(f(x)=\\dfrac{1}{${g}}\\) using \\(\\left(\\frac{1}{g(x)}\\right)'=-\\frac{g'(x)}{(g(x))^2}\\)`,
+      s:`<strong>Lecture 3 — Differentiation (reciprocal rule)</strong>
+
+\\(g(x)=${g}\\) is never zero, and \\(g'(x)=${2*a}x\\):
+
+\\[
+f'(x)=-\\frac{${2*a}x}{\\left(${g}\\right)^2}
+\\]`
+    };
+  },
+
+  /* Implicit function theorem (Lecture 3) */
+  () => {
+    let k,x0,y0,den;
+    do{ k=rand(-3,3); x0=rand(-3,3); y0=rand(-3,3); den=k*x0+2*y0; }while(den===0 || (x0===0&&y0===0) || 2*x0+k*y0===0);
+    const c=x0*x0+k*x0*y0+y0*y0;
+    const numr=2*x0+k*y0;
+    const F=poly([[1,'x^2'],[k,'xy'],[1,'y^2']]);
+    return {
+      q:`The equation \\(${F}=${c}\\) holds at \\((x,y)=(${x0},${y0})\\). Use the implicit function theorem to argue that near this point it defines \\(y=\\phi(x)\\), and find \\(\\phi'(${x0})\\).`,
+      s:`<strong>Lecture 3 — Implicit function theorem</strong>
+
+Let \\(F(x,y)=${F}-${paren(c)}\\). Then
+
+\\[
+F'_x=${poly([[2,'x'],[k,'y']])},\\qquad F'_y=${poly([[k,'x'],[2,'y']])}
+\\]
+
+At \\((${x0},${y0})\\): \\(F'_x=${numr}\\), \\(F'_y=${den}\\neq0\\). The derivatives are continuous, so the theorem gives a function \\(\\phi\\) near \\(x=${x0}\\) with \\(F(x,\\phi(x))=0\\).
+
+Differentiating \\(F(x,\\phi(x))=0\\):
+
+\\[
+\\phi'(${x0})=-\\frac{F'_x}{F'_y}=-\\frac{${numr}}{${den}}=${fracTeX(-numr,den)}
+\\]`
+    };
+  }
+],
+
+L4: [
+  /* Quadratic form — single critical point at origin */
+  () => {
+    let k = rand(3,6), m = rand(6,10);
+    let detH = 4*m - k*k;
+    let conclusion = detH > 0
+      ? `Since \\(\\det H = ${detH}>0\\) and \\(f_{xx}=2>0\\), the point \\((0,0)\\) is a <strong>minimum</strong>.`
+      : (detH < 0
+        ? `Since \\(\\det H = ${detH}<0\\), the point \\((0,0)\\) is a <strong>saddle point</strong>.`
+        : `Since \\(\\det H = 0\\), the second-derivative test is inconclusive here.`);
+
+    return {
+      q:`Find and classify critical points of
+\\[
+f(x,y)=x^2 - ${k}xy + ${m}y^2
+\\]`,
+
+      s:`<strong>Lecture 4 — Critical points in two variables</strong>
+
+First-order conditions (FOC):
+
+\\[
+f_x = 2x-${k}y=0, \\quad f_y=-${k}x+${2*m}y=0 \\implies (x,y)=(0,0)
+\\]
+
+(The system has the unique solution \\((0,0)\\) because \\(2\\cdot${2*m}-${k}^2=${detH}\\neq0\\).)
+
+Hessian:
+
+\\[
+H=\\begin{pmatrix}2 & -${k}\\\\ -${k} & ${2*m}\\end{pmatrix}
+\\]
+
+${conclusion}`
+    }
+  },
+
+  /* Cubic — two critical points: saddle at origin, minimum at (a,a) */
+  () => {
+    let a = rand(2,5);
+    let coeff = 3*a;
+    let detAt0  = -(9*a*a);
+    let detAtAA =  27*a*a;
+    return {
+      q:`Find and classify all critical points of
+\\[
+f(x,y)=x^3+y^3-${coeff}xy
+\\]`,
+      s:`<strong>Lecture 4 — Critical points in two variables</strong>
+
+FOC:
+
+\\[
+f_x=3x^2-${coeff}y=0 \\implies y=\\frac{x^2}{${a}} \\quad (*)
+\\]
+\\[
+f_y=3y^2-${coeff}x=0 \\quad (**)
+\\]
+
+Substitute \\((*)\\) into \\((**)\\):
+
+\\[
+3\\!\\left(\\frac{x^2}{${a}}\\right)^{\\!2}-${coeff}x=0
+\\implies x^4-${a*a*a}x=0
+\\implies x(x^3-${a*a*a})=0
+\\]
+
+So \\(x=0\\) or \\(x=${a}\\), giving two critical points: \\((0,0)\\) and \\((${a},${a})\\).
+
+Hessian: \\(H=\\begin{pmatrix}6x & -${coeff}\\\\ -${coeff} & 6y\\end{pmatrix}\\)
+
+At \\((0,0)\\): \\(\\det H = ${detAt0} < 0\\) → <strong>saddle point</strong>
+
+At \\((${a},${a})\\): \\(\\det H = ${detAtAA} > 0\\) and \\(f_{xx}=${6*a}>0\\) → <strong>local minimum</strong>`
+    }
+  },
+
+  /* Fence problem (PS4) */
+  () => {
+    const P=4*rand(5,25);
+    if(rng()<0.5){
+      return {
+        q:`You have \\(${P}\\) metres of fence. Which rectangle encloses the largest area? Model this as a single-variable optimisation problem.`,
+        s:`<strong>Lecture 4 — Optimisation in one variable</strong>
+
+Let the sides be \\(x\\) and \\(y\\), with \\(2x+2y=${P}\\), so \\(y=${P/2}-x\\) and \\(x\\in[0,${P/2}]\\).
+
+\\[
+A(x)=x(${P/2}-x),\\qquad A'(x)=${P/2}-2x=0\\implies x=${P/4}
+\\]
+
+\\(A''(x)=-2<0\\), so this is a maximum (and \\(A=0\\) at the endpoints).
+
+Optimal: a <strong>square</strong> of side \\(${P/4}\\) m, area \\(${P*P/16}\\) m².`
+      };
+    }
+    return {
+      q:`You have \\(${P}\\) metres of fence to enclose a rectangular field along a straight river; no fence is needed on the river side. Which dimensions maximise the area?`,
+      s:`<strong>Lecture 4 — Optimisation in one variable</strong>
+
+Let \\(x\\) be the two sides perpendicular to the river and \\(y\\) the side parallel to it: \\(2x+y=${P}\\), so \\(y=${P}-2x\\), \\(x\\in[0,${P/2}]\\).
+
+\\[
+A(x)=x(${P}-2x),\\qquad A'(x)=${P}-4x=0\\implies x=${P/4}
+\\]
+
+\\(A''(x)=-4<0\\), so it is a maximum. Then \\(y=${P/2}\\).
+
+The optimal field is \\(${P/4}\\times${P/2}\\) m, with area \\(${P*P/8}\\) m².`
+    };
+  },
+
+  /* Open-top box from an A×B sheet (PS4) */
+  () => {
+    const [A,B] = random([[3,8],[5,8],[7,15],[8,15],[6,16],[10,16],[5,21],[16,21],[12,12],[6,6],[9,24],[15,24]]);
+    const s = Math.round(Math.sqrt(A*A-A*B+B*B));
+    const N = A+B-s;             // x* = N/6
+    const xStar = fracTeX(N,6), x2 = fracTeX(A+B+s,6);
+    const Vstar = fracTeX(N*(3*A-N)*(3*B-N),54);
+    const mn = Math.min(A,B);
+    return {
+      q:`From a \\(${A}\\times${B}\\) sheet you cut four \\(x\\times x\\) squares from the corners and fold up the sides to make an open-top box. Which \\(x\\in[0,${fracTeX(mn,2)}]\\) maximises the volume?`,
+      s:`<strong>Lecture 4 — Optimisation with endpoints</strong>
+
+\\[
+V(x)=x(${A}-2x)(${B}-2x)=4x^3-${2*(A+B)}x^2+${A*B}x
+\\]
+
+FOC: \\(V'(x)=12x^2-${4*(A+B)}x+${A*B}=0\\). The quadratic formula gives
+
+\\[
+x=\\frac{${4*(A+B)}\\pm\\sqrt{${16*(A+B)*(A+B)}-${48*A*B}}}{24}=\\frac{${A+B}\\pm${s}}{6}
+\\]
+
+so \\(x_1=${xStar}\\) and \\(x_2=${x2}\\).
+
+\\(x_2\\ge${fracTeX(mn,2)}\\), so it is not an interior point of the feasible interval (it is a local minimum of the cubic). At \\(x_1\\): \\(V''(x)=24x-${4*(A+B)}<0\\), since \\(x_1<\\frac{${A+B}}{6}\\). So \\(x_1\\) is a local maximum.
+
+Endpoints: \\(V(0)=V\\!\\left(${fracTeX(mn,2)}\\right)=0\\), so there is no corner solution.
+
+Maximum at \\(x^*=${xStar}\\), with volume \\(V^*=${Vstar}\\).`
+    };
+  },
+
+  /* Convexity of a cubic (PS4) */
+  () => {
+    let a; do{ a=rand(-3,3); }while(a===0);
+    const b=rand(-6,6), c=rand(-6,6), d=rand(-5,5);
+    const x0=fracTeX(-b,3*a);
+    const f=poly([[a,'x^3'],[b,'x^2'],[c,'x'],[d,'']]);
+    const f2=poly([[6*a,'x'],[2*b,'']]);
+    const right = a>0 ? 'convex' : 'concave', left = a>0 ? 'concave' : 'convex';
+    return {
+      q:`Where is \\(f(x)=${f}\\) convex, and where is it concave? Find any inflection point.`,
+      s:`<strong>Lecture 4 — Convexity</strong>
+
+\\[
+f'(x)=${poly([[3*a,'x^2'],[2*b,'x'],[c,'']])},\\qquad f''(x)=${f2}
+\\]
+
+\\(f''(x)=0\\) at \\(x=${x0}\\). Since \\(f''\\) is linear with slope \\(${6*a}\\):
+
+\\(f\\) is <strong>${right}</strong> for \\(x>${x0}\\) and <strong>${left}</strong> for \\(x<${x0}\\).
+
+\\(x=${x0}\\) is an inflection point.`
+    };
+  },
+
+  /* Convexity of ln(g) or exp(g) (PS4) */
+  () => {
+    if(rng()<0.5){
+      const k=rand(1,5), k2=k*k;
+      return {
+        q:`Where is \\(f(x)=\\ln\\left(x^2+${k2}\\right)\\) defined? Where is it convex, and where is it concave?`,
+        s:`<strong>Lecture 4 — Convexity</strong>
+
+\\(x^2+${k2}>0\\) for every \\(x\\), so \\(f\\) is defined on all of \\(\\mathbb{R}\\).
+
+\\[
+f'(x)=\\frac{2x}{x^2+${k2}},\\qquad f''(x)=\\frac{2(x^2+${k2})-2x\\cdot2x}{(x^2+${k2})^2}=\\frac{2(${k2}-x^2)}{(x^2+${k2})^2}
+\\]
+
+\\(f''>0\\) for \\(|x|<${k}\\), so \\(f\\) is <strong>convex on \\((-${k},${k})\\)</strong>.
+
+\\(f''<0\\) for \\(|x|>${k}\\), so \\(f\\) is <strong>concave on \\((-\\infty,-${k})\\) and on \\((${k},\\infty)\\)</strong>.
+
+Inflection points are at \\(x=\\pm${k}\\).`
+      };
+    }
+    const [a,t]=random([[2,'\\frac12'],[8,'\\frac14'],[18,'\\frac16'],[32,'\\frac18']]);
+    return {
+      q:`Where is \\(f(x)=e^{-${a}x^2}\\) convex, and where is it concave?`,
+      s:`<strong>Lecture 4 — Convexity</strong>
+
+\\[
+f'(x)=-${2*a}x\\,e^{-${a}x^2},\\qquad f''(x)=\\left(${4*a*a}x^2-${2*a}\\right)e^{-${a}x^2}=${2*a}\\left(${2*a}x^2-1\\right)e^{-${a}x^2}
+\\]
+
+\\(e^{-${a}x^2}>0\\), so the sign of \\(f''\\) is the sign of \\(${2*a}x^2-1\\), which is zero at \\(x^2=\\frac{1}{${2*a}}\\), i.e. \\(|x|=${t}\\).
+
+<strong>Concave</strong> on \\(\\left(-${t},${t}\\right)\\); <strong>convex</strong> for \\(|x|>${t}\\). Inflection points are at \\(x=\\pm${t}\\).`
+    };
+  },
+
+  /* Higher-order derivative test (PS4) */
+  () => {
+    const s=random([-3,-2,-1,1,2,3]), n=random([3,4,5,6]), h=rand(1,5);
+    let fact=1; for(let i=2;i<=n;i++) fact*=i;
+    const f=`${s===1?'':(s===-1?'-':s)}(x-${h})^{${n}}`;
+    let concl;
+    if(n%2===1) concl=`The first non-zero derivative has <strong>odd</strong> order \\(${n}\\), so \\(x=${h}\\) is <strong>neither a maximum nor a minimum</strong> (an inflection point): \\(f\\) changes sign as \\(x\\) passes \\(${h}\\).`;
+    else if(s<0) concl=`The first non-zero derivative has <strong>even</strong> order \\(${n}\\) and is negative, so \\(x=${h}\\) is a <strong>maximum</strong>. (Indeed \\(f(x)\\le0=f(${h})\\).)`;
+    else concl=`The first non-zero derivative has <strong>even</strong> order \\(${n}\\) and is positive, so \\(x=${h}\\) is a <strong>minimum</strong>. (Indeed \\(f(x)\\ge0=f(${h})\\).)`;
+    return {
+      q:`Let \\(f(x)=${f}\\). The only critical point is \\(x^*=${h}\\). Use higher-order derivatives to classify it. (The second derivative is not enough!)`,
+      s:`<strong>Lecture 4 — Higher-order derivatives</strong>
+
+For \\(k\\le ${n}\\), \\(f^{(k)}(x)=${s}\\cdot\\frac{${n}!}{(${n}-k)!}(x-${h})^{${n}-k}\\). So
+
+\\[
+f'(${h})=f''(${h})=\\dots=f^{(${n-1})}(${h})=0,\\qquad f^{(${n})}(${h})=${s}\\cdot${n}!=${s*fact}
+\\]
+
+${concl}`
+    };
+  },
+
+  /* Densities: total mass, E[x], E[x^2] (PS4) */
+  () => {
+    const kind=rand(1,4);
+    let q, s;
+    if(kind===1){
+      const a=rand(2,9);
+      q=`\\(f(x)=\\frac{1}{${a}}\\) for \\(x\\in[0,${a}]\\), and \\(0\\) otherwise`;
+      s=`\\[\\int_0^{${a}}\\frac{1}{${a}}dx=1,\\qquad E[x]=\\int_0^{${a}}\\frac{x}{${a}}dx=\\left[\\frac{x^2}{${2*a}}\\right]_0^{${a}}=${fracTeX(a,2)}\\]
+\\[E[x^2]=\\int_0^{${a}}\\frac{x^2}{${a}}dx=\\left[\\frac{x^3}{${3*a}}\\right]_0^{${a}}=${fracTeX(a*a,3)},\\qquad \\text{Var}=E[x^2]-E[x]^2=${fracTeX(a*a,12)}\\]`;
+    } else if(kind===2){
+      const n=rand(1,4), c=n+1;
+      q=`\\(f(x)=${c}${xpow(1,n)}\\) for \\(x\\in[0,1]\\), and \\(0\\) otherwise`;
+      s=`\\[\\int_0^1 ${c}${xpow(1,n)}dx=\\left[x^{${c}}\\right]_0^1=1,\\qquad E[x]=\\int_0^1 ${c}x^{${n+1}}dx=${fracTeX(c,n+2)}\\]
+\\[E[x^2]=\\int_0^1 ${c}x^{${n+2}}dx=${fracTeX(c,n+3)},\\qquad \\text{Var}=${fracTeX(c,n+3)}-\\left(${fracTeX(c,n+2)}\\right)^2=${fracTeX(c,(n+3)*(n+2)*(n+2))}\\]`;
+    } else if(kind===3){
+      const al=rand(1,5), aS=al===1?'':al;
+      q=`\\(f(x)=${aS}e^{-${aS}x}\\) for \\(x\\ge0\\), and \\(0\\) otherwise`;
+      s=`\\[\\int_0^{\\infty}${aS}e^{-${aS}x}dx=\\left[-e^{-${aS}x}\\right]_0^{\\infty}=1\\]
+By parts, \\(\\int_0^\\infty x\\cdot ${aS}e^{-${aS}x}dx=\\left[-xe^{-${aS}x}\\right]_0^\\infty+\\int_0^\\infty e^{-${aS}x}dx=0+${fracTeX(1,al)}\\), so \\(E[x]=${fracTeX(1,al)}\\).
+By parts again, \\(E[x^2]=\\left[-x^2e^{-${aS}x}\\right]_0^\\infty+2\\int_0^\\infty xe^{-${aS}x}dx=\\frac{2}{${al}}E[x]=${fracTeX(2,al*al)}\\), and \\(\\text{Var}=${fracTeX(1,al*al)}\\).`;
+    } else {
+      const a=rand(2,6);
+      q=`\\(f(x)=\\frac{2x}{${a*a}}\\) for \\(x\\in[0,${a}]\\), and \\(0\\) otherwise`;
+      s=`\\[\\int_0^{${a}}\\frac{2x}{${a*a}}dx=\\left[\\frac{x^2}{${a*a}}\\right]_0^{${a}}=1,\\qquad E[x]=\\int_0^{${a}}\\frac{2x^2}{${a*a}}dx=\\frac{2\\cdot${a}^3}{3\\cdot${a*a}}=${fracTeX(2*a,3)}\\]
+\\[E[x^2]=\\int_0^{${a}}\\frac{2x^3}{${a*a}}dx=\\frac{2\\cdot${a}^4}{4\\cdot${a*a}}=${fracTeX(a*a,2)},\\qquad \\text{Var}=${fracTeX(a*a,2)}-\\left(${fracTeX(2*a,3)}\\right)^2=${fracTeX(a*a,18)}\\]`;
+    }
+    return {
+      q:`For the density ${q}: plot it, verify that \\(\\int_{-\\infty}^{\\infty}f(x)\\,dx=1\\), and compute \\(E[x]=\\int x f(x)\\,dx\\) and \\(E[x^2]=\\int x^2 f(x)\\,dx\\).`,
+      s:`<strong>Lecture 4 — Integrals of densities</strong>
+
+The region where \\(f=0\\) contributes nothing, so integrate over the support only.
+
+${s}`
+    };
+  },
+
+  /* Profit maximisation with a competitor (Homework 1, Problem 1 style) */
+  () => {
+    const B=rand(1,4), d=rand(1,3), c=rand(2,10);
+    const A=c+B*rand(6,15)+rand(1,9);
+    const T=rand(1, Math.min(8, Math.floor((A-c-1)/B)));
+    const s=B+d, g0=A-c, g1=A-B*T-c;
+    return {
+      q:`A restaurant with \\(Q\\) seats can charge \\(P(Q)=${A}-${B===1?'':B}Q\\) per meal. The cost of a meal is \\(${c}+${d===1?'':d}Q\\).
+(a) Find the profit-maximising \\(Q\\) and the maximal profit.
+(b) A competitor with \\(T=${T}\\) seats opens, so the price becomes \\(P(Q+T)\\). Find the new optimal \\(Q\\) and profit. How does \\(T\\) affect profit?`,
+      s:`<strong>Lecture 4 — Optimisation (economic application)</strong>
+
+(a) \\(\\Pi(Q)=(${A}-${B===1?'':B}Q)Q-(${c}+${d===1?'':d}Q)Q=${g0}Q-${s}Q^2\\).
+
+\\[
+\\Pi'(Q)=${g0}-${2*s}Q=0\\implies Q^*=${fracTeX(g0,2*s)},\\qquad \\Pi''=-${2*s}<0\\ \\text{(maximum)}
+\\]
+
+\\[
+\\Pi^*=\\left(${g0}-${s}Q^*\\right)Q^*=\\frac{${g0}^2}{4\\cdot${s}}=${fracTeX(g0*g0,4*s)}
+\\]
+
+(b) \\(\\Pi(Q)=(${A}-${B===1?'':B}(Q+${T}))Q-(${c}+${d===1?'':d}Q)Q=${g1}Q-${s}Q^2\\).
+
+\\[
+Q^*=${fracTeX(g1,2*s)},\\qquad \\Pi^*=\\frac{${g1}^2}{4\\cdot${s}}=${fracTeX(g1*g1,4*s)}
+\\]
+
+In general \\(\\Pi^*=\\frac{(A-BT-c)^2}{4(B+d)}\\), which is decreasing in \\(T\\) while \\(A-BT-c>0\\). The competitor lowers both your optimal size and your profit.`
+    };
+  },
+
+  /* Max and min on the unit square: corners, interior, edges (Fall Exam Problem 1 style) */
+  () => {
+    let K,A,B,C,D,E,det;
+    do{ K=rand(0,8); A=random([-5,-4,-3,-2,-1,1,2,3]); C=random([-5,-4,-3,-2,-1,1,2,3]); B=rand(-4,4); D=rand(-5,6); E=rand(-5,6); det=4*A*C-B*B; }while(det===0);
+    const f=(x,y)=>F(K).add(F(A).mul(x).mul(x)).add(F(B).mul(x).mul(y)).add(F(C).mul(y).mul(y)).add(F(D).mul(x)).add(F(E).mul(y));
+    const fTeX=poly([[K,''],[A,'x^2'],[B,'xy'],[C,'y^2'],[D,'x'],[E,'y']]);
+    const cands=[];
+    const corners=[[0,0],[1,0],[0,1],[1,1]].map(([x,y])=>{ const v=f(F(x),F(y)); cands.push({x:F(x),y:F(y),v}); return `f(${x},${y})=${v.tex()}`; });
+    // interior
+    const xi=new Fr(-2*C*D+B*E, det), yi=new Fr(-2*A*E+B*D, det);
+    let interior=`\\[f'_x=${poly([[2*A,'x'],[B,'y'],[D,'']])}=0,\\qquad f'_y=${poly([[B,'x'],[2*C,'y'],[E,'']])}=0\\implies (x,y)=${pt(xi,yi)}\\]\n`;
+    const inside=(t)=>t.cmp(0)>0 && t.cmp(1)<0;
+    if(inside(xi)&&inside(yi)){
+      const v=f(xi,yi);
+      let kind;
+      if(det>0 && A<0){ kind='a local maximum (\\(\\det H='+det+'>0,\\ f\'\'_{xx}<0\\))'; cands.push({x:xi,y:yi,v}); }
+      else if(det>0){ kind='a local minimum (\\(\\det H='+det+'>0,\\ f\'\'_{xx}>0\\))'; cands.push({x:xi,y:yi,v}); }
+      else kind='a saddle point (\\(\\det H='+det+'<0\\)), so not an extremum';
+      interior+=`This point is inside the square, and it is ${kind}. \\(f=${v.tex()}\\).`;
+    } else interior+=`This point is outside \\((0,1)^2\\), so there is no interior extremum.`;
+    // edges: g(t)=al t^2 + be t + ga
+    const edges=[
+      {name:'x=0', al:C, be:E, ga:K, mk:t=>[F(0),t], var:'y'},
+      {name:'x=1', al:C, be:B+E, ga:K+A+D, mk:t=>[F(1),t], var:'y'},
+      {name:'y=0', al:A, be:D, ga:K, mk:t=>[t,F(0)], var:'x'},
+      {name:'y=1', al:A, be:B+D, ga:K+C+E, mk:t=>[t,F(1)], var:'x'}
+    ];
+    const edgeTxt=edges.map(e=>{
+      const t=new Fr(-e.be,2*e.al);
+      let s=`Edge \\(${e.name}\\): \\(g(${e.var})=${poly([[e.al,e.var+'^2'],[e.be,e.var],[e.ga,'']])}\\), \\(g'=0\\) at \\(${e.var}=${t.tex()}\\)`;
+      if(inside(t)){
+        const [x,y]=e.mk(t), v=f(x,y);
+        cands.push({x,y,v});
+        s+=`, inside \\((0,1)\\): a local ${e.al<0?'maximum':'minimum'} along the edge at \\(${pt(x,y)}\\), with \\(f=${v.tex()}\\).`;
+      } else s+=`, outside \\((0,1)\\): the extremes along this edge are at its corners.`;
+      return s;
+    });
+    let mx=cands[0].v, mn=cands[0].v;
+    cands.forEach(c=>{ if(c.v.cmp(mx)>0) mx=c.v; if(c.v.cmp(mn)<0) mn=c.v; });
+    const uniq=(arr)=>[...new Map(arr.map(c=>[c.x.tex()+','+c.y.tex(),c])).values()];
+    const at=(v)=>uniq(cands.filter(c=>c.v.eq(v))).map(c=>pt(c.x,c.y)).join(',\\ ');
+    return {
+      q:`Consider \\(f(x,y)=${fTeX}\\) on \\([0,1]^2\\).
+(a) Argue that \\(f\\) has a maximum and a minimum on this set.
+(b) Evaluate \\(f\\) at the corners.
+(c) Find the first-order conditions assuming an interior solution. Is there an interior extremum?
+(d) Study the four edges.
+(e) Identify the maximum and the minimum.`,
+      s:`<strong>Lecture 4 — Optimisation on a compact set</strong>
+
+(a) \\([0,1]^2\\) is closed and bounded, hence compact. \\(f\\) is a polynomial, hence continuous. By the Weierstrass theorem a maximum and a minimum exist.
+
+(b) \\(${corners.join(',\\quad ')}\\).
+
+(c) ${interior}
+
+(d) ${edgeTxt.join('\n\n')}
+
+(e) Comparing all candidates: the <strong>maximum</strong> is \\(${mx.tex()}\\) at \\(${at(mx)}\\); the <strong>minimum</strong> is \\(${mn.tex()}\\) at \\(${at(mn)}\\).`
+    };
+  },
+
+  /* Gradient and Hessian in three variables (Mock exam Problem 2 style) */
+  () => {
+    let a,b,c,d,e,g,H,d1,d2,d3;
+    do{
+      const s=random([1,-1,0]);
+      const dg=()=> s===0 ? random([-1,1])*rand(1,3) : s*rand(2,4);
+      a=dg(); b=dg(); c=dg(); d=rand(-2,2); e=rand(-2,2); g=rand(-2,2);
+      H=[[2*a,d,e],[d,2*b,g],[e,g,2*c]];
+      d1=H[0][0]; d2=H[0][0]*H[1][1]-d*d; d3=det3(H);
+    }while(d1===0||d2===0||d3===0);
+    const fTeX=poly([[a,'x^2'],[b,'y^2'],[c,'z^2'],[d,'xy'],[e,'xz'],[g,'yz']]);
+    let cls;
+    if(d1>0&&d2>0&&d3>0) cls=`All leading principal minors are positive, so \\(H\\) is <strong>positive definite</strong>. \\(f\\) is strictly convex, and its unique critical point \\((0,0,0)\\) is the global <strong>minimum</strong>.`;
+    else if(d1<0&&d2>0&&d3<0) cls=`The minors alternate \\((-,+,-)\\), so \\(H\\) is <strong>negative definite</strong>. \\(f\\) is strictly concave, and \\((0,0,0)\\) is the global <strong>maximum</strong>.`;
+    else cls=`The signs \\((${d1>0?'+':'-'},${d2>0?'+':'-'},${d3>0?'+':'-'})\\) fit neither pattern and \\(\\det H\\neq0\\), so \\(H\\) is <strong>indefinite</strong> (not semidefinite either). The critical point \\((0,0,0)\\) is a <strong>saddle point</strong>.`;
+    return {
+      q:`Consider \\(f(x,y,z)=${fTeX}\\).
+(a) Calculate the vector of first derivatives.
+(b) Calculate the Hessian. Is it positive definite, negative definite, or neither? What does this tell you about the critical point \\((0,0,0)\\)?`,
+      s:`<strong>Lecture 4 — Multivariate derivatives and the Hessian</strong>
+
+(a)
+\\[
+\\nabla f=${pmat([[poly([[2*a,'x'],[d,'y'],[e,'z']])],[poly([[d,'x'],[2*b,'y'],[g,'z']])],[poly([[e,'x'],[g,'y'],[2*c,'z']])]])}
+\\]
+
+(b)
+\\[
+H=${pmat(H)},\\qquad D_1=${d1},\\quad D_2=${d2},\\quad D_3=\\det H=${d3}
+\\]
+
+${cls}
+
+(\\(\\nabla f=0\\) only at the origin because \\(\\det H\\neq0\\).)`
+    };
+  }
+],
+
+L5: [
+
+  /* log */
+  () => {
+    let a=rand(1,5), b=rand(1,5), c=rand(1,5), d=rand(1,5), m=rand(20,100);
+    let alnx=a===1?'\\ln x':`${a}\\ln x`, blny=b===1?'\\ln y':`${b}\\ln y`;
+
+    return {
+      q:`Maximise \\(${alnx} + ${blny}\\) subject to \\(${linx(c)}+${liny(d)}=${m}\\).`,
+
+      s:`<strong>Lecture 5 — Lagrange multipliers</strong>
+
+First-order conditions:
+
+\\[
+\\frac{${a}}{x}=${c}\\lambda, \\quad \\frac{${b}}{y}=${d}\\lambda
+\\]
+
+Divide the two equations to eliminate \\(\\lambda\\):
+
+\\[
+\\frac{x}{y}=\\frac{${a}\\cdot ${d}}{${b}\\cdot ${c}}
+\\]
+
+Substitute into the constraint and solve:
+
+\\[
+x^*=\\frac{${a}\\cdot ${m}}{${c}(${a}+${b})}=${fracTeX(a*m,c*(a+b))}, \\qquad y^*=\\frac{${b}\\cdot ${m}}{${d}(${a}+${b})}=${fracTeX(b*m,d*(a+b))}
+\\]
+
+The objective is concave and the constraint linear, so this is a maximum.`
+    }
+  },
+
+  /* quadratic */
+  () => {
+    let a=rand(1,5), b=rand(1,5), c=rand(1,5), d=rand(1,5), m=rand(20,100);
+    let denom = a*d*d + b*c*c;
+
+    return {
+      q:`Solve
+\\[
+\\min ${xpow(a,2)} + ${xpow(b,2).replace(/x/g,'y')}
+\\quad \\text{s.t. } ${linx(c)}+${liny(d)}=${m}
+\\]`,
+
+      s:`<strong>Lecture 5 — Lagrange multipliers</strong>
+
+First-order conditions:
+
+\\[
+2\\cdot ${a}\\,x=${c}\\lambda, \\quad 2\\cdot ${b}\\,y=${d}\\lambda
+\\]
+
+Divide to eliminate \\(\\lambda\\):
+
+\\[
+\\frac{x}{y}=\\frac{${b}\\cdot ${c}}{${a}\\cdot ${d}}
+\\]
+
+Substitute into the constraint and solve:
+
+\\[
+x^*=\\frac{${b}\\cdot ${c}\\cdot ${m}}{${denom}}=${fracTeX(b*c*m,denom)}, \\qquad y^*=\\frac{${a}\\cdot ${d}\\cdot ${m}}{${denom}}=${fracTeX(a*d*m,denom)}
+\\]
+
+The objective is convex and the constraint linear, so this is a minimum.`
+    }
+  },
+
+  /* root */
+  () => {
+    let a=rand(1,5), b=rand(1,5), c=rand(1,5), d=rand(1,5), m=rand(20,100);
+    let aad = a*a*d;
+    let bbc = b*b*c;
+
+    return {
+      q:`Maximise \\(${a===1?'':''+a}\\sqrt{x} + ${b===1?'':''+b}\\sqrt{y}\\) subject to \\(${linx(c)}+${liny(d)}=${m}\\).`,
+
+      s:`<strong>Lecture 5 — Lagrange multipliers</strong>
+
+First-order conditions:
+
+\\[
+\\frac{${a}}{2\\sqrt{x}}=${c}\\lambda, \\quad \\frac{${b}}{2\\sqrt{y}}=${d}\\lambda
+\\]
+
+Divide to eliminate \\(\\lambda\\), then square both sides to clear the roots:
+
+\\[
+x=\\left(\\frac{${a}\\cdot ${d}}{${b}\\cdot ${c}}\\right)^{2} y
+\\]
+
+Substitute into the constraint and solve:
+
+\\[
+x^*=\\frac{${aad}\\cdot ${m}}{${c}(${aad}+${bbc})}=${fracTeX(aad*m,c*(aad+bbc))}, \\qquad y^*=\\frac{${bbc}\\cdot ${m}}{${d}(${aad}+${bbc})}=${fracTeX(bbc*m,d*(aad+bbc))}
+\\]
+
+\\(\\sqrt{\\cdot}\\) is concave and the constraint linear, so this is a maximum.`
+    }
+  },
+
+  /* Log utility, 2 or 3 goods, demand and own-price elasticity (Fall Exam Problem 2 style) */
+  () => {
+    const n=random([2,3]), names=['x','y','z'].slice(0,n);
+    const a=names.map(()=>rand(1,4)), p=names.map(()=>rand(1,6));
+    const S=a.reduce((s,v)=>s+v,0);
+    const m=S*rand(3,12);
+    const u=names.map((v,i)=>`${a[i]===1?'':a[i]}\\ln ${v}`).join('+');
+    const bud=names.map((v,i)=>`${p[i]===1?'':p[i]}${v}`).join('+');
+    const foc=names.map((v,i)=>`\\frac{${a[i]}}{${v}}=${p[i]===1?'':p[i]}\\lambda`).join(',\\quad ');
+    const dem=names.map((v,i)=>`${v}^*=\\frac{${a[i]}}{${S}}\\cdot\\frac{${m}}{${p[i]}}=${fracTeX(a[i]*m,S*p[i])}`).join(',\\quad ');
+    const share=a[0]*m/S;
+    return {
+      q:`A consumer maximises \\(u=${u}\\) subject to \\(${bud}=${m}\\).
+(a) Argue that the budget binds and that zero consumption is not optimal. Is \\(u\\) concave?
+(b) Find the demands using the Lagrangean.
+(c) Treating the price of \\(x\\) as \\(p_x\\), find the own-price elasticity of demand for \\(x\\).`,
+      s:`<strong>Lecture 5 — Lagrangean demand</strong>
+
+(a) \\(u\\) is strictly increasing in every good, so any unspent money could raise utility: the budget binds. As any good goes to 0, \\(\\ln\\to-\\infty\\), so all goods are bought in positive amounts.
+
+\\(u\\) is a sum of concave functions, so it is concave. Its Hessian is diagonal with entries \\(-a_i/x_i^2<0\\), hence negative definite.
+
+(b) \\(\\mathcal{L}=${u}-\\lambda(${bud}-${m})\\). FOC:
+
+\\[
+${foc}
+\\]
+
+So \\(p_ix_i=a_i/\\lambda\\). Summing over goods: \\(${m}=${S}/\\lambda\\), so \\(\\lambda=${fracTeX(S,m)}\\) and
+
+\\[
+${dem}
+\\]
+
+Concave objective and linear constraint, so this is the maximum.
+
+(c) \\(x(p_x)=\\frac{${share%1===0?share:fracTeX(a[0]*m,S)}}{p_x}\\), so
+
+\\[
+\\varepsilon_{x,p_x}=\\frac{\\partial x}{\\partial p_x}\\frac{p_x}{x}=-\\frac{${share%1===0?share:fracTeX(a[0]*m,S)}}{p_x^2}\\cdot\\frac{p_x^2}{${share%1===0?share:fracTeX(a[0]*m,S)}}=-1
+\\]`
+    };
+  },
+
+  /* Perfect substitutes — corner solution (PS5 u1) */
+  () => {
+    let a,b,p1,p2;
+    do{ a=rand(1,6); b=rand(1,6); p1=rand(1,6); p2=rand(1,6); }while(a*p2===b*p1);
+    const m=rand(10,60);
+    const xBetter = a*p2 > b*p1;
+    const slope = new Fr(a*p2-b*p1, p2);
+    return {
+      q:`Maximise \\(u(x,y)=${linx(a)}+${liny(b)}\\) subject to \\(${linx(p1)}+${liny(p2)}=${m}\\), \\(x,y\\ge0\\).`,
+      s:`<strong>Lecture 5 — Corner solutions (perfect substitutes)</strong>
+
+The Lagrange conditions \\(${a}=${p1}\\lambda\\) and \\(${b}=${p2}\\lambda\\) cannot both hold, since \\(\\frac{${a}}{${p1}}\\neq\\frac{${b}}{${p2}}\\). So there is no interior solution.
+
+Substitute the budget, \\(y=${p2===1?`${m}-${linx(p1)}`:`\\frac{${m}-${linx(p1)}}{${p2}}`}\\):
+
+\\[
+u(x)=${linx(a)}+${b===1?'':b+'\\cdot'}${p2===1?`(${m}-${linx(p1)})`:`\\frac{${m}-${linx(p1)}}{${p2}}`}=${fracTeX(b*m,p2)}${xBetter?'+':'-'}${cf(slope.sign()>0?slope.tex():slope.neg().tex())}x
+\\]
+
+This is linear in \\(x\\) and ${xBetter?'increasing':'decreasing'}, so the optimum is at the corner.
+
+Compare utility per pound: \\(\\frac{${a}}{${p1}}\\) vs \\(\\frac{${b}}{${p2}}\\). Good \\(${xBetter?'x':'y'}\\) gives more.
+
+\\[
+${xBetter ? `x^*=${fracTeX(m,p1)},\\ y^*=0,\\quad u^*=${fracTeX(a*m,p1)}` : `x^*=0,\\ y^*=${fracTeX(m,p2)},\\quad u^*=${fracTeX(b*m,p2)}`}
+\\]
+
+No second-order condition is needed: a linear function on a segment attains its maximum at an endpoint.`
+    };
+  },
+
+  /* Leontief (PS5 u3) */
+  () => {
+    const a=rand(1,5), b=rand(1,5), p1=rand(1,6), p2=rand(1,6), m=rand(10,80);
+    const den=b*p1+a*p2;
+    return {
+      q:`Maximise \\(u(x,y)=\\min\\{${linx(a)},\\ ${liny(b)}\\}\\) subject to \\(${linx(p1)}+${liny(p2)}=${m}\\).`,
+      s:`<strong>Lecture 5 — Non-differentiable utility (perfect complements)</strong>
+
+\\(u\\) has no derivative where \\(${linx(a)}=${liny(b)}\\), so Lagrange FOCs do not apply there. Argue directly instead.
+
+If \\(${linx(a)}>${liny(b)}\\), some money spent on \\(x\\) adds nothing to \\(u\\). Moving it to \\(y\\) raises \\(u\\). The same holds the other way round. So at the optimum \\(${linx(a)}=${liny(b)}\\), i.e. \\(y=${fracTeX(a,b)==='1'?'':fracTeX(a,b)}x\\).
+
+Substitute into the budget:
+
+\\[
+${linx(p1)}+${p2}\\cdot${cf(fracTeX(a,b))}x=${m}\\implies x^*=\\frac{${b}\\cdot${m}}{${b}\\cdot${p1}+${a}\\cdot${p2}}=${fracTeX(b*m,den)},\\qquad y^*=${fracTeX(a*m,den)}
+\\]
+
+\\(u^*=${a===1?'':a}x^*=${fracTeX(a*b*m,den)}\\).`
+    };
+  },
+
+  /* Quasilinear with possible corner (Homework 1 Problem 4 style) */
+  () => {
+    const k=rand(1,6), p=rand(1,5), m=rand(1,2*k+8);
+    const kS=k===1?'':k;
+    const interior = m>=k;
+    return {
+      q:`A consumer with income \\(m=${m}\\) maximises \\(u(x,y)=${kS}\\ln x+y\\). The price of \\(x\\) is \\(p=${p}\\) and the price of \\(y\\) is 1; \\(y\\ge0\\). Find the demands. For which incomes is \\(y\\) consumed at all?`,
+      s:`<strong>Lecture 5 — Lagrangean with an inequality constraint</strong>
+
+\\[
+\\mathcal{L}=${kS}\\ln x+y-\\lambda(${p===1?'':p}x+y-${m})+\\mu y
+\\]
+
+FOC: \\(\\frac{${k}}{x}=${p===1?'':p}\\lambda\\) and \\(1-\\lambda+\\mu=0\\), with \\(\\mu\\ge0\\) and \\(\\mu y=0\\).
+
+<em>Interior case</em> (\\(y>0\\Rightarrow\\mu=0\\Rightarrow\\lambda=1\\)): \\(x=\\frac{${k}}{${p}}\\) and \\(y=m-${k}\\). This is valid only if \\(m\\ge${k}\\).
+
+<em>Corner case</em> (\\(m<${k}\\)): \\(y=0\\) and \\(x=m/${p}\\). Then \\(\\lambda=\\frac{${k}}{m}\\) and \\(\\mu=\\frac{${k}}{m}-1>0\\) ✓
+
+Here \\(m=${m}\\)${interior?`\\(\\ \\ge ${k}\\)`:`\\(\\ <${k}\\)`}:
+
+\\[
+${interior?`x^*=${fracTeX(k,p)},\\quad y^*=${m-k}`:`x^*=${fracTeX(m,p)},\\quad y^*=0`}
+\\]
+
+\\(y\\) is consumed only when \\(m>${k}\\). Above that income, \\(x\\) no longer depends on income: all extra money goes to \\(y\\).`
+    };
+  },
+
+  /* Cost minimisation with Q=√(KL), envelope theorem (Fall Exam resit Problem 2 style) */
+  () => {
+    const a=rand(1,4), b=rand(1,4), k=rand(1,3), Q=rand(2,10);
+    const w=k*a*a, r=k*b*b;     // √(w/r)=a/b
+    const K=fracTeX(Q*a,b), L=fracTeX(Q*b,a), C=2*k*a*b*Q, lam=2*k*a*b;
+    return {
+      q:`A firm produces \\(Q=\\sqrt{KL}\\). The wage is \\(w=${w}\\) and the rental rate of capital is \\(r=${r}\\).
+(a) Minimise \\(wL+rK\\) subject to \\(\\sqrt{KL}=${Q}\\) using the Lagrangean. Why is neither input zero?
+(b) Find the cost \\(C\\) and the multiplier \\(\\lambda\\). Compare \\(\\lambda\\) with the marginal cost.
+(c) Verify that \\(\\partial C/\\partial r=K\\).`,
+      s:`<strong>Lecture 5 — Cost minimisation and the envelope theorem</strong>
+
+(a) If either input is zero, output is zero, so both are positive and the constraint binds.
+
+\\[
+\\mathcal{L}=wL+rK+\\lambda\\left(Q-\\sqrt{KL}\\right)
+\\]
+
+\\[
+r=\\frac{\\lambda}{2}\\sqrt{\\frac{L}{K}},\\qquad w=\\frac{\\lambda}{2}\\sqrt{\\frac{K}{L}}\\implies \\frac{r}{w}=\\frac{L}{K}
+\\]
+
+With \\(KL=Q^2\\): \\(K=Q\\sqrt{w/r}\\) and \\(L=Q\\sqrt{r/w}\\). Numerically, \\(\\sqrt{w/r}=\\sqrt{${w}/${r}}=${fracTeX(a,b)}\\), so
+
+\\[
+K^*=${K},\\qquad L^*=${L}
+\\]
+
+(b) \\(C=wL^*+rK^*=2Q\\sqrt{wr}=${C}\\). From the FOC, \\(\\lambda=2r\\sqrt{K/L}=2\\sqrt{wr}=${lam}\\).
+
+Marginal cost is \\(\\partial C/\\partial Q=2\\sqrt{wr}=${lam}=\\lambda\\), as the envelope theorem predicts.
+
+(c) \\(C(w,r,Q)=2Q\\sqrt{wr}\\), so \\(\\dfrac{\\partial C}{\\partial r}=Q\\sqrt{\\dfrac{w}{r}}=K^*\\) ✓ This is the envelope theorem (Shephard's lemma): \\(\\partial\\mathcal{L}/\\partial r=K\\) at the optimum.`
+    };
+  },
+
+  /* Bliss-point utility: gradient, Hessian, concavity (PS5 u7) */
+  () => {
+    const a=rand(1,5), c=rand(1,5), b1=rand(1,6), b2=rand(1,6);
+    return {
+      q:`Let \\(u(x,y)=3-${a===1?'':a}(x-${b1})^2-${c===1?'':c}(y-${b2})^2\\). Compute the first and second derivatives. Is \\(u\\) concave? Where is its unconstrained maximum?`,
+      s:`<strong>Lecture 5 — Derivatives and concavity</strong>
+
+\\[
+u'_x=-${2*a}(x-${b1}),\\qquad u'_y=-${2*c}(y-${b2})
+\\]
+
+\\[
+H=${pmat([[-2*a,0],[0,-2*c]])}
+\\]
+
+\\(D_1=-${2*a}<0\\) and \\(D_2=${4*a*c}>0\\), so \\(H\\) is negative definite everywhere and \\(u\\) is <strong>strictly concave</strong>.
+
+The FOC give \\((x,y)=(${b1},${b2})\\), the unique global maximum ("bliss point"), with \\(u=3\\).
+
+(With a budget constraint, the bliss point is chosen whenever it is affordable. Otherwise the budget binds.)`
+    };
+  },
+
+  /* Concavity of Cobb–Douglas (PS5 u2) */
+  () => {
+    const A=rand(2,8), B=rand(2,8);
+    const a=A/10, b=B/10;
+    const s=(A+B)/10;
+    const detc=A*B*(10-A-B)/1000;
+    let cls;
+    if(A+B<10) cls=`\\(a+b=${s}<1\\): \\(f_{xx}<0\\) and \\(\\det H>0\\), so \\(H\\) is negative definite and \\(f\\) is <strong>strictly concave</strong> on \\(\\mathbb{R}^2_{++}\\).`;
+    else if(A+B===10) cls=`\\(a+b=1\\): \\(\\det H=0\\) and \\(f_{xx}<0\\), so \\(H\\) is negative semidefinite and \\(f\\) is <strong>(weakly) concave</strong>, but not strictly (it is linear along rays).`;
+    else cls=`\\(a+b=${s}>1\\): \\(\\det H<0\\), so \\(H\\) is indefinite and \\(f\\) is <strong>neither concave nor convex</strong>. (It is still quasi-concave: its upper contour sets are convex.)`;
+    return {
+      q:`Let \\(f(x,y)=x^{${a}}y^{${b}}\\) on \\(x,y>0\\). Compute the Hessian. Is \\(f\\) concave?`,
+      s:`<strong>Lecture 5 — Concavity of Cobb–Douglas</strong>
+
+\\[
+f_{xx}=${a}(${a}-1)x^{${dec(a-2)}}y^{${b}},\\quad f_{yy}=${b}(${b}-1)x^{${a}}y^{${dec(b-2)}},\\quad f_{xy}=${dec(a*b)}\\,x^{${dec(a-1)}}y^{${dec(b-1)}}
+\\]
+
+\\(f_{xx}<0\\) and \\(f_{yy}<0\\) because both exponents are below 1. The determinant is
+
+\\[
+\\det H=ab\\left[(a-1)(b-1)-ab\\right]x^{2a-2}y^{2b-2}=ab(1-a-b)\\,x^{${dec(2*a-2)}}y^{${dec(2*b-2)}}=${dec(detc)}\\,x^{${dec(2*a-2)}}y^{${dec(2*b-2)}}
+\\]
+
+${cls}`
+    };
+  }
+
+]
+
+};
+
+// =========================
+// EXTRA HELPERS (v3)
+// =========================
+function mm(A,B){ return A.map((r,i)=>B[0].map((_,j)=>r.reduce((s,_,k)=>s+A[i][k]*B[k][j],0))); }
+function cross(u,v){ return [u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]]; }
+function reduceVec(v){ const g=v.reduce((g,t)=>gcd(g,t),0)||1; let w=v.map(t=>t/g); const f=w.find(t=>t!==0); if(f<0) w=w.map(t=>-t); return w; }
+function colv(v){ return pmat(v.map(t=>[t])); }
+function augTeX(M,nLeft){
+  return `\\left(\\begin{array}{${'c'.repeat(nLeft)}|${'c'.repeat(M[0].length-nLeft)}}${M.map(r=>r.map(v=>F(v).tex()).join('&')).join('\\\\')}\\end{array}\\right)`;
+}
+// Reduced row echelon form with a log of the row operations
+function rrefLog(M0,nLeft){
+  let M=M0.map(r=>r.map(v=>F(v)));
+  const steps=[], pivots=[]; let row=0;
+  for(let col=0; col<nLeft && row<M.length; col++){
+    let r=row; while(r<M.length && M[r][col].isZero()) r++;
+    if(r===M.length) continue;
+    const ops=[];
+    if(r!==row){ [M[row],M[r]]=[M[r],M[row]]; ops.push(`swap \\(R_${row+1}\\leftrightarrow R_${r+1}\\)`); }
+    const p=M[row][col];
+    if(!p.eq(1)){ M[row]=M[row].map(v=>v.div(p)); ops.push(`divide \\(R_${row+1}\\) by \\(${p.tex()}\\)`); }
+    for(let k=0;k<M.length;k++){
+      if(k===row) continue;
+      const f=M[k][col]; if(f.isZero()) continue;
+      M[k]=M[k].map((v,j)=>v.sub(f.mul(M[row][j])));
+      ops.push(f.sign()>0 ? `\\(R_${k+1}\\to R_${k+1}-${cf(f.tex())}R_${row+1}\\)` : `\\(R_${k+1}\\to R_${k+1}+${cf(f.neg().tex())}R_${row+1}\\)`);
+    }
+    if(ops.length) steps.push(`Column ${col+1}: ${ops.join(', ')}:\n\\[${augTeX(M,nLeft)}\\]`);
+    pivots.push(col); row++;
+  }
+  return {steps,M,pivots};
+}
+// rational multiple of pi / of sqrt(n)
+function piTeX(fr){ const t=F(fr).tex(); return t==='1'?'\\pi':(t==='-1'?'-\\pi':t+'\\pi'); }
+function sqTeX(fr,n){ const t=F(fr).tex(); return (t==='1'?'':(t==='-1'?'-':t))+'\\sqrt{'+n+'}'; }
+// Ranking text for bundles with utility values
+function rankStr(names,vals){
+  const idx=names.map((_,i)=>i).sort((a,b)=>vals[b]-vals[a]);
+  let s=names[idx[0]];
+  for(let k=1;k<idx.length;k++) s+= (vals[idx[k]]===vals[idx[k-1]] ? '\\sim ' : '\\succ ')+names[idx[k]];
+  return s.replace(/(\\succ|\\sim) /g,'$1 ');
+}
+// Simple inline SVG plot. o = {xr:[x0,x1], yr:[y0,y1], curves:[{f,a,b,color,label}], polys:[{pts,fill,op,stroke}], dash:[{x?,y?,label}], pts:[{x,y,label}], xlabel, ylabel}
+function svgPlot(o){
+  const W=o.w||380, H=o.h||250, m=34;
+  const [x0,x1]=o.xr, [y0,y1]=o.yr;
+  const X=x=>(m+(x-x0)/(x1-x0)*(W-2*m)).toFixed(1), Y=y=>(H-m-(y-y0)/(y1-y0)*(H-2*m)).toFixed(1);
+  const ax=Math.min(Math.max(0,x0),x1), ay=Math.min(Math.max(0,y0),y1);
+  let s=`<svg width="${W}" height="${H}" viewBox="0 0 ${W} ${H}" style="display:block;margin:8px 0;max-width:100%;font:12px Arial">`;
+  (o.polys||[]).forEach(p=>{ s+=`<polygon points="${p.pts.map(([x,y])=>X(x)+','+Y(y)).join(' ')}" fill="${p.fill||'none'}" fill-opacity="${p.op===undefined?0.35:p.op}" stroke="${p.stroke||'none'}" stroke-width="1.5"/>`; });
+  s+=`<line x1="${X(x0)}" y1="${Y(ay)}" x2="${X(x1)}" y2="${Y(ay)}" stroke="#666"/><line x1="${X(ax)}" y1="${Y(y0)}" x2="${X(ax)}" y2="${Y(y1)}" stroke="#666"/>`;
+  (o.dash||[]).forEach(d=>{
+    if(d.x!==undefined){ s+=`<line x1="${X(d.x)}" y1="${Y(ay)}" x2="${X(d.x)}" y2="${Y(d.y2===undefined?y1:d.y2)}" stroke="#999" stroke-dasharray="4 3"/>`; if(d.label) s+=`<text x="${X(d.x)}" y="${+Y(ay)+14}" text-anchor="middle" fill="#333">${d.label}</text>`; }
+    else { s+=`<line x1="${X(ax)}" y1="${Y(d.y)}" x2="${X(d.x2===undefined?x1:d.x2)}" y2="${Y(d.y)}" stroke="#999" stroke-dasharray="4 3"/>`; if(d.label) s+=`<text x="${+X(ax)-4}" y="${+Y(d.y)+4}" text-anchor="end" fill="#333">${d.label}</text>`; }
+  });
+  (o.curves||[]).forEach(c=>{
+    const n=160, pts=[];
+    for(let i=0;i<=n;i++){ const x=c.a+(c.b-c.a)*i/n, y=c.f(x); if(isFinite(y) && y>=y0 && y<=y1) pts.push(X(x)+','+Y(y)); }
+    s+=`<polyline points="${pts.join(' ')}" fill="none" stroke="${c.color}" stroke-width="2"/>`;
+    if(c.label){ const xl=c.lx===undefined?c.b:c.lx, yl=Math.min(Math.max(c.f(xl),y0),y1); s+=`<text x="${+X(xl)+4}" y="${+Y(yl)-4}" fill="${c.color}">${c.label}</text>`; }
+  });
+  (o.pts||[]).forEach(p=>{ s+=`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="3" fill="#333"/>`; if(p.label) s+=`<text x="${+X(p.x)+5}" y="${+Y(p.y)-5}" fill="#333">${p.label}</text>`; });
+  if(o.xlabel) s+=`<text x="${W-m+6}" y="${+Y(ay)+4}" fill="#333">${o.xlabel}</text>`;
+  if(o.ylabel) s+=`<text x="${+X(ax)}" y="${m-10}" text-anchor="middle" fill="#333">${o.ylabel}</text>`;
+  return s+'</svg>';
+}
+
+const B = lectureBanks;
+
+// =========================
+// L1 — NEW
+// =========================
+
+/* Preference orderings: complete? transitive? (Homework 1 resit Problem 3) */
+B.L1.push(() => {
+  const kind=rand(1,5);
+  let rule, A, Bb, C, cmp, complete, transitive;
+  if(kind===1){
+    const x=rand(0,4), y=rand(1,5), d=rand(1,3), e=rand(1,3), y0=rand(0,y-1);
+    A=[x,y]; Bb=[x,y+d]; C=[x+e,y0];
+    rule=`\\(X\\succ Y\\) if \\(X\\) contains more of good 1 than \\(Y\\); if they contain the same amount of good 1, \\(X\\succ Y\\) if \\(X\\) contains more of good 2 (<em>lexicographic</em> order).`;
+    cmp=`\\(A\\) and \\(B\\) have the same amount of good 1 and \\(B\\) has more good 2, so \\(B\\succ A\\). \\(C\\) has more good 1 than both, so \\(C\\succ B\\) and \\(C\\succ A\\). Ranking: \\(C\\succ B\\succ A\\).`;
+    complete=`<strong>Complete:</strong> yes. Take two different bundles. Either their good-1 amounts differ (more good 1 wins), or they are equal, so the good-2 amounts differ (more good 2 wins).`;
+    transitive=`<strong>Transitive:</strong> yes. Let \\(X\\succ Y\\) and \\(Y\\succ Z\\), so \\(x_1\\ge y_1\\ge z_1\\). If \\(x_1>z_1\\), then \\(X\\succ Z\\). If \\(x_1=z_1\\), then \\(x_1=y_1=z_1\\): both comparisons used good 2, so \\(x_2>y_2>z_2\\) and \\(X\\succ Z\\).
+
+(Famous fact: this order cannot be represented by any continuous utility function.)`;
+  } else if(kind===2){
+    const p=rand(0,4), q=rand(1,5), d=rand(1,2), e=rand(1,3), f=d+rand(1,2);
+    A=[p,q]; Bb=[p+d,q+e]; C=[p+f,q-1];
+    rule=`\\(X\\succ Y\\) if \\(X\\) contains strictly more of <em>both</em> goods than \\(Y\\).`;
+    cmp=`\\(B\\) has more of both goods than \\(A\\), so \\(B\\succ A\\). \\(C\\) has more good 1 but less good 2 than \\(A\\), so they cannot be compared. The same holds for \\(C\\) and \\(B\\) (\\(${C[0]}>${Bb[0]}\\) but \\(${C[1]}\\lt ${Bb[1]}\\)).`;
+    complete=`<strong>Complete:</strong> no. \\(A\\) and \\(C\\) are not comparable: neither is preferred to the other. This is only a <em>partial</em> order, as for \\(\\mathbb{R}^2\\) in Lecture 1.`;
+    transitive=`<strong>Transitive:</strong> yes. \\(x_1>y_1>z_1\\) and \\(x_2>y_2>z_2\\) imply \\(x_1>z_1\\) and \\(x_2>z_2\\).`;
+  } else if(kind===3 || kind===4){
+    const pts=[[rand(0,6),rand(0,6)],[rand(0,6),rand(0,6)],[rand(1,6),rand(1,6)]];
+    [A,Bb,C]=pts;
+    const u = kind===3 ? (v=>v[0]+v[1]) : (v=>v[0]*v[1]);
+    const uT = kind===3 ? 'x_1+x_2' : 'x_1x_2';
+    const vals=pts.map(u);
+    rule=`\\(X\\succsim Y\\) if \\(${kind===3?'x_1+x_2\\ge y_1+y_2':'x_1x_2\\ge y_1y_2'}\\).`;
+    cmp=`Compute \\(u=${uT}\\): \\(u(A)=${vals[0]}\\), \\(u(B)=${vals[1]}\\), \\(u(C)=${vals[2]}\\). Ranking: \\(${rankStr(['A','B','C'],vals)}\\).`;
+    complete=`<strong>Complete:</strong> yes. Any two real numbers \\(u(X),u(Y)\\) can be compared with \\(\\ge\\).`;
+    transitive=`<strong>Transitive:</strong> yes. \\(u(X)\\ge u(Y)\\ge u(Z)\\Rightarrow u(X)\\ge u(Z)\\). Any relation given by a utility function is complete and transitive.`;
+  } else {
+    const t=rand(3,5), u=t-1, a=rand(0,3), h=rand(0,3), k=rand(1,3);
+    A=[a,h+2*k]; Bb=[a+u,h+k]; C=[a+2*u,h];
+    rule=`\\(X\\succ Y\\) if \\(x_1\\ge y_1+${t}\\). If the good-1 amounts differ by less than \\(${t}\\), then \\(X\\succ Y\\) if \\(x_2>y_2\\).`;
+    cmp=`\\(A\\) vs \\(B\\): good 1 differs by \\(${u}\\lt ${t}\\), and \\(A\\) has more good 2, so \\(A\\succ B\\).
+\\(B\\) vs \\(C\\): good 1 differs by \\(${u}\\lt ${t}\\), and \\(B\\) has more good 2, so \\(B\\succ C\\).
+\\(C\\) vs \\(A\\): \\(${C[0]}\\ge ${A[0]}+${t}\\), so \\(C\\succ A\\). This is a <strong>cycle</strong>.`;
+    complete=`<strong>Complete:</strong> no. \\((0,1)\\) and \\((1,1)\\) have good-1 amounts within \\(${t}\\) and equal good 2, so neither is preferred.`;
+    transitive=`<strong>Transitive:</strong> no. The cycle \\(A\\succ B\\succ C\\succ A\\) above violates transitivity.`;
+  }
+  const bt=v=>`(${v[0]},${v[1]})`;
+  return {
+    q:`Bundles of two goods live in \\(\\mathbb{R}^2_+\\). Consider the rule: ${rule}
+(a) Compare \\(A=${bt(A)}\\), \\(B=${bt(Bb)}\\), \\(C=${bt(C)}\\).
+(b) Is the relation complete?
+(c) Is it transitive?`,
+    s:`<strong>Lecture 1 — Order relations</strong>
+
+(a) ${cmp}
+
+(b) ${complete}
+
+(c) ${transitive}`
+  };
+});
+
+/* System of inequalities: region, corners, linear objective (Lecture 1) */
+B.L1.push(() => {
+  let a1,b1,a2,b2;
+  do{ a1=rand(1,5); b1=rand(1,5); a2=rand(1,5); b2=rand(1,5); }while(a1*b2 <= a2*b1);
+  const x0=rand(1,5), y0=rand(1,5);
+  const c1=a1*x0+b1*y0, c2=a2*x0+b2*y0;
+  const p=rand(1,6), q=rand(1,6);
+  const corners=[[F(0),F(0)],[new Fr(c1,a1),F(0)],[F(x0),F(y0)],[F(0),new Fr(c2,b2)]];
+  const vals=corners.map(([x,y])=>F(p).mul(x).add(F(q).mul(y)));
+  let best=0; vals.forEach((v,i)=>{ if(v.cmp(vals[best])>0) best=i; });
+  const ties=vals.map((v,i)=>v.eq(vals[best])?i:-1).filter(i=>i>=0);
+  const obj=`${linx(p)}+${liny(q)}`;
+  const s1=x=>(c1-a1*x)/b1, s2=x=>(c2-a2*x)/b2;
+  const X1=c1/a1, Y2=c2/b2;
+  const fig=svgPlot({xr:[0,Math.max(X1,c2/a2)*1.1], yr:[0,Math.max(Y2,c1/b1)*1.1],
+    polys:[{pts:corners.map(([x,y])=>[x.num(),y.num()]), fill:'#4a90d9'}],
+    curves:[{f:s1,a:0,b:X1,color:'#c0392b',label:'(1)'},{f:s2,a:0,b:c2/a2,color:'#27ae60',label:'(2)'}],
+    pts:corners.map(([x,y])=>({x:x.num(),y:y.num()})), xlabel:'x', ylabel:'y'});
+  return {
+    q:`Let \\(S=\\{(x,y): x\\ge0,\\ y\\ge0,\\ ${linx(a1)}+${liny(b1)}\\le ${c1}\\ \\text{(1)},\\ ${linx(a2)}+${liny(b2)}\\le ${c2}\\ \\text{(2)}\\}\\).
+(a) Plot \\(S\\) and find its corner points.
+(b) Is \\(S\\) open, closed, bounded, convex?
+(c) Where does \\(${obj}\\) attain its maximum on \\(S\\)?`,
+    s:`<strong>Lecture 1 — Systems of inequalities</strong>
+
+(a) Line (1) meets the axes at \\(\\left(${fracTeX(c1,a1)},0\\right)\\) and \\(\\left(0,${fracTeX(c1,b1)}\\right)\\). Line (2) meets them at \\(\\left(${fracTeX(c2,a2)},0\\right)\\) and \\(\\left(0,${fracTeX(c2,b2)}\\right)\\).
+
+Solving (1) and (2) as equalities gives the crossing point \\((${x0},${y0})\\). Line (1) is steeper, so it binds near the \\(x\\)-axis and line (2) binds near the \\(y\\)-axis.
+${fig}
+Corners: \\(${corners.map(([x,y])=>pt(x,y)).join(',\\ ')}\\).
+
+(b) <strong>Closed</strong>: an intersection of four closed half-planes (all inequalities are weak). <strong>Not open</strong>: \\((0,0)\\in S\\) but \\((-\\varepsilon,0)\\notin S\\). <strong>Bounded</strong>, so <strong>compact</strong>. <strong>Convex</strong>, as an intersection of convex half-planes.
+
+(c) \\(S\\) is compact and the objective is continuous, so a maximum exists (Weierstrass). A linear function on a convex polygon is maximised at a corner. Evaluate:
+
+\\[${corners.map(([x,y],i)=>`${pt(x,y)}: ${vals[i].tex()}`).join(',\\quad ')}\\]
+
+Maximum \\(${vals[best].tex()}\\) at \\(${ties.map(i=>pt(...corners[i])).join('\\text{ and }')}\\)${ties.length>1?' (and on the whole edge between them)':''}.`,
+    chk:{type:'lp', a1,b1,c1,a2,b2,c2,p,q, max:vals[best].num()}
+  };
+});
+
+/* Functions: one-to-one, onto, invertible (Lecture 1) */
+B.L1.push(() => {
+  const kind=rand(1,6);
+  let f, dom, cod, ans;
+  if(kind===1){
+    const c=rand(-4,4);
+    f=poly([[1,'x^2'],[c,'']]); dom='\\mathbb{R}'; cod='\\mathbb{R}';
+    ans=`<strong>Not one-to-one:</strong> \\(f(-1)=f(1)=${1+c}\\).
+<strong>Not onto:</strong> \\(f(x)\\ge ${c}\\), so e.g. \\(${c-1}\\) is never reached.
+<strong>Not invertible.</strong>
+
+Restricted to \\(f:[0,\\infty)\\to[${c},\\infty)\\), it is strictly increasing and continuous, hence a bijection, with inverse \\(f^{-1}(y)=\\sqrt{y${term(-c,'')}}\\).`;
+  } else if(kind===2){
+    const a=rand(-5,5), b=random([-3,-2,2,3,4,5]);
+    f=poly([[a,''],[b,'x']]); dom='\\mathbb{R}'; cod='\\mathbb{R}';
+    ans=`<strong>One-to-one:</strong> \\(f(x_1)=f(x_2)\\Rightarrow ${b}x_1=${b}x_2\\Rightarrow x_1=x_2\\) (since \\(${b}\\neq0\\)).
+<strong>Onto:</strong> for any \\(y\\), \\(x=\\frac{y${term(-a,'')}}{${b}}\\) gives \\(f(x)=y\\).
+<strong>Invertible</strong>, with \\(f^{-1}(y)=\\dfrac{y${term(-a,'')}}{${b}}\\).`;
+  } else if(kind===3){
+    const k=rand(1,4);
+    f=`e^{${k===1?'':k}x}`; dom='\\mathbb{R}'; cod='\\mathbb{R}';
+    ans=`<strong>One-to-one:</strong> yes, \\(f'(x)=${k===1?'':k}e^{${k===1?'':k}x}>0\\), so \\(f\\) is strictly increasing.
+<strong>Onto:</strong> no, \\(f(x)>0\\), so \\(0\\) and negative numbers are never reached.
+<strong>Not invertible</strong> as a map \\(\\mathbb{R}\\to\\mathbb{R}\\).
+
+As a map \\(\\mathbb{R}\\to(0,\\infty)\\) it is a bijection, with inverse \\(f^{-1}(y)=${k===1?'':`\\frac{1}{${k}}`}\\ln y\\).`;
+  } else if(kind===4){
+    const c=rand(-6,6);
+    f=poly([[1,'x^3'],[c,'']]); dom='\\mathbb{R}'; cod='\\mathbb{R}';
+    ans=`<strong>One-to-one:</strong> yes, \\(x^3\\) is strictly increasing.
+<strong>Onto:</strong> yes. \\(f\\) is continuous, \\(f\\to\\pm\\infty\\) as \\(x\\to\\pm\\infty\\), so by the intermediate value theorem every \\(y\\) is reached.
+<strong>Invertible</strong>, with \\(f^{-1}(y)=\\sqrt[3]{y${term(-c,'')}}\\).`;
+  } else if(kind===5){
+    const c=rand(1,5);
+    f=`\\ln(x+${c})`; dom=`(-${c},\\infty)`; cod='\\mathbb{R}';
+    ans=`<strong>One-to-one:</strong> yes, \\(f'(x)=\\frac{1}{x+${c}}>0\\) on the domain.
+<strong>Onto:</strong> yes. For any \\(y\\), \\(x=e^y-${c}>-${c}\\) gives \\(f(x)=y\\).
+<strong>Invertible</strong>, with \\(f^{-1}(y)=e^{y}-${c}\\).`;
+  } else {
+    const k=rand(1,5);
+    f=`\\frac{${k}}{x}`; dom='\\mathbb{R}\\setminus\\{0\\}'; cod='\\mathbb{R}';
+    ans=`<strong>One-to-one:</strong> yes, \\(\\frac{${k}}{x_1}=\\frac{${k}}{x_2}\\Rightarrow x_1=x_2\\).
+<strong>Onto:</strong> no, \\(0\\) is never reached.
+<strong>Not invertible</strong> as a map into \\(\\mathbb{R}\\).
+
+As a map \\(\\mathbb{R}\\setminus\\{0\\}\\to\\mathbb{R}\\setminus\\{0\\}\\) it is a bijection, and it is its own inverse: \\(f^{-1}(y)=\\frac{${k}}{y}\\).`;
+  }
+  return {
+    q:`Let \\(f:${dom}\\to${cod}\\), \\(f(x)=${f}\\). Is \\(f\\) one-to-one? Onto? Invertible? If it is invertible (possibly after changing the domain or codomain), find the inverse.`,
+    s:`<strong>Lecture 1 — Functions</strong>
+
+${ans}`
+  };
+});
+
+/* Is it a metric? (Lecture 1) */
+B.L1.push(() => {
+  const k=rand(2,5), m=rand(1,4);
+  const opts=[
+    {d:`${k}|x-y|`, ok:true, why:`Positivity, symmetry and \\(d(x,x)=0\\) are immediate. Triangle inequality: \\(${k}|x-y|\\le ${k}|x-z|+${k}|z-y|\\) is \\(${k}\\times\\) the usual one.`},
+    {d:`(x-y)^2`, ok:false, why:`Positivity, symmetry and \\(d(x,x)=0\\) hold, but the <strong>triangle inequality fails</strong>: with \\(x=0,\\ z=${m},\\ y=${2*m}\\), \\(d(x,y)=${4*m*m}>d(x,z)+d(z,y)=${2*m*m}\\).`},
+    {d:`\\frac{|x-y|}{1+|x-y|}`, ok:true, why:`Write \\(d=\\varphi(|x-y|)\\) with \\(\\varphi(t)=\\frac{t}{1+t}\\), which is increasing and satisfies \\(\\varphi(s+t)=\\frac{s+t}{1+s+t}\\le\\frac{s}{1+s}+\\frac{t}{1+t}\\). Then \\(d(x,y)\\le\\varphi(|x-z|+|z-y|)\\le d(x,z)+d(z,y)\\). The other properties are immediate. (This metric is bounded by 1.)`},
+    {d:`|x^3-y^3|`, ok:true, why:`It is \\(|g(x)-g(y)|\\) with \\(g(x)=x^3\\). The triangle inequality follows from the usual one for \\(g(x),g(z),g(y)\\). Because \\(g\\) is one-to-one, \\(d(x,y)=0\\) only when \\(x=y\\).`},
+    {d:`|x^2-y^2|`, ok:false, why:`It satisfies the four properties listed in the lecture (positive, symmetric, triangle inequality, \\(d(x,x)=0\\)). But \\(d(${m},-${m})=0\\) although \\(${m}\\neq-${m}\\). The standard definition also requires \\(d(x,y)=0\\Rightarrow x=y\\), so this is only a <em>pseudometric</em>: it cannot tell \\(${m}\\) from \\(-${m}\\).`},
+    {d:`\\sqrt{|x-y|}`, ok:true, why:`\\(\\sqrt{\\cdot}\\) is increasing and subadditive: \\(\\sqrt{s+t}\\le\\sqrt s+\\sqrt t\\) (square both sides). So \\(\\sqrt{|x-y|}\\le\\sqrt{|x-z|+|z-y|}\\le\\sqrt{|x-z|}+\\sqrt{|z-y|}\\).`}
+  ];
+  const o=random(opts);
+  return {
+    q:`Is \\(d(x,y)=${o.d}\\) a metric on \\(\\mathbb{R}\\)? Check positivity, symmetry, the triangle inequality and \\(d(x,x)=0\\).`,
+    s:`<strong>Lecture 1 — Metrics</strong>
+
+<strong>${o.ok?'Yes':'No'}.</strong> ${o.why}`
+  };
+});
+
+/* Intermediate value theorem + one bisection step (Lecture 1) */
+B.L1.push(() => {
+  let b,c,d,m,p;
+  const P=(x)=>x*x*x+b*x*x+c*x+d;
+  do{ b=rand(-3,3); c=rand(-6,6); d=rand(-8,8); m=rand(-4,3); }while(!(P(m)*P(m+1)<0));
+  p=poly([[1,'x^3'],[b,'x^2'],[c,'x'],[d,'']]);
+  const half=new Fr(2*m+1,2);
+  const ph=half.mul(half).mul(half).add(F(b).mul(half).mul(half)).add(F(c).mul(half)).add(d);
+  let next;
+  if(ph.isZero()) next=`\\(p\\left(${half.tex()}\\right)=0\\), so we have found the root exactly.`;
+  else if(ph.sign()*P(m)<0) next=`\\(p\\left(${half.tex()}\\right)=${ph.tex()}\\) has the opposite sign to \\(p(${m})\\), so a root lies in \\(\\left[${m},${half.tex()}\\right]\\).`;
+  else next=`\\(p\\left(${half.tex()}\\right)=${ph.tex()}\\) has the opposite sign to \\(p(${m+1})\\), so a root lies in \\(\\left[${half.tex()},${m+1}\\right]\\).`;
+  return {
+    q:`Show that \\(p(x)=${p}\\) has a root in \\([${m},${m+1}]\\). Then halve the interval once to locate it more precisely. Does the theorem you used say how many roots there are?`,
+    s:`<strong>Lecture 1 — Continuous functions (intermediate value theorem)</strong>
+
+\\(p\\) is a polynomial, hence continuous on \\([${m},${m+1}]\\). We have \\(p(${m})=${P(m)}\\) and \\(p(${m+1})=${P(m+1)}\\), which have opposite signs. By the intermediate value theorem, \\(p(x)=0\\) for some \\(x\\in(${m},${m+1})\\).
+
+Bisection: ${next}
+
+The theorem guarantees <em>existence</em>, not uniqueness or the number of roots. A cubic can have up to three real roots.`,
+    chk:{type:'root', f:P, lo:m, hi:m+1}
+  };
+});
+
+// =========================
+// L2 — NEW
+// =========================
+
+/* 3×3 eigenvalues and eigenvectors with a hint (Homework 1 Problem 2 style) */
+B.L2.push(() => {
+  let A,ls,P;
+  for(;;){
+    const l=[rand(-1,1),rand(-1,1),rand(-1,1)], u=[rand(-1,1),rand(-1,1),rand(-1,1)];
+    P=mm([[1,0,0],[l[0],1,0],[l[1],l[2],1]],[[1,u[0],u[1]],[0,1,u[2]],[0,0,1]]);
+    // P has det 1 → integer inverse via adjugate
+    const adj=[[0,0,0],[0,0,0],[0,0,0]];
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++){
+      const r=[0,1,2].filter(t=>t!==j), cc=[0,1,2].filter(t=>t!==i);
+      adj[i][j]=((i+j)%2?-1:1)*(P[r[0]][cc[0]]*P[r[1]][cc[1]]-P[r[0]][cc[1]]*P[r[1]][cc[0]]);
+    }
+    do{ ls=[rand(-3,5),rand(-3,5),rand(-3,5)]; }while(new Set(ls).size<3);
+    A=mm(mm(P,[[ls[0],0,0],[0,ls[1],0],[0,0,ls[2]]]),adj);
+    const mx=Math.max(...A.flat().map(Math.abs));
+    const zeros=A.flat().filter(t=>t===0).length;
+    if(mx<=9 && zeros<=4) break;
+  }
+  const tr=A[0][0]+A[1][1]+A[2][2];
+  const c2=(A[0][0]*A[1][1]-A[0][1]*A[1][0])+(A[0][0]*A[2][2]-A[0][2]*A[2][0])+(A[1][1]*A[2][2]-A[1][2]*A[2][1]);
+  const dt=det3(A);
+  const h=ls[0];
+  const b1=-tr+h, b2=c2+h*b1;   // λ³−trλ²+c2λ−det = (λ−h)(λ²+b1λ+b2)
+  const others=[ls[1],ls[2]].sort((x,y)=>x-y);
+  const vecs=[...ls].sort((x,y)=>x-y).map(lam=>{
+    const M=A.map((r,i)=>r.map((v,j)=>v-(i===j?lam:0)));
+    let v=cross(M[0],M[1]); if(v.every(t=>t===0)) v=cross(M[0],M[2]); if(v.every(t=>t===0)) v=cross(M[1],M[2]);
+    return [lam, reduceVec(v), M];
+  });
+  const L='\\lambda';
+  return {
+    q:`Find the eigenvalues and eigenvectors of
+\\[A=${pmat(A)}\\]
+Hint: one eigenvalue is \\(${h}\\).`,
+    s:`<strong>Lecture 2 — Eigenvalues and eigenvectors (3×3)</strong>
+
+The characteristic equation \\(\\det(A-${L} I)=0\\) is equivalent to
+\\[${L}^3-\\text{tr}(A)${L}^2+c_2${L}-\\det A=${poly([[1,L+'^3'],[-tr,L+'^2'],[c2,L],[-dt,'']])}=0\\]
+where \\(\\text{tr}A=${tr}\\), \\(c_2\\) (the sum of the principal \\(2\\times2\\) minors) \\(=${c2}\\), and \\(\\det A=${dt}\\).
+
+Divide by \\((${L}${term(-h,'')})\\), using the hint:
+\\[(${L}${term(-h,'')})(${poly([[1,L+'^2'],[b1,L],[b2,'']])})=0\\]
+The quadratic factor gives \\(${L}=${others[0]}\\) and \\(${L}=${others[1]}\\). So the eigenvalues are \\(${[...ls].sort((x,y)=>x-y).join(',\\ ')}\\).
+
+Eigenvectors solve \\((A-${L} I)v=0\\). Any two independent rows of \\(A-${L} I\\) determine \\(v\\), up to scale, as their cross product:
+
+${vecs.map(([lam,v,M])=>`\\(${L}=${lam}\\): \\(A-${lam<0?`(${lam})`:lam}I=${pmat(M)}\\Rightarrow v=${colv(v)}\\). Check: \\(Av=${colv(v.map(t=>t*lam))}=${lam}v\\) ✓`).join('\n\n')}`,
+    chk:{type:'eig', A, pairs:vecs.map(([l,v])=>[l,v])}
+  };
+});
+
+/* 3×3 linear systems by Gaussian elimination: unique / none / infinitely many */
+B.L2.push(() => {
+  const kind=random(['unique','none','many']);
+  let A, b, x0=[rand(-3,3),rand(-3,3),rand(-3,3)];
+  if(kind==='unique'){
+    do{ A=[[rand(-2,4),rand(-2,3),rand(-2,3)],[rand(-2,3),rand(-2,4),rand(-2,3)],[rand(-2,3),rand(-2,3),rand(-2,4)]]; }while(det3(A)===0 || Math.abs(det3(A))>12);
+    b=A.map(r=>r.reduce((s,v,j)=>s+v*x0[j],0));
+  } else {
+    let r1,r2,al,be;
+    do{
+      r1=[rand(1,3),rand(-2,3),rand(-2,3)]; r2=[rand(-2,3),rand(1,3),rand(-2,3)];
+      al=rand(-2,2); be=rand(-2,2);
+    }while(cross(r1,r2).every(t=>t===0) || (al===0&&be===0));
+    const r3=r1.map((v,j)=>al*v+be*r2[j]);
+    A=[r1,r2,r3];
+    const b1=r1.reduce((s,v,j)=>s+v*x0[j],0), b2=r2.reduce((s,v,j)=>s+v*x0[j],0);
+    b=[b1,b2,al*b1+be*b2+(kind==='none'?random([-3,-2,-1,1,2,3]):0)];
+  }
+  const vars=['x','y','z'];
+  const eq=A.map((r,i)=>`${poly(r.map((v,j)=>[v,vars[j]]))}=${b[i]}`).join('\\\\');
+  const {steps,M,pivots}=rrefLog(A.map((r,i)=>[...r,b[i]]),3);
+  let concl;
+  const incons=M.some(r=>r.slice(0,3).every(v=>v.isZero()) && !r[3].isZero());
+  if(incons){
+    concl=`The last row reads \\(0=${M.find(r=>r.slice(0,3).every(v=>v.isZero())&&!r[3].isZero())[3].tex()}\\), which is impossible. The system has <strong>no solution</strong>. The rank of \\(A\\) is ${pivots.length}, but the augmented matrix has rank 3.`;
+  } else if(pivots.length===3){
+    concl=`Unique solution: \\((x,y,z)=(${M.map(r=>r[3].tex()).join(',')})\\). \\(\\text{rank}A=3\\), so \\(A\\) is invertible.`;
+  } else {
+    const free=[0,1,2].find(j=>!pivots.includes(j));
+    const sol=[0,1,2].map(j=>{
+      if(j===free) return 't';
+      const r=M[pivots.indexOf(j)];
+      const c=r[free].neg();
+      const cst=r[3].tex();
+      if(c.isZero()) return cst;
+      const ct=c.tex(), coef=(ct==='1'?'':(ct==='-1'?'-':ct))+'t';
+      return cst==='0' ? coef : `${cst}${c.sign()>0?'+':''}${coef}`;
+    });
+    concl=`A row of zeros appeared (\\(0=0\\)): one equation was a combination of the others. \\(\\text{rank}A=2\\), \\(${vars[free]}\\) is free, and there are <strong>infinitely many solutions</strong>:
+\\[(x,y,z)=\\left(${sol.join(',\\ ')}\\right),\\quad t\\in\\mathbb{R}\\]`;
+  }
+  return {
+    q:`Solve by Gaussian elimination, and state the rank of the coefficient matrix:
+\\[\\begin{cases}${eq}\\end{cases}\\]`,
+    s:`<strong>Lecture 2 — Systems of linear equations (Gaussian elimination)</strong>
+
+Start from the augmented matrix:
+\\[${augTeX(A.map((r,i)=>[...r,b[i]]),3)}\\]
+
+${steps.join('\n\n')}
+
+${concl}`,
+    chk:{type:'sys', A, b, kind}
+  };
+});
+
+/* Normalised eigenvectors, spectral decomposition, inverse via spectral theorem */
+B.L2.push(() => {
+  const [a,bb]=random([[1,1],[1,2],[2,1]]);
+  const s=a*a+bb*bb;
+  let l1,l2;
+  do{ l2=rand(-4,6); l1=l2+s*rand(1,2); }while(l1===0||l2===0);
+  const A11=(l1*a*a+l2*bb*bb)/s, A12=(l1-l2)*a*bb/s, A22=(l1*bb*bb+l2*a*a)/s;
+  const inv=[[new Fr(a*a,s*l1).add(new Fr(bb*bb,s*l2)), new Fr(a*bb,s*l1).sub(new Fr(a*bb,s*l2))],
+             [new Fr(a*bb,s*l1).sub(new Fr(a*bb,s*l2)), new Fr(bb*bb,s*l1).add(new Fr(a*a,s*l2))]];
+  const tr=A11+A22, dt=A11*A22-A12*A12;
+  return {
+    q:`Let \\(A=${pmat([[A11,A12],[A12,A22]])}\\).
+(a) Find the eigenvalues and <em>normalised</em> eigenvectors.
+(b) Write \\(A=Q\\Lambda Q^T\\).
+(c) Use (b) to find \\(A^{-1}\\).`,
+    s:`<strong>Lecture 2 — Normalised eigenvectors and the spectral theorem</strong>
+
+(a) \\(\\det(A-\\lambda I)=${poly([[1,'\\lambda^2'],[-tr,'\\lambda'],[dt,'']])}=(\\lambda${term(-l1,'')})(\\lambda${term(-l2,'')})\\), so \\(\\lambda_1=${l1}\\) and \\(\\lambda_2=${l2}\\).
+
+For \\(\\lambda_1=${l1}\\): \\(v_1\\propto(${a},${bb})\\). For \\(\\lambda_2=${l2}\\): \\(v_2\\propto(${-bb},${a})\\). These are orthogonal, as they must be for a symmetric matrix.
+
+Normalise by dividing by the length \\(\\sqrt{${a}^2+${bb}^2}=\\sqrt{${s}}\\):
+\\[u_1=\\frac{1}{\\sqrt{${s}}}${colv([a,bb])},\\qquad u_2=\\frac{1}{\\sqrt{${s}}}${colv([-bb,a])}\\]
+
+(b)
+\\[A=Q\\Lambda Q^T,\\quad Q=\\frac{1}{\\sqrt{${s}}}${pmat([[a,-bb],[bb,a]])},\\quad \\Lambda=${pmat([[l1,0],[0,l2]])}\\]
+\\(Q\\) is orthogonal (\\(Q^TQ=I\\)), so \\(Q^{-1}=Q^T\\).
+
+(c) \\(A^{-1}=(Q\\Lambda Q^T)^{-1}=Q\\Lambda^{-1}Q^T\\). Just invert the eigenvalues:
+\\[A^{-1}=\\frac{1}{${s}}${pmat([[a,-bb],[bb,a]])}${pmat([[fracTeX(1,l1),0],[0,fracTeX(1,l2)]])}${pmat([[a,bb],[-bb,a]])}=${frMat(inv)}\\]
+Check with the \\(2\\times2\\) formula: \\(\\det A=${dt}\\), and \\(\\frac{1}{${dt}}${pmat([[A22,-A12],[-A12,A11]])}\\) gives the same matrix ✓`,
+    chk:{type:'inv2', A:[[A11,A12],[A12,A22]], inv:inv.map(r=>r.map(v=>v.num()))}
+  };
+});
+
+/* Matrix as a transformation of the unit square */
+B.L2.push(() => {
+  let A, name='';
+  const kind=rand(1,6);
+  if(kind===1){ const k=random([-2,-1,1,2]); A=[[1,k],[0,1]]; name='a horizontal shear'; }
+  else if(kind===2){ A=[[rand(2,3),0],[0,random([1,2,3])]]; name='a stretch along the axes'; }
+  else if(kind===3){ A=random([[[0,-1],[1,0]],[[0,1],[-1,0]]]); name='a rotation by 90°'; }
+  else if(kind===4){ A=random([[[1,0],[0,-1]],[[-1,0],[0,1]],[[0,1],[1,0]]]); name='a reflection'; }
+  else { do{ A=[[rand(-1,3),rand(-2,2)],[rand(-2,2),rand(-1,3)]]; }while(A[0][0]*A[1][1]-A[0][1]*A[1][0]===0); }
+  const dt=A[0][0]*A[1][1]-A[0][1]*A[1][0];
+  const c=[[0,0],[A[0][0],A[1][0]],[A[0][0]+A[0][1],A[1][0]+A[1][1]],[A[0][1],A[1][1]]];
+  const xs=c.map(p=>p[0]).concat([0,1]), ys=c.map(p=>p[1]).concat([0,1]);
+  const span=Math.max(Math.max(...xs)-Math.min(...xs),Math.max(...ys)-Math.min(...ys))+1, cx=(Math.max(...xs)+Math.min(...xs))/2, cy=(Math.max(...ys)+Math.min(...ys))/2;
+  const fig=svgPlot({xr:[cx-span/2,cx+span/2], yr:[cy-span/2,cy+span/2], w:300, h:300,
+    polys:[{pts:[[0,0],[1,0],[1,1],[0,1]], fill:'#999', op:0.2, stroke:'#999'},{pts:c, fill:'#4a90d9', op:0.35, stroke:'#2c6aa8'}],
+    pts:[{x:c[1][0],y:c[1][1],label:'Ae₁'},{x:c[3][0],y:c[3][1],label:'Ae₂'}], xlabel:'x', ylabel:'y'});
+  return {
+    q:`Let \\(A=${pmat(A)}\\). Find the image of the unit square (corners \\((0,0),(1,0),(1,1),(0,1)\\)) under \\(v\\mapsto Av\\), and sketch it. What is its area, and what does the sign of \\(\\det A\\) tell you?`,
+    s:`<strong>Lecture 2 — A matrix transforms vectors</strong>
+
+\\(A\\) sends \\(e_1=(1,0)\\) to its first column and \\(e_2=(0,1)\\) to its second column. The corners map to
+\\[(0,0)\\mapsto(0,0),\\quad (1,0)\\mapsto(${c[1].join(',')}),\\quad (1,1)\\mapsto(${c[2].join(',')}),\\quad (0,1)\\mapsto(${c[3].join(',')})\\]
+so the square becomes a parallelogram${name?` (this is ${name})`:''}:
+${fig}
+Area \\(=|\\det A|=|${A[0][0]}\\cdot${paren(A[1][1])}-${paren(A[0][1])}\\cdot${paren(A[1][0])}|=${Math.abs(dt)}\\).
+
+\\(\\det A=${dt}${dt>0?'>0':'\\lt 0'}\\): orientation is ${dt>0?'<strong>preserved</strong> (going round the corners counter-clockwise stays counter-clockwise)':'<strong>reversed</strong> (the image is "flipped", like a mirror image)'}.
+
+Since \\(\\det A\\neq0\\), \\(A\\) is invertible, and \\(A^{-1}\\) maps the parallelogram back to the square.`
+  };
+});
+
+// =========================
+// L3 — NEW
+// =========================
+
+/* Derivative from the definition (Lecture 3 "Derivative") */
+B.L3.push(() => {
+  const kind=rand(1,5);
+  const D='\\Delta';
+  if(kind===1){
+    let a; do{ a=rand(-4,5); }while(a===0); const b=rand(-6,6), c=rand(-5,5);
+    const f=poly([[a,'x^2'],[b,'x'],[c,'']]);
+    return {
+      q:`Using the definition \\(f'(x)=\\lim_{${D}\\to0}\\frac{f(x+${D})-f(x)}{${D}}\\) (not the power rule), find the derivative of \\(f(x)=${f}\\).`,
+      s:`<strong>Lecture 3 — Derivative from the definition</strong>
+
+\\[f(x+${D})-f(x)=${a}\\left[(x+${D})^2-x^2\\right]${b!==0?`+${paren(b)}\\left[(x+${D})-x\\right]`:''}=${a}(2x${D}+${D}^2)${b!==0?`+${paren(b)}${D}`:''}\\]
+\\[\\frac{f(x+${D})-f(x)}{${D}}=${poly([[2*a,'x'],[b,''],[a,D]])}\\;\\xrightarrow{${D}\\to0}\\;${poly([[2*a,'x'],[b,'']])}\\]
+The limit is the same for every sequence \\(${D}_n\\to0\\), so \\(f'(x)=${poly([[2*a,'x'],[b,'']])}\\).`
+    };
+  }
+  if(kind===2) return {
+    q:`Using the definition of the derivative, show that \\((x^3)'=3x^2\\).`,
+    s:`<strong>Lecture 3 — Derivative from the definition</strong>
+
+\\[\\frac{(x+${D})^3-x^3}{${D}}=\\frac{3x^2${D}+3x${D}^2+${D}^3}{${D}}=3x^2+3x${D}+${D}^2\\;\\xrightarrow{${D}\\to0}\\;3x^2\\]`
+  };
+  if(kind===3){
+    const k=rand(1,5), x0=rand(1,4);
+    return {
+      q:`Using the definition of the derivative, find \\(f'(x)\\) for \\(f(x)=\\frac{${k}}{x}\\), \\(x\\neq0\\), and evaluate \\(f'(${x0})\\).`,
+      s:`<strong>Lecture 3 — Derivative from the definition</strong>
+
+\\[\\frac{1}{${D}}\\left(\\frac{${k}}{x+${D}}-\\frac{${k}}{x}\\right)=\\frac{1}{${D}}\\cdot\\frac{${k===1?'':k}x-${k===1?'':k}(x+${D})}{x(x+${D})}=-\\frac{${k}}{x(x+${D})}\\;\\xrightarrow{${D}\\to0}\\;-\\frac{${k}}{x^2}\\]
+So \\(f'(${x0})=${fracTeX(-k,x0*x0)}\\).`
+    };
+  }
+  if(kind===4){
+    const x0=random([1,4,9,16,25]);
+    return {
+      q:`Using the definition of the derivative (not the power formula), prove that \\((\\sqrt{x})'=\\frac{1}{2\\sqrt{x}}\\) for \\(x>0\\), and evaluate it at \\(x=${x0}\\).`,
+      s:`<strong>Lecture 3 — Derivative from the definition</strong>
+
+Multiply by the conjugate:
+\\[\\frac{\\sqrt{x+${D}}-\\sqrt{x}}{${D}}=\\frac{(x+${D})-x}{${D}\\left(\\sqrt{x+${D}}+\\sqrt x\\right)}=\\frac{1}{\\sqrt{x+${D}}+\\sqrt x}\\;\\xrightarrow{${D}\\to0}\\;\\frac{1}{2\\sqrt x}\\]
+(using continuity of \\(\\sqrt{\\cdot}\\)). At \\(x=${x0}\\): \\(\\frac{1}{2\\cdot${Math.sqrt(x0)}}=${fracTeX(1,2*Math.sqrt(x0))}\\).`
+    };
+  }
+  const k=rand(1,4), kS=k===1?'':k;
+  return {
+    q:`Prove that \\(f(x)=${kS}|x|\\) has no derivative at \\(x=0\\).`,
+    s:`<strong>Lecture 3 — Derivative from the definition</strong>
+
+\\[\\frac{f(0+${D})-f(0)}{${D}}=\\frac{${kS}|${D}|}{${D}}=\\begin{cases}${k}, & ${D}>0\\\\ -${k}, & ${D}\\lt 0\\end{cases}\\]
+Take \\(${D}_n=\\frac1n\\to0\\): the quotient tends to \\(${k}\\). Take \\(${D}_n=-\\frac1n\\to0\\): it tends to \\(-${k}\\).
+
+The definition requires the <em>same</em> limit for every sequence \\(${D}_n\\to0\\), so \\(f'(0)\\) does not exist. (The graph has a kink at 0.)`
+  };
+});
+
+/* Derivative of an inverse function (Lecture 3 "Composition of functions") */
+B.L3.push(() => {
+  const kind=rand(1,3);
+  if(kind===1){
+    const a=rand(1,5), b=rand(-5,5), x0=rand(-2,3);
+    const y0=x0*x0*x0+a*x0+b;
+    return {
+      q:`Let \\(f(x)=${poly([[1,'x^3'],[a,'x'],[b,'']])}\\). Explain why \\(f\\) has an inverse \\(g=f^{-1}\\), and find \\(g'(${y0})\\).`,
+      s:`<strong>Lecture 3 — Derivative of an inverse function</strong>
+
+\\(f'(x)=3x^2+${a}>0\\), so \\(f\\) is strictly increasing, hence one-to-one. It is also onto \\(\\mathbb{R}\\), so it is invertible.
+
+Since \\(g(f(x))=x\\), differentiating gives \\(g'(f(x))f'(x)=1\\), so \\(g'(y)=\\dfrac{1}{f'(g(y))}\\).
+
+\\(f(${x0})=${y0}\\), so \\(g(${y0})=${x0}\\) and
+\\[g'(${y0})=\\frac{1}{f'(${x0})}=\\frac{1}{3\\cdot${paren(x0)}^2+${a}}=${fracTeX(1,3*x0*x0+a)}\\]`
+    };
+  }
+  if(kind===2){
+    const k=rand(1,4), c=rand(1,4);
+    return {
+      q:`Let \\(f(x)=e^{${k===1?'':k}x}+${c===1?'':c}x\\) and \\(g=f^{-1}\\). Find \\(g'(1)\\).`,
+      s:`<strong>Lecture 3 — Derivative of an inverse function</strong>
+
+\\(f'(x)=${k===1?'':k}e^{${k===1?'':k}x}+${c}>0\\), so \\(f\\) is strictly increasing and invertible. \\(f(0)=1\\), so \\(g(1)=0\\), and
+\\[g'(1)=\\frac{1}{f'(0)}=\\frac{1}{${k}+${c}}=${fracTeX(1,k+c)}\\]`
+    };
+  }
+  return {
+    q:`Knowing \\((e^x)'=e^x\\), use the inverse-function derivative formula to prove \\((\\ln y)'=\\frac{1}{y}\\).`,
+    s:`<strong>Lecture 3 — Derivative of an inverse function</strong>
+
+\\(g(y)=\\ln y\\) is the inverse of \\(f(x)=e^x\\): \\(g(f(x))=x\\). By the chain rule, \\(g'(f(x))f'(x)=1\\), so
+\\[g'(y)=\\frac{1}{f'(g(y))}=\\frac{1}{e^{\\ln y}}=\\frac{1}{y}\\]`
+  };
+});
+
+/* From marginal cost to total cost (Lecture 3 "Integrals") */
+B.L3.push(() => {
+  const a=rand(1,10), b=rand(1,4), c=rand(0,2), Fc=rand(5,50), q1=rand(1,5);
+  const MC=poly([[a,''],[2*b,'q'],[3*c,'q^2']]);
+  const TCv=poly([[a,'q'],[b,'q^2'],[c,'q^3']]);
+  const T=Fc+a*q1+b*q1*q1+c*q1*q1*q1;
+  return {
+    q:`A firm's marginal cost is \\(MC(q)=${MC}\\). Producing \\(${q1}\\) units costs \\(${T}\\) in total. Find the total cost function \\(TC(q)\\) and the fixed cost. Why can't the fixed cost be found from \\(MC\\) alone?`,
+    s:`<strong>Lecture 3 — Integrals (marginal to total)</strong>
+
+\\(TC'(q)=MC(q)\\), so integrate:
+\\[TC(q)=\\int\\left(${MC}\\right)dq=${TCv}+C\\]
+The constant \\(C=TC(0)\\) is the <strong>fixed cost</strong>. Use the data:
+\\[TC(${q1})=${a*q1+b*q1*q1+c*q1*q1*q1}+C=${T}\\implies C=${Fc}\\]
+So \\(TC(q)=${TCv}+${Fc}\\).
+
+The fixed cost does not change with \\(q\\), so it disappears when you differentiate. Every \\(TC+C\\) has the same \\(MC\\).`
+  };
+});
+
+/* Consumer and producer surplus, possibly non-linear curves */
+B.L3.push(() => {
+  const dK=random(['lin','quad','sqrt','hyp']);
+  let sK=random(['lin','quad','sqrt']);
+  if(dK==='lin' && sK==='lin') sK=random(['quad','sqrt']);
+  const useSqrt = dK==='sqrt' || sK==='sqrt';
+  const Q = useSqrt ? random([4,9]) : rand(2,6);
+  const r = Math.round(Math.sqrt(Q));
+  // supply: P = c + d*g(Q)
+  const d=rand(1,3), cS=rand(0,6);
+  const gS = {lin:Q, quad:Q*Q, sqrt:r}[sK];
+  const P = cS + d*gS;
+  // demand
+  let bD=rand(1,3), aD, Dstr, Df, intD, intDtex, CS, CSnum, kH;
+  if(dK==='lin'){ aD=P+bD*Q; Dstr=`P=${aD}-${bD===1?'':bD}Q`; Df=x=>aD-bD*x; intD=F(aD*Q).sub(new Fr(bD*Q*Q,2)); intDtex=`\\left[${aD}Q-${fracTeX(bD,2)==='1'?'':fracTeX(bD,2)}Q^2\\right]_0^{${Q}}`; }
+  if(dK==='quad'){ aD=P+bD*Q*Q; Dstr=`P=${aD}-${bD===1?'':bD}Q^2`; Df=x=>aD-bD*x*x; intD=F(aD*Q).sub(new Fr(bD*Q*Q*Q,3)); intDtex=`\\left[${aD}Q-${cf(fracTeX(bD,3))}Q^3\\right]_0^{${Q}}`; }
+  if(dK==='sqrt'){ aD=P+bD*r; Dstr=`P=${aD}-${bD===1?'':bD}\\sqrt{Q}`; Df=x=>aD-bD*Math.sqrt(x); intD=F(aD*Q).sub(new Fr(2*bD*r*r*r,3)); intDtex=`\\left[${aD}Q-${cf(fracTeX(2*bD,3))}Q^{3/2}\\right]_0^{${Q}}`; }
+  if(dK==='hyp'){ kH=rand(1,3); aD=P*(Q+kH); Dstr=`P=\\dfrac{${aD}}{Q+${kH}}`; Df=x=>aD/(x+kH); }
+  const Sstr = {lin:`P=${poly([[cS,''],[d,'Q']])}`, quad:`P=${poly([[cS,''],[d,'Q^2']])}`, sqrt:`P=${poly([[cS,''],[d,'\\sqrt{Q}']])}`}[sK];
+  const Sf = {lin:x=>cS+d*x, quad:x=>cS+d*x*x, sqrt:x=>cS+d*Math.sqrt(x)}[sK];
+  const intS = {lin:F(cS*Q).add(new Fr(d*Q*Q,2)), quad:F(cS*Q).add(new Fr(d*Q*Q*Q,3)), sqrt:F(cS*Q).add(new Fr(2*d*r*r*r,3))}[sK];
+  const intStex = {lin:`\\left[${cS}Q+${cf(fracTeX(d,2))}Q^2\\right]_0^{${Q}}`, quad:`\\left[${cS}Q+${cf(fracTeX(d,3))}Q^3\\right]_0^{${Q}}`, sqrt:`\\left[${cS}Q+${cf(fracTeX(2*d,3))}Q^{3/2}\\right]_0^{${Q}}`}[sK];
+  const PS = F(P*Q).sub(intS);
+  let csLine, csNum;
+  if(dK==='hyp'){
+    csNum = aD*Math.log((Q+kH)/kH) - P*Q;
+    csLine = `\\[CS=\\int_0^{${Q}}\\frac{${aD}}{Q+${kH}}dQ-${P}\\cdot${Q}=${aD}\\ln\\frac{${Q+kH}}{${kH}}-${P*Q}\\approx ${dec(csNum)}\\]`;
+  } else {
+    CS = intD.sub(P*Q); csNum = CS.num();
+    csLine = `\\[CS=\\int_0^{${Q}}D(Q)\\,dQ-P^*Q^*=${intDtex}-${P*Q}=${intD.tex()}-${P*Q}=${CS.tex()}\\]`;
+  }
+  const Qmax=Q*1.6, Pmax=Math.max(Df(0.0001),Sf(Qmax))*1.08;
+  const curvePts=(f,a,b)=>{ const pts=[]; for(let i=0;i<=60;i++){ const x=a+(b-a)*i/60; pts.push([x,f(x)]); } return pts; };
+  const fig=svgPlot({xr:[0,Qmax], yr:[0,Math.min(Pmax, P*3+10)],
+    polys:[{pts:[[0,P],...curvePts(Df,0,Q).map(([x,y])=>[x,Math.min(y,P*3+10)])], fill:'#4a90d9'},{pts:[[0,P],...curvePts(Sf,0,Q)], fill:'#e67e22'}],
+    curves:[{f:Df,a:0.0001,b:Qmax,color:'#2c6aa8',label:'D',lx:Q*1.3},{f:Sf,a:0,b:Qmax,color:'#c0661a',label:'S',lx:Q*1.3}],
+    dash:[{x:Q,label:`Q*=${Q}`,y2:P},{y:P,label:`P*=${P}`,x2:Q}], xlabel:'Q', ylabel:'P'});
+  const eqText = {
+    lin:`${poly([[cS,''],[d,'Q']])}`, quad:`${poly([[cS,''],[d,'Q^2']])}`, sqrt:`${poly([[cS,''],[d,'\\sqrt{Q}']])}`}[sK];
+  const dRhs = Dstr.replace(/^P=/,'');
+  return {
+    q:`Demand is \\(${Dstr}\\) and supply is \\(${Sstr}\\).
+(a) Find the equilibrium. (Hint: try small whole numbers for \\(Q\\).)
+(b) Compute consumer surplus \\(CS\\) and producer surplus \\(PS\\), and sketch them.`,
+    s:`<strong>Lecture 3 — Integrals: consumer and producer surplus</strong>
+
+(a) Set demand equal to supply: \\(${dRhs}=${eqText}\\). At \\(Q=${Q}\\) both sides equal \\(${P}\\). Demand is strictly decreasing and supply is strictly increasing, so they cross only once: \\(Q^*=${Q}\\), \\(P^*=${P}\\).
+
+(b) \\(CS\\) is the area between the demand curve and the price line; \\(PS\\) is the area between the price line and the supply curve.
+${fig}${csLine}
+\\[PS=P^*Q^*-\\int_0^{${Q}}S(Q)\\,dQ=${P*Q}-${intStex}=${P*Q}-${intS.tex()}=${PS.tex()}\\]
+Total surplus \\(=CS+PS\\approx ${dec(csNum+PS.num())}\\).`,
+    chk:{type:'surplus', D:Df, S:Sf, Q, P, CS:csNum, PS:PS.num()}
+  };
+});
+
+/* Differentiating integrals (Lecture 3 "Useful Ideas") */
+B.L3.push(() => {
+  const kind=rand(1,3);
+  if(kind===1){
+    const n=rand(1,3), k=rand(1,6), a=rand(0,2);
+    return {
+      q:`Let \\(G(t)=\\displaystyle\\int_{${a}}^{t^2}\\left(${poly([[1,xpow(1,n)],[k,'']])}\\right)dx\\). Find \\(G'(t)\\).`,
+      s:`<strong>Lecture 3 — Differentiating an integral</strong>
+
+If \\(F'=f\\), then \\(G(t)=F(t^2)-F(${a})\\). By the chain rule, \\(G'(t)=f(t^2)\\cdot 2t\\):
+\\[G'(t)=\\left(${poly([[1,`t^{${2*n}}`],[k,'']])}\\right)\\cdot 2t=${poly([[2,`t^{${2*n+1}}`],[2*k,'t']])}\\]`
+    };
+  }
+  if(kind===2){
+    const c=rand(1,4);
+    return {
+      q:`Let \\(H(t)=\\displaystyle\\int_0^{${c}}\\left(tx^2+t^2x\\right)dx\\). Find \\(H'(t)\\) in two ways: by differentiating under the integral sign, and by integrating first.`,
+      s:`<strong>Lecture 3 — Differentiating under the integral sign</strong>
+
+Way 1: \\(H'(t)=\\displaystyle\\int_0^{${c}}\\frac{\\partial}{\\partial t}(tx^2+t^2x)\\,dx=\\int_0^{${c}}(x^2+2tx)\\,dx=${fracTeX(c*c*c,3)}+${c*c===1?'':c*c}t\\).
+
+Way 2: \\(H(t)=t\\cdot${fracTeX(c*c*c,3)}+t^2\\cdot${fracTeX(c*c,2)}\\), so \\(H'(t)=${fracTeX(c*c*c,3)}+${c*c===1?'':c*c}t\\) ✓`
+    };
+  }
+  const k=rand(1,5), b=rand(3,8);
+  return {
+    q:`Let \\(K(t)=\\displaystyle\\int_t^{${b}}\\left(x^2+${k}\\right)dx\\). Find \\(K'(t)\\) and \\(K'(1)\\).`,
+    s:`<strong>Lecture 3 — Differentiating an integral</strong>
+
+The lower limit enters with a minus sign: \\(\\frac{d}{da}\\int_a^b f=-f(a)\\). So
+\\[K'(t)=-(t^2+${k}),\\qquad K'(1)=${-(1+k)}\\]`
+  };
+});
+
+/* Volumes by slicing: cone, square / triangular pyramid, sphere (Lecture 3 "Examples") */
+B.L3.push(() => {
+  const kind=rand(1,5);
+  const H=rand(2,9);
+  let shape, base, baseTeX, V, Vtex, area, lo=0, hi=H, extra='';
+  if(kind===1){ const R=rand(1,6); shape=`a cone with base radius \\(${R}\\) and height \\(${H}\\)`; baseTeX=`\\pi\\cdot${R}^2`; area=z=>Math.PI*R*R*(z/H)**2; V=Math.PI*R*R*H/3; Vtex=piTeX(new Fr(R*R*H,3)); }
+  if(kind===2){ const a=rand(2,8); shape=`a pyramid with a square base of side \\(${a}\\) and height \\(${H}\\)`; baseTeX=`${a}^2`; area=z=>a*a*(z/H)**2; V=a*a*H/3; Vtex=fracTeX(a*a*H,3); }
+  if(kind===3){ const a=rand(2,8), b=rand(2,8); shape=`a pyramid whose base is a right triangle with legs \\(${a}\\) and \\(${b}\\), and whose height is \\(${H}\\)`; baseTeX=`\\frac{${a}\\cdot${b}}{2}`; area=z=>a*b/2*(z/H)**2; V=a*b*H/6; Vtex=fracTeX(a*b*H,6); }
+  if(kind===4){ const s=rand(2,6); shape=`a pyramid whose base is an equilateral triangle with side \\(${s}\\), and whose height is \\(${H}\\)`; baseTeX=`\\frac{\\sqrt3}{4}\\cdot${s}^2`; area=z=>Math.sqrt(3)/4*s*s*(z/H)**2; V=Math.sqrt(3)*s*s*H/12; Vtex=sqTeX(new Fr(s*s*H,12),3); }
+  if(kind===5){
+    const R=rand(1,6);
+    return {
+      q:`Using integration (slice by planes), find the volume of a ball of radius \\(${R}\\).`,
+      s:`<strong>Lecture 3 — Volumes by slicing</strong>
+
+Centre the ball at the origin. The slice at \\(x\\in[-${R},${R}]\\) is a disk of radius \\(\\sqrt{${R*R}-x^2}\\), with area \\(\\pi(${R*R}-x^2)\\):
+\\[V=\\int_{-${R}}^{${R}}\\pi(${R*R}-x^2)\\,dx=\\pi\\left[${R*R===1?'':R*R}x-\\frac{x^3}{3}\\right]_{-${R}}^{${R}}=\\pi\\left(${fracTeX(2*R*R*R,3)}+${fracTeX(2*R*R*R,3)}\\right)=${piTeX(new Fr(4*R*R*R,3))}\\]
+which matches \\(\\frac43\\pi R^3\\).`,
+      chk:{type:'vol', A:x=>Math.PI*(R*R-x*x), lo:-R, hi:R, V:4*Math.PI*R*R*R/3}
+    };
+  }
+  return {
+    q:`Using integration (slice parallel to the base), find the volume of ${shape}.`,
+    s:`<strong>Lecture 3 — Volumes by slicing</strong>
+
+Measure \\(z\\) from the apex (\\(z=0\\)) down to the base (\\(z=${H}\\)). The slice at depth \\(z\\) has the shape of the base, scaled by \\(\\frac{z}{${H}}\\) in every direction. Its area is therefore the base area times \\(\\left(\\frac{z}{${H}}\\right)^2\\).
+
+Base area \\(=${baseTeX}\\). So
+\\[V=\\int_0^{${H}}${baseTeX}\\cdot\\frac{z^2}{${H*H}}\\,dz=${baseTeX}\\cdot\\frac{1}{${H*H}}\\cdot\\frac{${H}^3}{3}=${baseTeX}\\cdot\\frac{${H}}{3}=${Vtex}\\]
+This is the general rule: <strong>volume = base area × height / 3</strong> for any cone or pyramid.`,
+    chk:{type:'vol', A:area, lo, hi, V}
+  };
+});
+
+// =========================
+// L4 — NEW
+// =========================
+
+/* Geometric optimisation with a constraint: many shapes (PS4 style) */
+B.L4.push(() => {
+  const kind=rand(1,11);
+  const k=rand(1,4);
+  const pi='\\pi';
+  let q,s,chk;
+  if(kind===1){ // open-top box, square base, fixed material S=3k^2 -> max volume
+    const S=3*k*k;
+    q=`An open-top box with a square base is made from \\(${S}\\) m² of material. Which dimensions maximise its volume?`;
+    s=`Let the base be \\(x\\times x\\) and the height \\(h\\). Material: \\(x^2+4xh=${S}\\), so \\(h=\\frac{${S}-x^2}{4x}\\).
+\\[V(x)=x^2h=\\frac{x(${S}-x^2)}{4},\\qquad V'(x)=\\frac{${S}-3x^2}{4}=0\\implies x=${k}\\]
+\\(V''(x)=-\\frac{3x}{2}<0\\), so this is a maximum (and \\(V=0\\) at \\(x=0\\) and at \\(x=\\sqrt{${S}}\\)).
+
+Base \\(${k}\\times${k}\\), height \\(h=${fracTeX(k,2)}\\), volume \\(${fracTeX(k*k*k,2)}\\) m³. The height is half the base side.`;
+    chk={f:x=>x*(S-x*x)/4, lo:0, hi:Math.sqrt(S), x:k, sense:'max'};
+  } else if(kind===2){ // open-top square box, fixed volume V=4m^3 -> min material
+    const V=4*k*k*k;
+    q=`An open-top box with a square base must hold \\(${V}\\) m³. Which dimensions minimise the material used?`;
+    s=`Base \\(x\\times x\\), height \\(h=\\frac{${V}}{x^2}\\). Material:
+\\[A(x)=x^2+4xh=x^2+\\frac{${4*V}}{x},\\qquad A'(x)=2x-\\frac{${4*V}}{x^2}=0\\implies x^3=${2*V}\\implies x=${2*k}\\]
+\\(A''(x)=2+\\frac{${8*V}}{x^3}>0\\), so this is a minimum. (\\(A\\to\\infty\\) as \\(x\\to0\\) or \\(x\\to\\infty\\).)
+
+Base \\(${2*k}\\times${2*k}\\), height \\(${k}\\), material \\(${12*k*k}\\) m².`;
+    chk={f:x=>x*x+4*V/x, lo:0.05, hi:20*k, x:2*k, sense:'min'};
+  } else if(kind===3){ // closed cylinder, V=2πk^3, min surface
+    q=`A closed cylindrical can must hold \\(${cf(String(2*k*k*k))}${pi}\\) litres (dm³). Which radius and height minimise the total surface area (including top and bottom)?`;
+    s=`Volume: \\(${pi} r^2h=${2*k*k*k}${pi}\\), so \\(h=\\frac{${2*k*k*k}}{r^2}\\).
+\\[S(r)=2${pi} r^2+2${pi} rh=2${pi} r^2+\\frac{${4*k*k*k}${pi}}{r},\\qquad S'(r)=4${pi} r-\\frac{${4*k*k*k}${pi}}{r^2}=0\\implies r^3=${k*k*k}\\implies r=${k}\\]
+\\(S''>0\\), so this is a minimum. Then \\(h=${2*k}=2r\\): the can is as tall as it is wide. \\(S=${cf(String(6*k*k))}${pi}\\).`;
+    chk={f:r=>2*Math.PI*r*r+4*k*k*k*Math.PI/r, lo:0.05, hi:10*k, x:k, sense:'min'};
+  } else if(kind===4){ // open cylinder (cup), V=πk^3
+    q=`An open cylindrical cup (no lid) must hold \\(${cf(String(k*k*k))}${pi}\\) cm³. Which radius and height minimise the material?`;
+    s=`\\(h=\\frac{${k*k*k}}{r^2}\\), so the material is
+\\[S(r)=${pi} r^2+2${pi} rh=${pi} r^2+\\frac{${2*k*k*k}${pi}}{r},\\qquad S'(r)=2${pi} r-\\frac{${2*k*k*k}${pi}}{r^2}=0\\implies r=${k}\\]
+\\(S''>0\\): a minimum. \\(h=${k}=r\\), and \\(S=${cf(String(3*k*k))}${pi}\\). Without a lid, the optimal cup is half as tall (relative to its width) as the closed can.`;
+    chk={f:r=>Math.PI*r*r+2*k*k*k*Math.PI/r, lo:0.05, hi:10*k, x:k, sense:'min'};
+  } else if(kind===5){ // cone with fixed slant height l=3k
+    const l=3*k;
+    q=`A cone has slant height \\(${l}\\) (the distance from the apex to the edge of the base). Which height maximises its volume?`;
+    s=`Radius and height satisfy \\(r^2+h^2=${l*l}\\).
+\\[V(h)=\\frac{${pi}}{3}r^2h=\\frac{${pi}}{3}(${l*l}-h^2)h,\\qquad V'(h)=\\frac{${pi}}{3}(${l*l}-3h^2)=0\\implies h=${sqTeX(k,3)}\\]
+\\(V''(h)=-2${pi} h<0\\): a maximum. Then \\(r=\\sqrt{${l*l}-${3*k*k}}=${sqTeX(k,6)}\\) and \\(V=\\frac{${pi}}{3}\\cdot${6*k*k}\\cdot${sqTeX(k,3)}=${sqTeX(2*k*k*k,3)}\\,${pi}\\).`;
+    chk={f:h=>Math.PI/3*(l*l-h*h)*h, lo:0, hi:l, x:k*Math.sqrt(3), sense:'max'};
+  } else if(kind===6){ // cylinder in sphere R=3k
+    const R=3*k;
+    q=`Find the cylinder of largest volume that fits inside a ball of radius \\(${R}\\).`;
+    s=`Let the cylinder have radius \\(r\\) and height \\(2y\\), centred in the ball. Its rim touches the sphere: \\(r^2+y^2=${R*R}\\).
+\\[V(y)=${pi}r^2\\cdot2y=2${pi}(${R*R}-y^2)y,\\qquad V'(y)=2${pi}(${R*R}-3y^2)=0\\implies y=${sqTeX(k,3)}\\]
+\\(V''<0\\): a maximum. Height \\(2y=${sqTeX(2*k,3)}\\), radius \\(r=\\sqrt{${R*R}-${3*k*k}}=${sqTeX(k,6)}\\), volume \\(${sqTeX(12*k*k*k,3)}\\,${pi}\\).`;
+    chk={f:y=>2*Math.PI*(R*R-y*y)*y, lo:0, hi:R, x:k*Math.sqrt(3), sense:'max'};
+  } else if(kind===7){ // cone in sphere R=3k
+    const R=3*k;
+    q=`Find the cone of largest volume that fits inside a ball of radius \\(${R}\\) (apex on the sphere, base a circle on the sphere).`;
+    s=`Put the apex at the top of the ball and the base a distance \\(y\\) below the centre. Height \\(h=${R}+y\\); base radius \\(r^2=${R*R}-y^2\\).
+\\[V(y)=\\frac{${pi}}{3}(${R*R}-y^2)(${R}+y)\\]
+\\[V'(y)=\\frac{${pi}}{3}\\left[-2y(${R}+y)+(${R*R}-y^2)\\right]=\\frac{${pi}}{3}(${R}+y)(${R}-3y)=0\\implies y=${k}\\]
+\\(V'\\) changes sign from + to − at \\(y=${k}\\), so this is a maximum. Height \\(h=${4*k}=\\frac43R\\), radius \\(r=\\sqrt{${R*R-k*k}}=${sqTeX(2*k,2)}\\), and \\(V=\\frac{${pi}}{3}\\cdot${8*k*k}\\cdot${4*k}=${piTeX(new Fr(32*k*k*k,3))}\\).`;
+    chk={f:y=>Math.PI/3*(R*R-y*y)*(R+y), lo:-R, hi:R, x:k, sense:'max'};
+  } else if(kind===8){ // rectangle in semicircle
+    const R=rand(2,8);
+    q=`A rectangle has its base on the diameter of a semicircle of radius \\(${R}\\) and its top corners on the arc. Find the largest possible area.`;
+    s=`Let the base be \\([-x,x]\\). The height is \\(\\sqrt{${R*R}-x^2}\\), so \\(A(x)=2x\\sqrt{${R*R}-x^2}\\). Maximise \\(A^2\\) instead (same maximiser, easier):
+\\[A^2=4x^2(${R*R}-x^2)=4(${R*R}x^2-x^4),\\qquad \\frac{d}{dx}A^2=4(${2*R*R}x-4x^3)=0\\implies x^2=${fracTeX(R*R,2)}\\]
+So \\(x=\\frac{${R}}{\\sqrt2}\\), the height is also \\(\\frac{${R}}{\\sqrt2}\\), and the maximal area is \\(A=2\\cdot${fracTeX(R*R,2)}=${R*R}\\). (\\(A=0\\) at both endpoints.)`;
+    chk={f:x=>2*x*Math.sqrt(R*R-x*x), lo:0, hi:R, x:R/Math.SQRT2, sense:'max'};
+  } else if(kind===9){ // rectangle under parabola
+    const a=3*k*k;
+    q=`A rectangle has its base on the \\(x\\)-axis and its top corners on the parabola \\(y=${a}-x^2\\). Find the largest possible area.`;
+    s=`By symmetry take corners at \\(\\pm x\\): \\(A(x)=2x(${a}-x^2)\\) for \\(x\\in[0,${sqTeX(k,3)}]\\).
+\\[A'(x)=${2*a}-6x^2=0\\implies x=${k},\\qquad A''(x)=-12x<0\\]
+Width \\(${2*k}\\), height \\(${a-k*k}\\), maximal area \\(${4*k*k*k}\\).`;
+    chk={f:x=>2*x*(a-x*x), lo:0, hi:Math.sqrt(a), x:k, sense:'max'};
+  } else if(kind===10){ // Norman window
+    const P=rand(4,20);
+    q=`A Norman window is a rectangle topped by a semicircle. Its total perimeter (including the curved part) is \\(${P}\\) m. Which dimensions let in the most light (maximise area)?`;
+    s=`Let the semicircle have radius \\(r\\), so the rectangle is \\(2r\\) wide and \\(h\\) tall. Perimeter: \\(2r+2h+${pi} r=${P}\\), so \\(h=\\frac{${P}-(2+${pi})r}{2}\\).
+\\[A(r)=2rh+\\frac{${pi} r^2}{2}=${P}r-\\left(2+\\frac{${pi}}{2}\\right)r^2,\\qquad A'(r)=${P}-(4+${pi})r=0\\implies r=\\frac{${P}}{4+${pi}}\\approx${dec(P/(4+Math.PI))}\\]
+\\(A''<0\\): a maximum. Then \\(h=\\frac{${P}}{4+${pi}}=r\\), and \\(A=\\frac{${P*P}}{2(4+${pi})}\\approx${dec(P*P/(2*(4+Math.PI)))}\\) m².`;
+    chk={f:r=>P*r-(2+Math.PI/2)*r*r, lo:0, hi:P/(2+Math.PI), x:P/(4+Math.PI), sense:'max'};
+  } else { // gutter
+    const W=4*rand(3,10);
+    q=`A flat metal sheet \\(${W}\\) cm wide is bent up at both edges to form a rain gutter with a rectangular cross-section. How high should the sides be to maximise the cross-sectional area?`;
+    s=`Bend up \\(x\\) cm on each side: the area is \\(A(x)=x(${W}-2x)\\) for \\(x\\in[0,${W/2}]\\).
+\\[A'(x)=${W}-4x=0\\implies x=${W/4},\\qquad A''=-4<0\\]
+Sides \\(${W/4}\\) cm, bottom \\(${W/2}\\) cm, area \\(${W*W/8}\\) cm².`;
+    chk={f:x=>x*(W-2*x), lo:0, hi:W/2, x:W/4, sense:'max'};
+  }
+  return { q, s:`<strong>Lecture 4 — Optimisation with a constraint (substitute and optimise)</strong>
+
+${s}`, chk:Object.assign({type:'opt'},chk) };
+});
+
+/* Extremes of a cubic on a closed interval vs open interval (Lecture 4 "Constraints") */
+B.L4.push(() => {
+  const a=rand(1,3), c=rand(-5,5);
+  let lo,hi; do{ lo=rand(-5,1); hi=rand(lo+2,5); }while(hi-lo>7);
+  const f=x=>x*x*x-3*a*a*x+c;
+  const crit=[-a,a].filter(x=>x>lo&&x<hi);
+  const cands=[lo,...crit,hi];
+  const vals=cands.map(f);
+  const mx=Math.max(...vals), mn=Math.min(...vals);
+  const at=v=>cands.filter((x,i)=>vals[i]===v);
+  const interiorMax = at(mx).some(x=>x>lo&&x<hi), interiorMin = at(mn).some(x=>x>lo&&x<hi);
+  return {
+    q:`Let \\(f(x)=${poly([[1,'x^3'],[-3*a*a,'x'],[c,'']])}\\).
+(a) Find the maximum and minimum of \\(f\\) on \\([${lo},${hi}]\\).
+(b) Does \\(f\\) have a maximum and a minimum on the <em>open</em> interval \\((${lo},${hi})\\)?`,
+    s:`<strong>Lecture 4 — Optimisation on an interval (corner vs interior solutions)</strong>
+
+(a) A maximum and a minimum exist by Weierstrass (continuous \\(f\\), closed and bounded interval). Candidates are the interior critical points and the endpoints.
+
+\\(f'(x)=3x^2-${3*a*a}=0\\implies x=\\pm${a}\\). ${crit.length?`Inside the interval: \\(${crit.join(',\\ ')}\\).`:'Neither lies inside the interval.'}
+
+\\[${cands.map((x,i)=>`f(${x})=${vals[i]}`).join(',\\quad ')}\\]
+
+Maximum \\(${mx}\\) at \\(x=${at(mx).join(',\\ ')}\\); minimum \\(${mn}\\) at \\(x=${at(mn).join(',\\ ')}\\).
+
+(b) On \\((${lo},${hi})\\) the endpoints are excluded. ${interiorMax?`The maximum is reached at an interior point, so it still exists.`:`The maximum was reached only at an endpoint. Near it, \\(f\\) gets arbitrarily close to \\(${mx}\\) without reaching it, so there is <strong>no maximum</strong>.`} ${interiorMin?`The minimum is attained in the interior, so it still exists.`:`The minimum was only at an endpoint, so there is <strong>no minimum</strong> on the open interval.`} (Weierstrass needs a closed interval.)`,
+    chk:{type:'ext', f, lo, hi, max:mx, min:mn}
+  };
+});
+
+/* Two-product firm: unconstrained 2-variable optimisation */
+B.L4.push(() => {
+  let a,b,c,q1,q2;
+  do{ a=rand(1,4); c=rand(1,4); b=rand(-2,3); }while(4*a*c-b*b<=0);
+  do{ q1=rand(1,8); q2=rand(1,8); }while(2*a*q1+b*q2<=0 || b*q1+2*c*q2<=0);
+  const p1=2*a*q1+b*q2, p2=b*q1+2*c*q2;
+  const prof=p1*q1+p2*q2-(a*q1*q1+b*q1*q2+c*q2*q2);
+  const cost=poly([[a,'q_1^2'],[b,'q_1q_2'],[c,'q_2^2']]);
+  return {
+    q:`A firm sells two products at fixed prices \\(p_1=${p1}\\) and \\(p_2=${p2}\\). The cost of producing \\(q_1\\) and \\(q_2\\) is \\(C=${cost}\\). Find the profit-maximising quantities and verify the second-order conditions.`,
+    s:`<strong>Lecture 4 — Multidimensional optimisation</strong>
+
+\\(\\pi(q_1,q_2)=${lead(p1,'q_1')}+${lead(p2,'q_2')}-(${cost})\\).
+
+FOC:
+\\[\\pi'_{q_1}=${p1}-${2*a}q_1${term(-b,'q_2')}=0,\\qquad \\pi'_{q_2}=${p2}${term(-b,'q_1')}-${2*c}q_2=0\\]
+Solving gives \\(q_1^*=${q1}\\), \\(q_2^*=${q2}\\).
+
+Hessian:
+\\[H=${pmat([[-2*a,-b],[-b,-2*c]])},\\quad \\pi''_{11}=${-2*a}<0,\\quad \\det H=${4*a*c-b*b}>0\\]
+So \\(H\\) is negative definite: \\(\\pi\\) is strictly concave and \\((${q1},${q2})\\) is the global maximum.${b!==0?` (The cross term \\(${lead(b,'q_1q_2')}\\) means the products are ${b>0?'cost substitutes: making more of one raises the marginal cost of the other':'cost complements: making more of one lowers the marginal cost of the other'}.)`:''}
+
+Maximal profit: \\(\\pi^*=${prof}\\).`,
+    chk:{type:'grid2', f:(x,y)=>p1*x+p2*y-(a*x*x+b*x*y+c*y*y), box:[0,2*q1+4,0,2*q2+4], x:[q1,q2], sense:'max'}
+  };
+});
+
+/* Proof-style questions from the Lecture 4 slides */
+B.L4.push(() => {
+  const kind=rand(1,4);
+  if(kind===1){
+    const a=rand(-3,3), bw=rand(1,4); let c; do{ c=rand(-3,5); }while(c===a);
+    const xs=new Fr(a+bw*c,1+bw);
+    return {
+      q:`Prove: for two convex functions of one variable, the point that minimises their sum lies between the points that minimise each of them. Illustrate with \\(f(x)=(x${term(-a,'')})^2\\) and \\(g(x)=${bw===1?'':bw}(x${term(-c,'')})^2\\).`,
+      s:`<strong>Lecture 4 — Convex analysis</strong>
+
+Let \\(f\\) be minimised at \\(a\\) and \\(g\\) at \\(c\\), with \\(a\\le c\\) (both differentiable and convex). For \\(x\\lt a\\): convexity means \\(f'\\) is non-decreasing, so \\(f'(x)\\le f'(a)=0\\) and \\(g'(x)\\le g'(c)=0\\). Hence \\((f+g)'(x)\\le0\\): the sum is non-increasing to the left of \\(a\\). Symmetrically, it is non-decreasing to the right of \\(c\\). So a minimiser of \\(f+g\\) can be found in \\([a,c]\\).
+
+Illustration: \\(f\\) is minimised at \\(${a}\\) and \\(g\\) at \\(${c}\\).
+\\[(f+g)'(x)=2(x${term(-a,'')})+${2*bw}(x${term(-c,'')})=0\\implies x^*=\\frac{${a}+${bw}\\cdot${paren(c)}}{${1+bw}}=${xs.tex()}\\]
+which is a weighted average of \\(${a}\\) and \\(${c}\\), so it lies between them ✓`
+    };
+  }
+  if(kind===2) return {
+    q:`Prove: the sum of two convex functions is convex. (Use the definition \\(f(tx+(1-t)y)\\le tf(x)+(1-t)f(y)\\).)`,
+    s:`<strong>Lecture 4 — Convex analysis</strong>
+
+Let \\(h=f+g\\) with \\(f,g\\) convex. For any \\(x,y\\) and \\(t\\in[0,1]\\):
+\\[h(tx+(1-t)y)=f(tx+(1-t)y)+g(tx+(1-t)y)\\le tf(x)+(1-t)f(y)+tg(x)+(1-t)g(y)=t\\,h(x)+(1-t)\\,h(y)\\]
+So \\(h\\) is convex. The same argument with \\(\\ge\\) shows that a sum of concave functions is concave.`
+  };
+  if(kind===3) return {
+    q:`Prove: if \\(f\\) is differentiable and \\(x^*\\) is an interior minimum, then \\(f'(x^*)=0\\).`,
+    s:`<strong>Lecture 4 — Optimisation theorems</strong>
+
+Since \\(x^*\\) is a minimum, \\(f(x^*+\\Delta)-f(x^*)\\ge0\\) for all small \\(\\Delta\\).
+
+For \\(\\Delta>0\\): \\(\\frac{f(x^*+\\Delta)-f(x^*)}{\\Delta}\\ge0\\). Letting \\(\\Delta\\downarrow0\\) gives \\(f'(x^*)\\ge0\\).
+For \\(\\Delta\\lt 0\\): the quotient is \\(\\le0\\). Letting \\(\\Delta\\uparrow0\\) gives \\(f'(x^*)\\le0\\).
+
+Hence \\(f'(x^*)=0\\). "Interior" matters: at an endpoint only one side is available, and the derivative need not be zero.`
+  };
+  const n=random([4,6,8]);
+  return {
+    q:`Show that \\(f(x)=x^{${n}}\\) is convex even though \\(f''(0)=0\\), and that \\(x=0\\) is its unique minimum.`,
+    s:`<strong>Lecture 4 — Convex analysis</strong>
+
+\\(f''(x)=${n*(n-1)}x^{${n-2}}\\ge0\\) everywhere, with equality only at \\(x=0\\). A function with \\(f''\\ge0\\) on an interval is convex (its derivative is non-decreasing), so \\(f\\) is convex. A zero second derivative at a single point does not break convexity.
+
+Minimum: \\(f'(x)=${n}x^{${n-1}}=0\\) only at \\(x=0\\), and \\(f(x)=x^{${n}}>0=f(0)\\) for \\(x\\neq0\\). Alternatively, the first non-zero derivative at 0 is \\(f^{(${n})}(0)=${n}!>0\\), of even order, so it is a minimum.`
+  };
+});
+
+// =========================
+// L5 — NEW
+// =========================
+
+/* Inequality constraint / KKT (Lecture 5 example) */
+B.L5.push(() => {
+  const a=rand(1,6), c=rand(2,14);
+  const binds = 2*a > c;
+  const fT=`-(x${term(-a,'')})^2-(y-x)^2`;
+  let body, x, y;
+  if(!binds){
+    x=F(a); y=F(a);
+    body=`Try \\(\\lambda=0\\) (constraint slack): the FOC give \\(x=y=${a}\\). Check feasibility: \\(${a}+${a}=${2*a}\\le${c}\\) ✓. So the constraint does <strong>not</strong> bind, and \\(\\lambda=0\\).`;
+  } else {
+    x=new Fr(a+2*c,5); y=new Fr(3*c-a,5);
+    const lam=new Fr(2*(2*a-c),5);
+    body=`Try \\(\\lambda=0\\): the FOC give \\(x=y=${a}\\), but \\(${2*a}>${c}\\) is infeasible. So the constraint <strong>binds</strong>: \\(x+y=${c}\\).
+
+From \\(\\mathcal{L}'_y=0\\): \\(\\lambda=-2(y-x)\\). Substitute into \\(\\mathcal{L}'_x=0\\): \\(-2(x${term(-a,'')})+2(y-x)=\\lambda=-2(y-x)\\), so \\(x${term(-a,'')}=2(y-x)\\). With \\(y=${c}-x\\):
+\\[x${term(-a,'')}=2(${c}-2x)\\implies 5x=${a+2*c}\\implies x^*=${x.tex()},\\quad y^*=${y.tex()}\\]
+\\(\\lambda=2(x^*-y^*)=${lam.tex()}>0\\) ✓. A positive multiplier is consistent with a binding \\(\\le\\) constraint.`;
+  }
+  return {
+    q:`Solve \\(\\displaystyle\\max_{x,y}\\ ${fT}\\) subject to \\(x+y\\le ${c}\\).`,
+    s:`<strong>Lecture 5 — Inequality constraints (complementary slackness)</strong>
+
+\\(\\mathcal{L}=${fT}-\\lambda(x+y-${c})\\), with \\(\\lambda\\ge0\\) and \\(\\lambda(x+y-${c})=0\\).
+\\[\\mathcal{L}'_x=-2(x${term(-a,'')})+2(y-x)-\\lambda=0,\\qquad \\mathcal{L}'_y=-2(y-x)-\\lambda=0\\]
+
+${body}
+
+The objective is concave (a negative sum of squares of linear functions) and the constraint is linear, so this point is the maximum: \\((x^*,y^*)=${pt(x,y)}\\).`,
+    chk:{type:'grid2', f:(X,Y)=>-((X-a)**2)-((Y-X)**2), feas:(X,Y)=>X+Y<=c+1e-9, box:[-5,15,-5,15], x:[x.num(),y.num()], sense:'max'}
+  };
+});
+
+/* Bordered Hessian check (Fall Exam style) */
+B.L5.push(() => {
+  const k=rand(0,4), p1=rand(1,5), p2=rand(1,5);
+  const m=p1*k+2*p1*rand(1,8);
+  const lam=new Fr(m+p1*k,2*p1*p2), x=new Fr(m-p1*k,2*p1), y=new Fr(m+p1*k,2*p2);
+  const u=k===0?'xy':`(x+${k})y`;
+  return {
+    q:`Maximise \\(u(x,y)=${u}\\) subject to \\(${linx(p1)}+${liny(p2)}=${m}\\). Verify that you found a maximum using the bordered Hessian.`,
+    s:`<strong>Lecture 5 — Lagrangean and the bordered Hessian</strong>
+
+\\(\\mathcal{L}=${u}-\\lambda(${linx(p1)}+${liny(p2)}-${m})\\).
+\\[\\mathcal{L}'_x=y-${p1}\\lambda=0,\\qquad \\mathcal{L}'_y=${k===0?'x':`x+${k}`}-${p2}\\lambda=0\\]
+So \\(y=${p1}\\lambda\\) and \\(x=${p2}\\lambda${k?`-${k}`:''}\\). Substitute into the budget: \\(${p1}(${p2}\\lambda${k?`-${k}`:''})+${p2}\\cdot${p1}\\lambda=${m}\\), so \\(\\lambda=${lam.tex()}\\).
+\\[x^*=${x.tex()},\\qquad y^*=${y.tex()}\\]
+
+Bordered Hessian (second derivatives of \\(u\\), bordered by the constraint gradient):
+\\[\\bar H=${pmat([[0,p1,p2],[p1,0,1],[p2,1,0]])},\\qquad \\det\\bar H=2\\cdot${p1}\\cdot${p2}=${2*p1*p2}>0\\]
+With 2 variables and 1 constraint, \\(\\det\\bar H>0\\) means a local <strong>maximum</strong> ✓`,
+    chk:{type:'line', f:t=>(t+k)*((m-p1*t)/p2), lo:0, hi:m/p1, x:x.num(), sense:'max'}
+  };
+});
+
+/* Indirect utility, λ as marginal utility of income, Roy's identity (envelope theorem) */
+B.L5.push(() => {
+  const a=rand(1,4), b=rand(1,4), S=a+b;
+  const aS=a===1?'':a, bS=b===1?'':b;
+  return {
+    q:`A consumer maximises \\(u=${aS}\\ln x+${bS}\\ln y\\) subject to \\(p_xx+p_yy=m\\).
+(a) Find demands and the multiplier \\(\\lambda\\).
+(b) Find the indirect utility \\(V(p_x,p_y,m)=u(x^*,y^*)\\).
+(c) Verify the envelope theorem: \\(\\partial V/\\partial m=\\lambda\\) and \\(\\partial V/\\partial p_x=-\\lambda x^*\\). Deduce Roy's identity, \\(x^*=-\\frac{\\partial V/\\partial p_x}{\\partial V/\\partial m}\\).`,
+    s:`<strong>Lecture 5 — Envelope theorem</strong>
+
+(a) FOC: \\(\\frac{${a}}{x}=\\lambda p_x\\) and \\(\\frac{${b}}{y}=\\lambda p_y\\), so \\(p_xx=\\frac{${a}}{\\lambda}\\) and \\(p_yy=\\frac{${b}}{\\lambda}\\). The budget gives \\(\\frac{${S}}{\\lambda}=m\\):
+\\[\\lambda=\\frac{${S}}{m},\\qquad x^*=\\frac{${a}m}{${S}p_x},\\qquad y^*=\\frac{${b}m}{${S}p_y}\\]
+
+(b) \\(V=${aS}\\ln\\frac{${a}m}{${S}p_x}+${bS}\\ln\\frac{${b}m}{${S}p_y}=${S}\\ln m-${aS}\\ln p_x-${bS}\\ln p_y+\\text{const}\\).
+
+(c) \\(\\frac{\\partial V}{\\partial m}=\\frac{${S}}{m}=\\lambda\\) ✓. \\(\\lambda\\) is the value of one more unit of income.
+
+\\(\\frac{\\partial V}{\\partial p_x}=-\\frac{${a}}{p_x}\\), and \\(-\\lambda x^*=-\\frac{${S}}{m}\\cdot\\frac{${a}m}{${S}p_x}=-\\frac{${a}}{p_x}\\) ✓. (The envelope theorem: differentiate \\(\\mathcal{L}\\) with respect to \\(p_x\\) holding the choices fixed, giving \\(-\\lambda x\\).)
+
+Dividing: \\(-\\frac{\\partial V/\\partial p_x}{\\partial V/\\partial m}=\\frac{${a}/p_x}{${S}/m}=\\frac{${a}m}{${S}p_x}=x^*\\) ✓`
+  };
+});
+
+/* Time allocation L + S = T (Lecture 5 "Optimal Time Allocation Choice") */
+B.L5.push(() => {
+  const T=random([8,10,12,16,24]);
+  const kind=rand(1,3);
+  let u, body, chk;
+  if(kind===1){
+    u='L+S^2';
+    body=`Substituting gives \\(g(S)=(${T}-S)+S^2\\) on \\([0,${T}]\\). \\(g'(S)=-1+2S=0\\) at \\(S=\\frac12\\), but \\(g''=2>0\\), so that point is a <strong>minimum</strong>!
+
+The maximum is therefore at a corner: \\(g(0)=${T}\\) and \\(g(${T})=${T*T}\\). Best: \\(S^*=${T}\\), \\(L^*=0\\), with \\(u=${T*T}\\).
+
+Lesson: when \\(u\\) is convex along the constraint, the FOC point is not the answer. Check the corners.`;
+    chk={f:S=>(T-S)+S*S, lo:0, hi:T, x:T, sense:'max'};
+  } else if(kind===2){
+    const [al,alT,beT]=random([[1/3,'\\frac13','\\frac23'],[2/3,'\\frac23','\\frac13'],[1/4,'\\frac14','\\frac34'],[1/2,'\\frac12','\\frac12']]);
+    u=`L^{${alT}}S^{${beT}}`;
+    const Lst=new Fr(Math.round(al*12)*T,12), Sst=F(T).sub(Lst);
+    body=`Take logs (a monotone transformation): \\(\\max\\ ${alT}\\ln L+${beT}\\ln S\\). Substituting \\(L=${T}-S\\):
+\\[\\frac{d}{dS}:\\ -\\frac{${alT}}{${T}-S}+\\frac{${beT}}{S}=0\\implies S^*=${beT}\\cdot${T}=${Sst.tex()},\\quad L^*=${Lst.tex()}\\]
+The objective is concave and \\(u=0\\) at the corners, so this interior point is the maximum: each activity gets time in proportion to its exponent.`;
+    chk={f:S=>Math.pow(T-S,al)*Math.pow(S,1-al), lo:0, hi:T, x:Sst.num(), sense:'max'};
+  } else {
+    const c=rand(2,3);
+    u=`\\sqrt{L}+${c}\\sqrt{S}`;
+    const Lst=new Fr(T,1+c*c), Sst=new Fr(c*c*T,1+c*c);
+    body=`FOC along \\(L=${T}-S\\): \\(-\\frac{1}{2\\sqrt{${T}-S}}+\\frac{${c}}{2\\sqrt{S}}=0\\implies \\sqrt S=${c}\\sqrt{L}\\implies S=${c*c}L\\).
+\\[L^*=\\frac{${T}}{${1+c*c}}=${Lst.tex()},\\qquad S^*=${Sst.tex()}\\]
+\\(\\sqrt{\\cdot}\\) is concave, so this is the maximum. (At a corner, the marginal utility of the missing activity is infinite.)`;
+    chk={f:S=>Math.sqrt(T-S)+c*Math.sqrt(S), lo:0, hi:T, x:Sst.num(), sense:'max'};
+  }
+  return {
+    q:`You split \\(${T}\\) hours between leisure \\(L\\ge0\\) and study \\(S\\ge0\\), with \\(L+S=${T}\\). Your utility is \\(u(L,S)=${u}\\). How do you allocate your time?`,
+    s:`<strong>Lecture 5 — Optimal time allocation</strong>
+
+Both activities raise utility, so you use all \\(${T}\\) hours: \\(L=${T}-S\\), and you maximise over \\(S\\in[0,${T}]\\).
+
+${body}`,
+    chk:Object.assign({type:'opt'},chk)
+  };
+});
+
+/* CES demand with rho = -1 (Lecture 5 "For now") */
+B.L5.push(() => {
+  let s,t; do{ s=rand(1,3); t=rand(1,3); }while(s===t);
+  const kk=rand(1,2), p1=kk*s*s, p2=kk*t*t, m=kk*s*t*(s+t)*rand(1,4);
+  const x=new Fr(m,kk*s*(s+t)), y=new Fr(m,kk*t*(s+t));
+  return {
+    q:`Maximise the CES utility \\(u(x,y)=\\left(x^{-1}+y^{-1}\\right)^{-1}\\) (i.e. \\(\\rho=-1\\)) subject to \\(${linx(p1)}+${liny(p2)}=${m}\\).`,
+    s:`<strong>Lecture 5 — CES demand</strong>
+
+\\(t\\mapsto t^{-1}\\) is decreasing, so maximising \\(u\\) is the same as <em>minimising</em> \\(x^{-1}+y^{-1}\\) on the budget line.
+
+FOC: \\(\\frac{1}{x^2}=\\lambda\\cdot${p1}\\) and \\(\\frac{1}{y^2}=\\lambda\\cdot${p2}\\). Dividing: \\(\\frac{y^2}{x^2}=\\frac{${p1}}{${p2}}\\), so \\(\\frac{y}{x}=\\sqrt{\\frac{${p1}}{${p2}}}=${fracTeX(s,t)}\\).
+
+(In general, \\(\\frac{x}{y}=\\left(\\frac{p_2}{p_1}\\right)^{\\frac{1}{1-\\rho}}\\) with equal weights.)
+
+Substitute \\(y=${fracTeX(s,t)}x\\) into the budget: \\(${linx(p1)}+${p2}\\cdot${fracTeX(s,t)}x=${m}\\):
+\\[x^*=${x.tex()},\\qquad y^*=${y.tex()}\\]
+\\(x^{-1}+y^{-1}\\) is convex for \\(x,y>0\\), so this is its minimum on the budget line, and hence the maximum of \\(u\\). (With \\(\\rho\\lt 1\\) the CES function is concave; \\(\\rho>1\\) would push the optimum to a corner.)`,
+    chk:{type:'line', f:X=>1/(1/X+p2/(m-p1*X)), lo:1e-6, hi:m/p1-1e-6, x:x.num(), sense:'max'}
+  };
+});
+
+/* u = k ln(x+y) + y: piecewise demand (Homework 1 resit Problem 4 style) */
+B.L5.push(() => {
+  const k=rand(1,4);
+  const [pn,pd]=random([[1,4],[1,3],[1,2],[2,3],[3,4]]);
+  const p=new Fr(pn,pd), one_p=F(1).sub(p);
+  const m1=one_p.mul(k), m2=one_p.mul(k).div(p);   // thresholds
+  const region=rand(1,3);
+  let m;
+  if(region===1) m=m1.mul(new Fr(1,2));
+  else if(region===2) m=m1.add(m2).div(2);
+  else m=m2.add(rand(1,4));
+  let x,y;
+  if(m.cmp(m1)<=0){ x=m.div(p); y=F(0); }
+  else if(m.cmp(m2)>=0){ x=F(0); y=m; }
+  else { x=F(k).div(p).sub(m.div(one_p)); y=m.div(one_p).sub(k); }
+  const kS=k===1?'':k;
+  return {
+    q:`A consumer with income \\(m\\) maximises \\(u(x,y)=${kS}\\ln(x+y)+y\\), \\(x,y\\ge0\\). The price of \\(x\\) is \\(p=${p.tex()}\\) and the price of \\(y\\) is 1. Find demand for both goods as a function of \\(m\\), and evaluate it at \\(m=${m.tex()}\\).`,
+    s:`<strong>Lecture 5 — Lagrangean with non-negativity constraints</strong>
+
+\\(\\mathcal{L}=${kS}\\ln(x+y)+y-\\lambda(${p.tex()}x+y-m)+\\mu_xx+\\mu_yy\\).
+
+<em>Interior</em> (\\(\\mu_x=\\mu_y=0\\)): \\(\\frac{${k}}{x+y}=\\lambda p\\) and \\(\\frac{${k}}{x+y}+1=\\lambda\\). So \\(\\lambda p+1=\\lambda\\), giving \\(\\lambda=\\frac{1}{1-p}=${F(1).div(one_p).tex()}\\), and \\(x+y=\\frac{${k}(1-p)}{p}=${m2.tex()}\\). Subtracting the budget \\(px+y=m\\):
+\\[x=\\frac{${k}}{p}-\\frac{m}{1-p}=${F(k).div(p).tex()}-${F(1).div(one_p).tex()==='1'?'':F(1).div(one_p).tex()}m,\\qquad y=\\frac{m}{1-p}-${k}=${F(1).div(one_p).tex()==='1'?'':F(1).div(one_p).tex()}m-${k}\\]
+This needs \\(y\\ge0\\iff m\\ge${m1.tex()}\\) and \\(x\\ge0\\iff m\\le${m2.tex()}\\).
+
+<em>Poor</em> (\\(m\\lt ${m1.tex()}\\)): only \\(x\\) is bought, \\(x=m/p\\) (\\(\\mu_y>0\\)).
+<em>Rich</em> (\\(m>${m2.tex()}\\)): only \\(y\\) is bought, \\(y=m\\) (\\(\\mu_x>0\\)).
+
+So demand for \\(x\\) first rises with income, then falls (in the middle range \\(x\\) is an inferior good), and finally reaches zero.
+
+At \\(m=${m.tex()}\\): \\(x^*=${x.tex()}\\), \\(y^*=${y.tex()}\\).`,
+    chk:{type:'line', f:X=>k*Math.log(X+(m.num()-p.num()*X))+(m.num()-p.num()*X), lo:0, hi:m.num()/p.num(), x:x.num(), sense:'max'}
+  };
+});
+
+/* Cost minimisation with F(K,L) = a√K + b√L (Lecture 5 "Example") */
+B.L5.push(() => {
+  const a=rand(1,3), b=rand(1,3), r=rand(1,5), w=rand(1,5), Q=rand(1,6);
+  const D=a*a*w+b*b*r;
+  const sK=new Fr(Q*a*w,D), sL=new Fr(Q*b*r,D);
+  const K=sK.mul(sK), L=sL.mul(sL), C=new Fr(Q*Q*r*w,D), lam=new Fr(2*Q*r*w,D);
+  const aS=a===1?'':a, bS=b===1?'':b;
+  return {
+    q:`A firm produces \\(F(K,L)=${aS}\\sqrt{K}+${bS}\\sqrt{L}\\) with \\(r=${r}\\) and \\(w=${w}\\). Find the cost-minimising \\(K\\) and \\(L\\) for output \\(Q=${Q}\\), the cost, and the marginal cost.`,
+    s:`<strong>Lecture 5 — Cost minimisation</strong>
+
+\\(\\mathcal{L}=${lead(r,'K')}+${lead(w,'L')}-\\lambda\\left(${aS}\\sqrt K+${bS}\\sqrt L-${Q}\\right)\\).
+\\[${r}=\\frac{${a}\\lambda}{2\\sqrt K},\\qquad ${w}=\\frac{${b}\\lambda}{2\\sqrt L}\\implies \\sqrt K=\\frac{${a}\\lambda}{${2*r}},\\quad \\sqrt L=\\frac{${b}\\lambda}{${2*w}}\\]
+Substitute into the constraint: \\(\\lambda\\left(\\frac{${a*a}}{${2*r}}+\\frac{${b*b}}{${2*w}}\\right)=${Q}\\), so \\(\\lambda=${lam.tex()}\\).
+\\[\\sqrt{K^*}=${sK.tex()},\\ K^*=${K.tex()};\\qquad \\sqrt{L^*}=${sL.tex()},\\ L^*=${L.tex()}\\]
+Cost: \\(C=${lead(r,'K^*')}+${lead(w,'L^*')}=${C.tex()}\\). In general \\(C(Q)=\\frac{rw}{a^2w+b^2r}Q^2\\), so \\(MC=C'(Q)=\\frac{2rwQ}{a^2w+b^2r}=${lam.tex()}=\\lambda\\) ✓ (envelope theorem).
+
+Why a minimum: the isoquant \\(${aS}\\sqrt K+${bS}\\sqrt L=${Q}\\) is convex to the origin (\\(F\\) is concave) and cost is linear, so the tangency point is the cheapest. A corner, e.g. \\(K=0,\\ L=${new Fr(Q*Q,b*b).tex()}\\), costs \\(${new Fr(w*Q*Q,b*b).tex()}\\), which is more.`,
+    chk:{type:'line', f:k=>r*k+w*Math.pow((Q-a*Math.sqrt(k))/b,2), lo:0, hi:(Q/a)**2, x:K.num(), sense:'min'}
+  };
+});
+
+/* The shed: roof + three walls with a given tile area (Homework 1 Problem 3 style) */
+B.L5.push(() => {
+  const k=rand(1,4), S=6*k*k;
+  return {
+    q:`A box-shaped shed has length \\(a\\), depth \\(b\\) and height \\(c\\). Its roof (\\(a\\times b\\)) and three walls (both \\(a\\times c\\) walls and one \\(b\\times c\\) wall) are covered with \\(${S}\\) m² of tiles; the floor and the front stay open. Maximise the volume \\(abc\\).`,
+    s:`<strong>Lecture 5 — Lagrange multipliers (three variables)</strong>
+
+Constraint: \\(ab+2ac+bc=${S}\\). \\(\\mathcal{L}=abc-\\lambda(ab+2ac+bc-${S})\\):
+\\[bc=\\lambda(b+2c),\\qquad ac=\\lambda(a+c),\\qquad ab=\\lambda(2a+b)\\]
+Multiply the equations by \\(a\\), \\(b\\) and \\(c\\) respectively. The left sides all become \\(abc\\), so
+\\[ab+2ac=ab+bc=2ac+bc\\]
+The first equality gives \\(2a=b\\), and the second gives \\(a=c\\). So \\(b=2a\\), \\(c=a\\).
+
+Constraint: \\(2a^2+2a^2+2a^2=6a^2=${S}\\), so \\(a=${k}\\).
+\\[a=${k},\\quad b=${2*k},\\quad c=${k},\\qquad V=${2*k*k*k}\\text{ m}^3\\]
+This is a maximum: the volume goes to 0 at the edges of the feasible set (any dimension → 0), and this is the only interior critical point.`,
+    chk:{type:'shed', S, x:[k,2*k,k]}
+  };
+});
+
+// =========================
+// REFERENCES: lecture slide + search terms for every template (same order as the banks)
+// =========================
+const LECTURES = {
+  1:'Sets, Inequalities, and Equations',
+  2:'Linear Algebra',
+  3:'Univariate Calculus, Differentiation, and Integration',
+  4:'Optimization',
+  5:'Constrained Optimization'
+};
+// R(lecture, [slide titles], [search terms], problem set)
+function R(lec, slides, terms, ps){ return {lec, slides, terms, ps}; }
+
+const REFS = {
+L1: [
+  R(1,['Open and Closed'],['open set proof epsilon ball','preimage of open set continuous function'],1),
+  R(1,['Open and Closed','Equalities and Inequalities'],['half-plane open set','preimage of open set continuous function'],1),
+  R(1,['Open and Closed'],['open ball is open proof','metric space open ball'],1),
+  R(1,['Open and Closed'],['closed set complement open','preimage of closed set continuous'],1),
+  R(1,['Open and Closed','Convex set','Maximum Theorem'],['compact set closed and bounded','Weierstrass extreme value theorem','convex set definition'],1),
+  R(1,['Convex set'],['upper contour set convex','quasiconcave utility function','convex set proof'],1),
+  R(1,['System of Equations'],['system of two linear equations no solution infinitely many','solving simultaneous equations elimination'],1),
+  R(1,['Example: Supply and Demand'],['market equilibrium supply and demand algebra','linear supply demand equilibrium'],null),
+  R(1,['Order and Intervals'],['complete and transitive preferences','lexicographic preferences','partial order vs total order'],null),
+  R(1,['Equalities and Inequalities','System of Inequalities'],['graphing systems of linear inequalities','feasible region corner points','linear programming corner point method'],null),
+  R(1,['Functions','Examples of Functions'],['injective surjective bijective functions','one-to-one and onto function','inverse function'],null),
+  R(1,['Real numbers'],['metric space axioms','triangle inequality metric proof','pseudometric'],null),
+  R(1,['Continuous Functions'],['intermediate value theorem','bisection method root finding'],null)
+],
+L2: [
+  R(2,['Determinant'],['3x3 determinant cofactor expansion','Laplace expansion determinant'],2),
+  R(2,['Matrices Change Vectors','Example'],['eigenvalues and eigenvectors 2x2','characteristic equation'],2),
+  R(2,['Matrices Change Vectors','Spectral Theorem and Matrix Inversion'],['eigenvectors symmetric matrix orthogonal','eigenvalues 2x2 symmetric'],2),
+  R(2,['Inverting Matrices','$2\\times 2$ and $3\\times3$ Matrices'],['inverse of 2x2 matrix formula','determinant invertible matrix'],2),
+  R(2,['Systems of Linear Equations','Inverting Matrices'],['solve system using inverse matrix','Ax=b matrix inverse'],2),
+  R(2,['Gaussian Elimination'],['Gauss-Jordan elimination inverse 3x3','row reduction augmented matrix inverse'],2),
+  R(2,['Back to Range'],['null space of a matrix','rank-nullity theorem','column space left null space'],2),
+  R(2,['Matrix Multiplication'],['matrix multiplication not commutative','transpose of a product (AB)^T'],2),
+  R(2,['Quadratic Forms','Positive Definite'],['quadratic form symmetric matrix','positive definite matrix eigenvalues','negative definite 2x2'],2),
+  R(2,['Positive Definite'],["Sylvester's criterion leading principal minors",'positive definite 3x3 matrix test'],2),
+  R(2,['Matrices Change Vectors','Determinant'],['eigenvalues 3x3 matrix characteristic polynomial','factor cubic polynomial known root','eigenvectors 3x3'],2),
+  R(2,['Systems of Linear Equations','Gaussian Elimination'],['Gaussian elimination 3x3 system','inconsistent system row echelon','infinitely many solutions free variable'],2),
+  R(2,['Normalizing an Eigenvector','Spectral Theorem and Matrix Inversion'],['spectral theorem symmetric matrix','orthogonal diagonalization','normalize eigenvector unit length'],2),
+  R(2,['Matrix is a Transformation of a Vector','Matrix is a Transformation of a Vector 2'],['linear transformation unit square','determinant as area scaling factor','shear rotation reflection matrix'],null)
+],
+L3: [
+  R(3,['Derivative','Example'],['critical points derivative','second derivative test'],3),
+  R(3,['Composition of functions'],['chain rule derivative square root'],3),
+  R(3,['Product of functions'],['product rule derivative','derivative of x^n e^x'],3),
+  R(3,['Composition of functions'],['quotient rule derivative'],3),
+  R(3,['Rules for integrals'],['power rule integration','indefinite integral polynomial'],3),
+  R(3,['Rules for integrals','Useful Ideas'],['definite integral fundamental theorem of calculus'],3),
+  R(3,['Rules for integrals'],['integral of e^x','integral of 1/x ln'],3),
+  R(3,['Calculus','Limit Exercises'],['limit of a sequence epsilon N proof','limit of rational sequence'],3),
+  R(3,['Integration by Substitution'],['u-substitution integration','integration by substitution examples'],3),
+  R(3,['Integration by Substitution'],['u-substitution exponential','integration by substitution e^u'],3),
+  R(3,['Integration by Parts'],['integration by parts x e^-x','integration by parts LIATE'],3),
+  R(3,['Composition of functions'],['chain rule ln derivative','reciprocal rule derivative'],3),
+  R(3,['Implicit Function Theorem'],['implicit function theorem','implicit differentiation dy/dx'],null),
+  R(3,['Derivative'],['derivative from first principles','definition of derivative limit','derivative of absolute value at 0'],3),
+  R(3,['Composition of functions'],['derivative of inverse function','inverse function theorem one variable'],3),
+  R(3,['Integrals'],['marginal cost to total cost integration','fixed cost constant of integration'],null),
+  R(3,['Integrals','Useful Ideas'],['consumer surplus integral','producer surplus integral','consumer surplus nonlinear demand'],null),
+  R(3,['Useful Ideas'],['Leibniz integral rule','fundamental theorem of calculus chain rule','differentiation under the integral sign'],null),
+  R(3,['Examples'],['volume by slicing cone pyramid','volume of solid cross sections','volume of sphere integration'],null)
+],
+L4: [
+  R(4,['Multidimensional derivatives','Is that a maximum?','Convex Multidimensional Analysis'],['critical points two variables','second derivative test Hessian'],5),
+  R(4,['Multidimensional derivatives','Is that a maximum?'],['classify critical points saddle point','Hessian determinant test'],5),
+  R(4,['Optimization theorems','Example'],['optimization fence rectangle maximum area','calculus optimization word problem'],4),
+  R(4,['Optimization theorems','Constraints'],['open box optimization calculus','cut squares from corners maximize volume'],4),
+  R(4,['Convex Analysis','Inflection Points'],['concave up concave down second derivative','inflection point cubic'],4),
+  R(4,['Convex Analysis'],['convexity second derivative','concavity of ln function','convexity of exponential function'],4),
+  R(4,['Inflection Points'],['higher order derivative test','nth derivative test extrema'],4),
+  R(4,['Optimization theorems'],['probability density function integral','expected value continuous random variable','exponential distribution mean'],4),
+  R(4,['Optimization theorems','Example'],['profit maximization calculus','monopoly optimal quantity'],null),
+  R(4,['Multidimensional optimization','Constraints'],['absolute extrema on closed region','optimization on a square boundary','Weierstrass extreme value theorem'],null),
+  R(4,['General Approach','Convex Multidimensional Analysis'],['gradient and Hessian three variables','Hessian positive definite minimum'],5),
+  R(4,['Optimization theorems','Constraints'],['optimization problems geometry calculus','minimize surface area cylinder','maximize volume cone'],4),
+  R(4,['Constraints','Optimization theorems'],['absolute maximum closed interval','extreme value theorem closed interval endpoints'],null),
+  R(4,['Multidimensional optimization','Is that a maximum?'],['two-product firm profit maximization','Hessian negative definite maximum'],null),
+  R(4,['Convex Analysis','Optimization theorems'],['convex function definition proof','first order condition proof Fermat theorem'],null)
+],
+L5: [
+  R(5,['Generic Problem: Equality Constraint','Example'],['Lagrange multiplier log utility','Lagrangian utility maximization'],5),
+  R(5,['Generic Problem: Equality Constraint'],['Lagrange multiplier minimize quadratic'],5),
+  R(5,['Generic Problem: Equality Constraint'],['Lagrange multiplier square root utility'],5),
+  R(5,['Example','Example - Concavity'],['Cobb-Douglas demand derivation','price elasticity of demand'],5),
+  R(5,['For now'],['perfect substitutes utility maximization','corner solution consumer'],5),
+  R(5,['For now'],['perfect complements Leontief demand'],5),
+  R(5,['Generic Problem: Inequality Constraint'],['quasilinear utility demand','Kuhn-Tucker corner solution'],5),
+  R(5,['Envelope Theorem','Example'],['cost minimization Lagrangian Cobb-Douglas','Shephard lemma','envelope theorem'],5),
+  R(5,['Sufficient Conditions','Using Second Derivative Matrix'],['concave function Hessian','bliss point utility'],5),
+  R(5,['Sufficient Conditions','Quadratic Forms'],['Cobb-Douglas concavity Hessian','returns to scale concavity'],5),
+  R(5,['Generic Problem: Inequality Constraint'],['Kuhn-Tucker conditions','complementary slackness'],null),
+  R(5,['Checking the Second-Order Condition','Example - Concavity'],['bordered Hessian','second order condition constrained optimization'],null),
+  R(5,['Envelope Theorem'],['indirect utility function','Roy identity','envelope theorem Lagrange multiplier interpretation'],null),
+  R(5,['Optimal Time Allocation Choice'],['time allocation utility maximization','corner solution convex utility'],null),
+  R(5,['For now'],['CES utility function demand','elasticity of substitution CES'],5),
+  R(5,['Generic Problem: Inequality Constraint','Multiple Constraints'],['Kuhn-Tucker non-negativity constraints','inferior good income'],null),
+  R(5,['Example','Envelope Theorem'],['cost minimization Lagrangian','marginal cost Lagrange multiplier'],null),
+  R(5,['Generic Problem: Equality Constraint'],['Lagrange multipliers three variables','maximize volume box Lagrange'],null)
+]
+};
+
+// attach refs (a template may still return its own `ref` to override)
+for(const L of Object.keys(lectureBanks)){
+  if(REFS[L].length!==lectureBanks[L].length) console.warn('REFS length mismatch', L, REFS[L].length, lectureBanks[L].length);
+  lectureBanks[L] = lectureBanks[L].map((fn,i)=>()=>Object.assign({ref:REFS[L][i]}, fn()));
+}
+
+function refHTML(r){
+  if(!r) return '';
+  const g=t=>`https://www.google.com/search?q=${encodeURIComponent(t)}`;
+  const y=t=>`https://www.youtube.com/results?search_query=${encodeURIComponent(t)}`;
+  const slides=r.slides.map(s=>`“${s.replace(/\$\\times\$/g,'×').replace(/\$/g,'').replace(/\\times/g,'×')}”`).join(', ');
+  const terms=r.terms.map(t=>`<a href="${g(t)}" target="_blank" rel="noopener">${t}</a> <a class="yt" href="${y(t)}" target="_blank" rel="noopener" title="Search YouTube">▶</a>`).join(' · ');
+  return `<div class="ref">📖 <b>Lecture ${r.lec}: ${LECTURES[r.lec]}</b>, slide${r.slides.length>1?'s':''} ${slides}${r.ps?` · Problem Set ${r.ps}`:''}<br>🔎 Look up: ${terms}</div>`;
+}
+
+
+// =========================
+// GENERATE
+// =========================
+
+
+let currentSeed = null;
+
+function generate(seed){
+  if(seed===undefined || seed===null || isNaN(seed)) seed = Math.floor(Math.random()*900000)+100000;
+  currentSeed = seed;
+  rng = mulberry32(seed);
+
+  // ✅ all lectures
+  let lectures = ["L1","L2","L3","L4","L5"];
+
+  // ✅ remove one random lecture
+  let excludedIndex = Math.floor(rng() * lectures.length);
+  lectures.splice(excludedIndex, 1);  // now 4 remain
+
+  // ✅ pick one problem from each remaining lecture
+  let result = lectures.map(L => {
+    const idx = Math.floor(rng()*lectureBanks[L].length);
+    const p = lectureBanks[L][idx]();
+    p.tag = `${L}.${idx+1}`;
+    return p;
+  });
+
+  render(result, seed);
+  try{ history.replaceState(null, '', '#hw='+seed); }catch(e){}
+  const inp=document.getElementById('seedIn'); if(inp) inp.value=seed;
+}
+
+function loadSeed(){
+  const v=parseInt(String(document.getElementById('seedIn').value).replace(/\D/g,''),10);
+  if(!isNaN(v)) generate(v);
+}
+
+
+// =========================
+// RENDER
+// =========================
+
+function render(list, seed){
+
+  let html = `<h2>Homework #${seed}</h2>
+  <p class="hint">Homework number <b>${seed}</b> (generator ${GENERATOR_VERSION}). Typing this number into the box above, or opening this page's link, regenerates exactly these questions. Please quote it if you report a bug.</p>`;
+
+  list.forEach((p,i)=>{
+    html += `
+    <div class="problem">
+      <b>Q${i+1}</b> <span class="tag">${p.tag||''}</span><br><br>
+      <div style="white-space:pre-line">${p.q}</div>
+      ${refHTML(p.ref)}
+      <button onclick="toggle(this)">Show Solution</button>
+      <div class="solution">${p.s}</div>
+    </div>
+    `;
+  });
+
+  document.getElementById("output").innerHTML = html;
+
+  MathJax.typeset();
+}
+
+// =========================
+
+function toggle(btn){
+  let s = btn.nextElementSibling;
+  const open = s.style.display === "block";
+  s.style.display = open ? "none" : "block";
+  btn.textContent = open ? "Show Solution" : "Hide Solution";
+}
+
+if(typeof window!=='undefined' && window.addEventListener){
+  window.addEventListener('load', ()=>{
+    const m=(location.hash||'').match(/hw=(\d+)/);
+    if(m) generate(parseInt(m[1],10));
+  });
+}
+
+</script>
+
+</body>
+</html>
