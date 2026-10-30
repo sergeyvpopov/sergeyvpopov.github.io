@@ -1,0 +1,1190 @@
+<title>BS1515 Optimisation Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: single reading column; sticky tab rail on top; one live plot per section. */
+:root{
+  --paper:#FBF8F6; --surface:#FFFFFF; --sunk:#F3EDE9;
+  --ink:#1C1715; --ink2:#6A5C57; --rule:#E6DCD6;
+  --accent:#C21F16; --accent-soft:rgba(194,31,22,.11); --accent-line:rgba(194,31,22,.55);
+  --good:#1C6F52; --good-soft:rgba(28,111,82,.12);
+  --warn:#8E5A10; --warn-soft:rgba(142,90,16,.13);
+  --display:"Literata",Georgia,"Times New Roman",serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+    --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+    --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+    --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+    --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+  --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+  --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+  --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+  --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+
+/* Masthead */
+header.mast{padding-block:30px 18px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,6vw,42px);line-height:1.08;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.mast p{color:var(--ink2);margin:10px 0 0;max-width:62ch;font-size:14.5px}
+
+/* Tabs */
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);
+  display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);margin-bottom:26px;
+  scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--body);font-size:13.5px;font-weight:500;color:var(--ink2);
+  padding:13px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:3px}
+nav.tabs .num{font-family:var(--mono);font-size:11px;opacity:.65;margin-right:6px}
+
+h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-weight:600;font-size:17px;margin:26px 0 8px}
+.lede{color:var(--ink2);margin:0 0 22px;max-width:64ch}
+p{max-width:66ch}
+
+/* Maths inline */
+.m{font-family:var(--display);font-style:italic;font-size:1.03em;white-space:nowrap}
+.m .op,.m .n{font-style:normal}
+code{font-family:var(--mono);font-size:.92em;background:var(--sunk);padding:1px 5px;border-radius:3px}
+
+/* Set picker */
+.picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.picker button{appearance:none;cursor:pointer;background:var(--surface);color:var(--ink2);
+  border:1px solid var(--rule);border-radius:999px;padding:6px 13px;font-family:var(--body);font-size:13px}
+.picker button:hover{border-color:var(--accent-line);color:var(--ink)}
+.picker button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.picker button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Lab */
+.lab{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:720px){.lab{grid-template-columns:1fr}}
+.stage{min-width:0}
+.canvas-box{position:relative;width:100%;aspect-ratio:1/1;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+.toolrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.toolrow button{appearance:none;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  color:var(--ink2);border-radius:3px;padding:6px 10px;font-family:var(--body);font-size:12.5px}
+.toolrow button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.toolrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.slider{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.slider input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.readout{margin-top:10px;min-height:68px;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+  background:var(--sunk);border-radius:4px;padding:10px 12px;color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+.readout .yes{color:var(--good)}
+.readout .no{color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11.5px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:16px;height:3px;border-radius:2px;flex:0 0 auto}
+
+/* Hint ladder */
+details.step{border-top:1px solid var(--rule);padding:0}
+details.step:last-of-type{border-bottom:1px solid var(--rule)}
+details.step>summary{list-style:none;cursor:pointer;padding:11px 2px;display:flex;align-items:baseline;gap:10px;
+  font-size:13.5px;color:var(--ink2)}
+details.step>summary::-webkit-details-marker{display:none}
+details.step>summary::after{content:"+";margin-left:auto;font-family:var(--mono);color:var(--accent);font-size:15px}
+details.step[open]>summary::after{content:"\2212"}
+details.step>summary:hover{color:var(--ink)}
+details.step>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.step .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);flex:0 0 auto}
+details.step .body{padding:0 2px 16px;font-size:14px;color:var(--ink)}
+details.step .body p{margin:0 0 9px}
+details.step .body p:last-child{margin-bottom:0}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 14px;margin:16px 0}
+.quiz .q{font-size:14px;margin:0 0 10px;max-width:none}
+.quiz .q+.q{margin-top:18px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{appearance:none;cursor:pointer;background:var(--paper);border:1px solid var(--rule);color:var(--ink);
+  border-radius:3px;padding:6px 14px;font-family:var(--body);font-size:13px}
+.opts button:hover{border-color:var(--accent-line)}
+.opts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts button.right{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:500}
+.opts button.wrong{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);text-decoration:line-through}
+.fb{margin-top:9px;font-size:13px;color:var(--ink2);border-left:2px solid var(--rule);padding-left:11px}
+.fb.on{border-left-color:var(--accent)}
+
+/* Callout */
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:13px 15px;border-radius:0 4px 4px 0;margin:22px 0;font-size:13.5px}
+.note strong{font-weight:600;color:var(--warn)}
+.note p{max-width:none;margin:0}
+.note p+p{margin-top:8px}
+
+/* Systems */
+.syscards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-bottom:20px}
+.syscard{appearance:none;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  border-radius:4px;padding:13px 14px;font-family:var(--mono);font-size:13px;color:var(--ink);line-height:1.75}
+.syscard:hover{border-color:var(--accent-line)}
+.syscard[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.syscard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.syscard .lbl{font-family:var(--body);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.checkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.checkrow label{font-size:13px;color:var(--ink2)}
+.checkrow input[type=text]{width:84px;font-family:var(--mono);font-size:13px;padding:6px 8px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:3px}
+.checkrow input[type=text]:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.checkrow .go{appearance:none;cursor:pointer;background:var(--ink);color:var(--paper);border:0;border-radius:3px;
+  padding:7px 15px;font-family:var(--body);font-size:13px;font-weight:500}
+.checkrow .go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{font-size:13px;margin-top:9px;min-height:20px}
+.verdict.ok{color:var(--good)}
+.verdict.bad{color:var(--accent)}
+
+table.rec{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+table.rec th,table.rec td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.rec th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:400}
+table.rec td:first-child{font-family:var(--display);font-style:italic;white-space:nowrap}
+.tw{overflow-x:auto}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);color:var(--ink2);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.canvas-box{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.methodchip{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:10px;
+  border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft)}
+.intstate{font-family:var(--display);font-size:17px;margin:4px 0 14px;line-height:1.5}
+.intstate sup,.intstate sub{font-size:.68em}
+.fline{font-family:var(--mono);font-size:12.5px;background:var(--sunk);border-radius:4px;padding:10px 12px;
+  margin:10px 0;color:var(--ink);line-height:1.7;overflow-x:auto}
+.picker button{font-family:var(--mono);font-size:12px}
+u{text-decoration-color:var(--accent);text-underline-offset:3px}
+table.kv{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;margin:2px 0}
+table.kv td{padding:3px 8px 3px 0;border-bottom:1px solid var(--rule);vertical-align:baseline}
+table.kv td:first-child{color:var(--ink2);white-space:nowrap;width:1%}
+table.kv td.v{color:var(--ink);text-align:right;white-space:nowrap}
+table.kv tr:last-child td{border-bottom:none}
+.derow{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0 2px}
+.derow code{font-family:var(--mono);font-size:11.5px;background:var(--sunk);border:1px solid var(--rule);
+  border-radius:4px;padding:4px 8px;color:var(--ink2)}
+.derow code.hit{border-color:var(--accent);color:var(--accent);background:var(--accent-soft)}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">BS1515 · Problem Set 4</p>
+  <h1>Modelling, second derivatives, and the integrals that turn out to be densities</h1>
+  <p>Four jobs on this sheet. Turn three word problems into one-variable optimisation problems; read convexity off a second derivative; handle a maximum that the second-derivative test refuses to confirm; and integrate four functions you will meet again as probability densities. Every number below is computed from the formulas as written — move a slider and the whole answer moves with it.</p>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" id="t0" aria-controls="p0" aria-selected="true"><span class="num">1</span>Word problems</button>
+  <button role="tab" id="t1" aria-controls="p1" aria-selected="false"><span class="num">2</span>Convexity</button>
+  <button role="tab" id="t2" aria-controls="p2" aria-selected="false"><span class="num">3</span>Deeper derivatives</button>
+  <button role="tab" id="t3" aria-controls="p3" aria-selected="false"><span class="num">4</span>Densities</button>
+</nav>
+
+<!-- ===== 1 ===== -->
+<section role="tabpanel" id="p0" aria-labelledby="t0">
+  <h2>Three problems to model</h2>
+  <p class="lede">The calculus in all three is one line. The work is in the modelling: pick <em>one</em> variable, use the constraint to kill the other, write the objective, then differentiate. Pick a problem and the lab plots your objective function over its feasible range and marks the stationary point it finds.</p>
+
+  <div class="picker" id="pickWP"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cvWP"></canvas></div>
+      <div id="wpParams"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i>objective</span>
+        <span><i class="swatch" style="background:var(--good)"></i>stationary point</span>
+        <span><i class="swatch" style="background:var(--sunk);border:1px solid var(--rule)"></i>feasible range</span>
+      </div>
+      <div class="readout" id="wpOut"></div>
+    </div>
+    <div class="guide" id="wpGuide"></div>
+  </div>
+
+  <h3>The modelling recipe</h3>
+  <div class="tw"><table class="rec">
+    <tr><th>Step</th><th>What it means</th><th>Where people lose marks</th></tr>
+    <tr><td>Name the variables</td><td>Every length, radius, height you might need — with units.</td><td>Starting to differentiate before deciding what the variable <em>is</em>.</td></tr>
+    <tr><td>Write the constraint</td><td>The sentence in the problem that is an equation, not a goal: "50 metres of fence", "holds 1 litre".</td><td>Treating the constraint as the thing to maximise.</td></tr>
+    <tr><td>Write the objective</td><td>The thing the problem asks you to make big or small.</td><td>Maximising perimeter instead of area, or volume instead of material.</td></tr>
+    <tr><td>Eliminate</td><td>Solve the constraint for one variable and substitute, so the objective has one argument.</td><td>Leaving two variables and differentiating with respect to one as if the other were fixed.</td></tr>
+    <tr><td>State the feasible set</td><td>The values of the variable that make geometric sense — lengths positive, cut-outs smaller than the sheet.</td><td>Reporting a stationary point that lies outside it, or missing a corner solution.</td></tr>
+    <tr><td>FOC, then SOC</td><td>Set the derivative to zero; use the second derivative (or the endpoints) to say which kind of point you found.</td><td>Stopping at the FOC and calling it a maximum.</td></tr>
+  </table></div>
+
+  <div class="note">
+    <p><strong>Why the answers are so tidy.</strong> Two of the three come out perfectly symmetric — the square, and the can as tall as it is wide. That is not a coincidence of the numbers: rescale the fence length or the volume and the <em>shape</em> of the answer never changes, only its size. Move the sliders and watch the optimal shape stay put while the optimal size moves.</p>
+  </div>
+</section>
+
+<!-- ===== 2 ===== -->
+<section role="tabpanel" id="p1" aria-labelledby="t1" hidden>
+  <h2>Convex here, concave there</h2>
+  <p class="lede">Convexity is a statement about <span class="m">f″</span>, so the whole question is: where is <span class="m">f″ ≥ 0</span>? For all three functions the answer comes down to the sign of a quadratic. The plot shades the convex region, and the readout reports the switch points it computed from your parameters.</p>
+
+  <div class="picker" id="pickCx"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cvCx"></canvas></div>
+      <div id="cxParams"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i>f</span>
+        <span><i class="swatch" style="height:3px;background:repeating-linear-gradient(90deg,var(--ink2) 0 5px,transparent 5px 10px)"></i>f″</span>
+        <span><i class="swatch" style="background:var(--good-soft);border:1px solid var(--good)"></i>convex (f″ &gt; 0)</span>
+      </div>
+      <div class="readout" id="cxOut"></div>
+    </div>
+    <div class="guide" id="cxGuide"></div>
+  </div>
+
+  <div class="note">
+    <p><strong>A second derivative is a sign question, not a number question.</strong> You are never asked for the value of <span class="m">f″</span>, only for where it changes sign. So simplify until you have <em>something positive</em> times <em>something whose sign you can read</em> — a square, an exponential, or <span class="m">q<span class="n">²</span></span> in a denominator — and then only the second factor matters. Both the log and the exponential case below reduce to exactly that.</p>
+  </div>
+</section>
+
+<!-- ===== 3 ===== -->
+<section role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+  <h2>When the second derivative says nothing</h2>
+  <p class="lede">For <span class="m">f(x) = −(x − 4)<span class="n">⁴</span></span> the first derivative vanishes at <span class="m">x* = 4</span> — and so does the second, and the third. The second-derivative test is silent. Step up through the derivatives and watch where the first non-zero one appears.</p>
+
+  <div class="picker" id="pickD4"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cvD4"></canvas></div>
+      <div class="slider">
+        <label for="zw">window ±</label>
+        <input type="range" id="zw" min="0.15" max="4" step="0.05" value="2.5">
+        <span id="zwval">2.50</span>
+      </div>
+      <div class="readout" id="d4Out"></div>
+    </div>
+    <div class="guide" id="d4Guide"></div>
+  </div>
+
+  <h3>The general rule</h3>
+  <p>Suppose <span class="m">f′(x*) = f″(x*) = … = f<span class="n">⁽ᵏ⁻¹⁾</span>(x*) = 0</span> and <span class="m">f<span class="n">⁽ᵏ⁾</span>(x*) ≠ 0</span>. Taylor's theorem says that near <span class="m">x*</span>,</p>
+  <p style="font-family:var(--mono);font-size:12.5px">f(x* + h) ≈ f(x*) + f<sup>(k)</sup>(x*)·h<sup>k</sup>/k!</p>
+  <p>and the sign of <span class="m">h<span class="n">ᵏ</span></span> decides everything:</p>
+  <div class="tw"><table class="rec">
+    <tr><th>k</th><th>f<sup>(k)</sup>(x*)</th><th>Verdict</th><th>Why</th></tr>
+    <tr><td>even</td><td>&lt; 0</td><td>local maximum</td><td><span class="m">h<span class="n">ᵏ</span> &gt; 0</span> on both sides, so the correction is negative on both sides.</td></tr>
+    <tr><td>even</td><td>&gt; 0</td><td>local minimum</td><td>Same, with the correction positive on both sides.</td></tr>
+    <tr><td>odd</td><td>≠ 0</td><td>neither — an inflection</td><td><span class="m">h<span class="n">ᵏ</span></span> flips sign with <span class="m">h</span>, so <span class="m">f</span> rises on one side and falls on the other.</td></tr>
+  </table></div>
+  <p>The familiar second-derivative test is just the case <span class="m">k = 2</span>. It is not a different rule, only the first one you meet.</p>
+
+  <div class="note">
+    <p><strong>And a shortcut worth noticing.</strong> Here <span class="m">f″(x) = −12(x − 4)<span class="n">²</span> ≤ 0</span> for <em>every</em> <span class="m">x</span>, so <span class="m">f</span> is concave on all of <span class="m">ℝ</span>. A stationary point of a concave function is a global maximum, so that single observation settles the problem without any Taylor expansion. The distinction is worth being precise about: the second-derivative <em>test at the point</em> is inconclusive because <span class="m">f″(4) = 0</span>, while the <em>global sign</em> of <span class="m">f″</span> is conclusive. Both facts come from the same formula.</p>
+  </div>
+</section>
+
+<!-- ===== 4 ===== -->
+<section role="tabpanel" id="p3" aria-labelledby="t3" hidden>
+  <h2>Four densities and their first two moments</h2>
+  <p class="lede">Each function integrates to <span class="m">1</span> over the region where it is non-zero — that is what makes it a density. Outside that region <span class="m">f = 0</span>, so those parts of the integral contribute nothing and the infinite limits are harmless. The lab shades the area it is integrating and compares your closed forms against a numerical integral of the same formula.</p>
+
+  <div class="picker" id="pickDn"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cvDn"></canvas></div>
+      <div id="dnParams"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i>f(x)</span>
+        <span><i class="swatch" style="background:var(--accent-soft);border:1px solid var(--accent)"></i>area = 1</span>
+        <span><i class="swatch" style="background:var(--good)"></i>Ex</span>
+      </div>
+      <div class="readout" id="dnOut"></div>
+    </div>
+    <div class="guide" id="dnGuide"></div>
+  </div>
+
+  <h3>Reading the three integrals</h3>
+  <div class="tw"><table class="rec">
+    <tr><th>Integral</th><th>Name later in BS1515</th><th>What it tells you</th></tr>
+    <tr><td>∫f(x)dx</td><td>total probability</td><td>Nothing about the distribution — it is a consistency check. If it is not 1, the function is not a density, or you have the wrong limits.</td></tr>
+    <tr><td>∫x·f(x)dx</td><td>expectation, <span class="m">Ex</span></td><td>The balance point of the shaded area. Note it need not be where <span class="m">f</span> peaks.</td></tr>
+    <tr><td>∫x<sup>2</sup>·f(x)dx</td><td>second moment, <span class="m">Ex<span class="n">²</span></span></td><td>On its own, little. Combined as <span class="m">Ex<span class="n">²</span> − (Ex)<span class="n">²</span></span> it is the variance — the spread.</td></tr>
+  </table></div>
+
+  <div class="note">
+    <p><strong>A check you can always run.</strong> <span class="m">Ex<span class="n">²</span> − (Ex)<span class="n">²</span></span> is a variance, so it must come out <strong>positive</strong>. If your two moments give a negative answer, one of them is wrong — and you knew that before looking up the right answer. The readout computes it for you on every parameter change.</p>
+    <p>A second check: <span class="m">Ex</span> must lie inside the range where <span class="m">f &gt; 0</span>. An expectation outside the support is impossible.</p>
+  </div>
+</section>
+
+<footer>Built for BS1515 Problem Set 4. Optima, inflection points and moments are all recomputed from the formulas on screen whenever a slider moves; the numerical column uses Simpson's rule on the same density, not a stored answer.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== plotter: curves, vertical bands, filled areas ===== */
+function Plot(cv){
+  this.cv=cv; this.ctx=cv.getContext("2d");
+  this.pad={l:50,r:14,t:14,b:30};
+  var self=this; this.resize();
+  if(window.ResizeObserver) new ResizeObserver(function(){ self.resize(); if(self.last) self.render(self.last); }).observe(cv.parentNode);
+  else window.addEventListener("resize", function(){ self.resize(); if(self.last) self.render(self.last); });
+}
+Plot.prototype.css=function(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
+Plot.prototype.resize=function(){
+  var r=this.cv.parentNode.getBoundingClientRect();
+  this.w=Math.max(220,Math.round(r.width)); this.h=Math.max(170,Math.round(r.height));
+  this.dpr=Math.min(window.devicePixelRatio||1,2);
+  this.cv.width=Math.round(this.w*this.dpr); this.cv.height=Math.round(this.h*this.dpr);
+};
+Plot.prototype.px=function(x){ return this.pad.l + (x-this.X[0])/(this.X[1]-this.X[0])*(this.w-this.pad.l-this.pad.r); };
+Plot.prototype.py=function(y){ return this.h-this.pad.b - (y-this.Y[0])/(this.Y[1]-this.Y[0])*(this.h-this.pad.t-this.pad.b); };
+Plot.prototype.ticks=function(lo,hi){
+  var span=hi-lo, step=Math.pow(10,Math.floor(Math.log(span/4)/Math.LN10));
+  if(span/step>8) step*=2; if(span/step>8) step*=2.5;
+  var out=[], t=Math.ceil(lo/step)*step;
+  for(; t<=hi+1e-9 && out.length<12; t+=step) out.push(Math.abs(t)<step/1000?0:t);
+  return out;
+};
+Plot.prototype.render=function(spec){
+  this.last=spec;
+  var c=this.ctx, i;
+  this.X=spec.X; this.Y=spec.Y;
+  c.setTransform(this.dpr,0,0,this.dpr,0,0);
+  c.clearRect(0,0,this.w,this.h);
+  c.fillStyle=this.css("--surface"); c.fillRect(0,0,this.w,this.h);
+
+  var rule=this.css("--rule"), ink2=this.css("--ink2");
+  var xs=this.ticks(this.X[0],this.X[1]), ys=this.ticks(this.Y[0],this.Y[1]);
+  c.font="11px "+(this.css("--mono")||"monospace"); c.fillStyle=ink2;
+  c.strokeStyle=rule; c.lineWidth=1;
+  for(i=0;i<xs.length;i++){ var p=Math.round(this.px(xs[i]))+0.5;
+    c.beginPath(); c.moveTo(p,this.pad.t); c.lineTo(p,this.h-this.pad.b); c.stroke();
+    c.textAlign="center"; c.textBaseline="top"; c.fillText(trimNum(xs[i]), p, this.h-this.pad.b+6); }
+  for(i=0;i<ys.length;i++){ var q=Math.round(this.py(ys[i]))+0.5;
+    c.beginPath(); c.moveTo(this.pad.l,q); c.lineTo(this.w-this.pad.r,q); c.stroke();
+    c.textAlign="right"; c.textBaseline="middle"; c.fillText(trimNum(ys[i]), this.pad.l-7, q); }
+
+  c.save(); c.beginPath();
+  c.rect(this.pad.l, this.pad.t, this.w-this.pad.l-this.pad.r, this.h-this.pad.t-this.pad.b); c.clip();
+
+  /* vertical bands (regions of x) */
+  (spec.vbands||[]).forEach(function(b){
+    var x1=this.px(Math.max(b.x1,this.X[0])), x2=this.px(Math.min(b.x2,this.X[1]));
+    if(x2<=x1) return;
+    c.fillStyle=b.fill; c.fillRect(x1, this.pad.t, x2-x1, this.h-this.pad.t-this.pad.b);
+  }, this);
+
+  /* filled area between a curve and y = 0 */
+  (spec.fills||[]).forEach(function(fl){
+    var N=fl.N||300, y0=this.py(0), k, x, y, started=false;
+    c.fillStyle=fl.fill; c.beginPath();
+    for(k=0;k<=N;k++){
+      x=fl.x1+(fl.x2-fl.x1)*k/N; y=fl.f(x);
+      if(!isFinite(y)) continue;
+      if(!started){ c.moveTo(this.px(x), y0); started=true; }
+      c.lineTo(this.px(x), this.py(y));
+    }
+    if(started){ c.lineTo(this.px(fl.x2), y0); c.closePath(); c.fill(); }
+  }, this);
+
+  /* axes on top of the shading */
+  c.strokeStyle=ink2; c.lineWidth=1.2;
+  if(this.Y[0]<=0&&this.Y[1]>=0){ var z=Math.round(this.py(0))+0.5; c.beginPath(); c.moveTo(this.pad.l,z); c.lineTo(this.w-this.pad.r,z); c.stroke(); }
+  if(this.X[0]<=0&&this.X[1]>=0){ var z2=Math.round(this.px(0))+0.5; c.beginPath(); c.moveTo(z2,this.pad.t); c.lineTo(z2,this.h-this.pad.b); c.stroke(); }
+
+  (spec.hlines||[]).forEach(function(L){
+    c.strokeStyle=L.color; c.lineWidth=L.w||1.4; c.setLineDash(L.dash||[]);
+    c.beginPath(); c.moveTo(this.pad.l, this.py(L.y)); c.lineTo(this.w-this.pad.r, this.py(L.y)); c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.vlines||[]).forEach(function(L){
+    c.strokeStyle=L.color; c.lineWidth=L.w||1.4; c.setLineDash(L.dash||[]);
+    c.beginPath(); c.moveTo(this.px(L.x), this.pad.t); c.lineTo(this.px(L.x), this.h-this.pad.b); c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.curves||[]).forEach(function(cu){
+    c.strokeStyle=cu.color; c.lineWidth=cu.w||2.2; c.setLineDash(cu.dash||[]);
+    c.beginPath(); var started=false, N=cu.N||420, k, x, y;
+    for(k=0;k<=N;k++){
+      x=(cu.x1==null?this.X[0]:cu.x1); var x2=(cu.x2==null?this.X[1]:cu.x2);
+      x=x+(x2-x)*k/N; y=cu.f(x);
+      if(!isFinite(y) || y<this.Y[0]-1e6 || y>this.Y[1]+1e6){ started=false; continue; }
+      if(!started){ c.moveTo(this.px(x),this.py(y)); started=true; } else c.lineTo(this.px(x),this.py(y));
+    }
+    c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.segs||[]).forEach(function(s){
+    c.strokeStyle=s.color; c.lineWidth=s.w||2; c.setLineDash(s.dash||[]);
+    c.beginPath(); c.moveTo(this.px(s.x1),this.py(s.y1)); c.lineTo(this.px(s.x2),this.py(s.y2)); c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.points||[]).forEach(function(pt){
+    c.fillStyle=pt.color; c.beginPath(); c.arc(this.px(pt.x),this.py(pt.y),pt.r||4,0,Math.PI*2); c.fill();
+    if(pt.ring){ c.strokeStyle=this.css("--surface"); c.lineWidth=1.6; c.stroke(); }
+  }, this);
+  c.restore();
+};
+function trimNum(v){
+  if(Math.abs(v)>=10000||((Math.abs(v)<0.01)&&v!==0)) return v.toExponential(0);
+  var s=(Math.round(v*1000)/1000).toString();
+  return s.replace("-","−");
+}
+function fmt(v,d){ d=(d==null)?3:d; if(!isFinite(v)) return "—";
+  var s=(Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toFixed(d); return s.replace("-","−"); }
+function simp(f,lo,hi,n){
+  n=n||2000; if(n%2) n++;
+  var h=(hi-lo)/n, s=f(lo)+f(hi), i;
+  for(i=1;i<n;i++) s+=f(lo+i*h)*(i%2?4:2);
+  return s*h/3;
+}
+function kv(rows){
+  var h="<table class='kv'>";
+  rows.forEach(function(r){ h+="<tr><td>"+r[0]+"</td><td class='v'>"+r[1]+"</td></tr>"; });
+  return h+"</table>";
+}
+function steps(list){
+  var h="";
+  list.forEach(function(t){
+    h+="<details class='step'><summary><span class='tag'>"+t[0]+"</span>"+t[1]+"</summary><div class='body'>"+t[2]+"</div></details>";
+  });
+  return h;
+}
+function picker(el, items, isOn, onPick){
+  el.innerHTML="";
+  items.forEach(function(it,i){
+    var b=document.createElement("button"); b.type="button"; b.innerHTML=it;
+    b.setAttribute("aria-pressed", isOn(i)?"true":"false");
+    b.addEventListener("click", function(){ onPick(i); });
+    el.appendChild(b);
+  });
+}
+function sliders(host, pre, keys, cfg, store, onChange){
+  host.innerHTML="";
+  keys.forEach(function(key){
+    var d=cfg[key], id=pre+"-"+key;
+    var wrap=document.createElement("div"); wrap.className="slider";
+    wrap.innerHTML="<label for='sl"+id+"'>"+d.label+" =</label>"+
+      "<input type='range' id='sl"+id+"' min='"+d.min+"' max='"+d.max+"' step='"+d.step+"' value='"+store[key]+"'>"+
+      "<span id='sv"+id+"'>"+fmt(store[key],d.dp==null?2:d.dp)+"</span>";
+    host.appendChild(wrap);
+    var inp=wrap.querySelector("input");
+    var out=wrap.querySelector("span");
+    inp.addEventListener("input", function(){
+      var v=parseFloat(inp.value);
+      store[key]=v;
+      out.textContent=fmt(v,d.dp==null?2:d.dp);
+      onChange();
+    });
+  });
+}
+
+/* =====================================================================
+   TAB 1 — word problems
+   ===================================================================== */
+var W={L:50, V:1000, A:10, B:6};
+var WCFG={
+  L:{label:"total fence (m)", min:10, max:120, step:1, dp:0},
+  V:{label:"volume (cm³)", min:200, max:3000, step:50, dp:0},
+  A:{label:"A", min:2, max:24, step:0.5, dp:1},
+  B:{label:"B", min:2, max:24, step:0.5, dp:1}
+};
+
+var WP=[
+{
+  chip:"50 m of fence", uses:["L"],
+  title:"Fencing a rectangle",
+  ask:"50 metres of fence. Which rectangle encloses the most area?",
+  xlabel:"x = one side (m)", ylabel:"area (m²)",
+  dom:function(){ return [0, W.L/2]; },
+  f:function(x){ return x*(W.L/2 - x); },
+  xstar:function(){ return W.L/4; },
+  d2:function(){ return -2; },
+  rows:function(){
+    var x=W.L/4, y=W.L/2-x;
+    return [
+      ["constraint","2x + 2y = "+fmt(W.L,0)],
+      ["objective","A(x) = x·("+fmt(W.L/2,1)+" − x)"],
+      ["A′(x) = 0 at","x* = L/4 = "+fmt(x,3)],
+      ["other side","y = "+fmt(y,3)],
+      ["A″","−2  (&lt; 0 ⇒ maximum)"],
+      ["max area",""+fmt(x*y,3)+" m²"]
+    ];
+  },
+  verdict:function(){ return "<span class='yes'>The optimal rectangle is a square — x = y = L/4, for every L.</span>"; },
+  hints:[
+    ["Step 1","Which quantity is fixed and which is free?",
+     "<p>You are told the <em>perimeter</em>, and asked about the <em>area</em>. So the perimeter is the constraint and the area is the objective — not the other way round.</p>"+
+     "<p>Call the sides <span class='m'>x</span> and <span class='m'>y</span>. The constraint is <span class='m'>2x + 2y = L</span>, i.e. <span class='m'>x + y = L/2</span>.</p>"],
+    ["Step 2","Get down to one variable",
+     "<p>Solve the constraint: <span class='m'>y = L/2 − x</span>. Substitute into the area:</p>"+
+     "<div class='fline'>A(x) = x·y = x(L/2 − x) = (L/2)x − x²</div>"+
+     "<p>Feasible range: both sides must be positive, so <span class='m'>0 &lt; x &lt; L/2</span>. The objective is a downward parabola that vanishes at both ends of that interval, which already tells you the maximum is interior.</p>"],
+    ["Step 3","FOC and SOC",
+     "<div class='fline'>A′(x) = L/2 − 2x = 0 ⇒ x* = L/4<br>A″(x) = −2 &lt; 0 ⇒ maximum</div>"+
+     "<p>Then <span class='m'>y = L/2 − L/4 = L/4 = x</span>: the rectangle is a square. With <span class='m'>L = 50</span> that is <span class='m'>12.5 × 12.5 = 156.25</span> m².</p>"],
+    ["Worth noticing","The answer is scale-free",
+     "<p>The optimal side is <span class='m'>L/4</span> and the optimal area <span class='m'>L²/16</span> whatever <span class='m'>L</span> is. Doubling the fence doubles the side but <em>quadruples</em> the area — an instance of the general fact that area scales as the square of length. Slide the fence length and watch the shape stay square.</p>"]
+  ]
+},
+{
+  chip:"1 litre can", uses:["V"],
+  title:"The cheapest can",
+  ask:"A cylinder holding 1 litre. Which shape uses the least material?",
+  xlabel:"r = radius (cm)", ylabel:"surface area (cm²)",
+  dom:function(){ var rs=Math.cbrt(W.V/(2*Math.PI)); return [Math.max(0.4,rs*0.25), rs*2.6]; },
+  f:function(r){ return 2*Math.PI*r*r + 2*W.V/r; },
+  xstar:function(){ return Math.cbrt(W.V/(2*Math.PI)); },
+  d2:function(){ var r=Math.cbrt(W.V/(2*Math.PI)); return 4*Math.PI + 4*W.V/(r*r*r); },
+  rows:function(){
+    var r=Math.cbrt(W.V/(2*Math.PI)), h=W.V/(Math.PI*r*r);
+    return [
+      ["constraint","πr²h = "+fmt(W.V,0)+" cm³"],
+      ["objective","S(r) = 2πr² + 2V/r"],
+      ["S′(r) = 0 at","r* = (V/2π)^(1/3) = "+fmt(r,4)],
+      ["height","h = V/πr² = "+fmt(h,4)],
+      ["h / 2r",""+fmt(h/(2*r),4)],
+      ["S″(r*)","+"+fmt(this.d2(),2)+"  (&gt; 0 ⇒ minimum)"],
+      ["material","S = "+fmt(this.f(r),2)+" cm²"]
+    ];
+  },
+  verdict:function(){ return "<span class='yes'>The cheapest can is exactly as tall as it is wide: h = 2r.</span> Real drink cans are much taller — so material cost is not the only thing being minimised."; },
+  hints:[
+    ["Step 1","Two variables, one constraint",
+     "<p>A cylinder has a radius <span class='m'>r</span> and a height <span class='m'>h</span>. The volume fixes one in terms of the other:</p>"+
+     "<div class='fline'>πr²h = V = 1000 cm³   (1 litre = 1000 cm³)</div>"+
+     "<p>“Amount of material” means total surface area: two circular ends plus the curved side,</p>"+
+     "<div class='fline'>S = 2πr² + 2πrh</div>"+
+     "<p>The <span class='m'>2πrh</span> term is the side unrolled into a rectangle of width <span class='m'>2πr</span> (the circumference) and height <span class='m'>h</span>.</p>"],
+    ["Step 2","Eliminate h",
+     "<p>From the constraint <span class='m'>h = V/(πr²)</span>, so</p>"+
+     "<div class='fline'>S(r) = 2πr² + 2πr·V/(πr²) = 2πr² + 2V/r</div>"+
+     "<p>Feasible range <span class='m'>r &gt; 0</span>. Both ends of that range are bad: as <span class='m'>r → 0</span> the can becomes an infinitely long thin tube (<span class='m'>2V/r → ∞</span>), and as <span class='m'>r → ∞</span> it becomes a vast flat pan (<span class='m'>2πr² → ∞</span>). So the minimum is interior.</p>"],
+    ["Step 3","FOC and SOC",
+     "<div class='fline'>S′(r) = 4πr − 2V/r² = 0 ⇒ 4πr³ = 2V ⇒ r³ = V/(2π)<br>S″(r) = 4π + 4V/r³ &gt; 0 for all r &gt; 0 ⇒ minimum</div>"+
+     "<p>Since <span class='m'>S″ &gt; 0</span> everywhere, <span class='m'>S</span> is convex on <span class='m'>r &gt; 0</span> and the stationary point is a <em>global</em> minimum, not merely a local one.</p>"],
+    ["Step 4","Report a shape, not just a number",
+     "<p>With <span class='m'>V = 1000</span>: <span class='m'>r* = (500/π)^(1/3) ≈ 5.419</span> cm. Now get the height:</p>"+
+     "<div class='fline'>h = V/(πr*²) = 2πr*³/(πr*²) = 2r*   (using 2πr*³ = V)</div>"+
+     "<p>So <span class='m'>h = 2r ≈ 10.84</span> cm — the height equals the diameter. The can fits exactly inside a cube. Because that relation is <span class='m'>h = 2r</span> with no <span class='m'>V</span> in it, it holds for every volume: slide <span class='m'>V</span> and the ratio in the table stays at 1.</p>"]
+  ]
+},
+{
+  chip:"A×B box", uses:["A","B"],
+  title:"Folding a box from a sheet",
+  ask:"Cut x×x squares from the corners of an A×B sheet and fold up. Which x gives the largest volume?",
+  xlabel:"x = size of the corner cut", ylabel:"volume",
+  dom:function(){ return [0, Math.min(W.A,W.B)/2]; },
+  f:function(x){ return x*(W.A-2*x)*(W.B-2*x); },
+  xstar:function(){
+    var A=W.A,B=W.B, D=(A+B)*(A+B)-3*A*B;
+    return ((A+B)-Math.sqrt(D))/6;
+  },
+  xother:function(){
+    var A=W.A,B=W.B, D=(A+B)*(A+B)-3*A*B;
+    return ((A+B)+Math.sqrt(D))/6;
+  },
+  d2:function(){ var A=W.A,B=W.B, D=(A+B)*(A+B)-3*A*B; return -4*Math.sqrt(D); },
+  rows:function(){
+    var A=W.A,B=W.B, D=(A+B)*(A+B)-3*A*B;
+    var xm=this.xstar(), xp=this.xother(), lim=Math.min(A,B)/2;
+    return [
+      ["objective","V(x) = x(A−2x)(B−2x)"],
+      ["feasible","0 &lt; x &lt; min(A,B)/2 = "+fmt(lim,3)],
+      ["(A+B)² − 3AB","= "+fmt(D,3)+"  (≥ 0 ✓)"],
+      ["candidate −","x₋ = "+fmt(xm,4)+(xm<=lim?"  ✓ feasible":"  ✗ outside")],
+      ["candidate +","x₊ = "+fmt(xp,4)+(xp<=lim?"  ✓ feasible":"  ✗ outside")],
+      ["V″(x₋)","= −4√D = "+fmt(-4*Math.sqrt(D),3)+"  ⇒ max"],
+      ["V″(x₊)","= +4√D = "+fmt(4*Math.sqrt(D),3)+"  ⇒ min"],
+      ["max volume","V(x₋) = "+fmt(this.f(xm),4)]
+    ];
+  },
+  verdict:function(){
+    var A=W.A,B=W.B, lim=Math.min(A,B)/2, xp=this.xother();
+    return "<span class='yes'>Take the smaller root: x₋ = [(A+B) − √((A+B)²−3AB)]/6.</span>"+
+      (xp>lim ? " The larger root "+fmt(xp,3)+" is not even feasible here — it would need you to cut past the middle of the sheet."
+              : " The larger root "+fmt(xp,3)+" is feasible but is a <em>minimum</em>.");
+  },
+  hints:[
+    ["Step 1","Build the volume",
+     "<p>Cutting an <span class='m'>x×x</span> square from each of the four corners and folding the flaps up gives a box of height <span class='m'>x</span>, with a base of</p>"+
+     "<div class='fline'>(A − 2x) by (B − 2x)   — two cuts come off each side, not one</div>"+
+     "<div class='fline'>V(x) = x(A − 2x)(B − 2x) = 4x³ − 2(A+B)x² + ABx</div>"+
+     "<p>Feasible: <span class='m'>x &gt; 0</span> and both base sides positive, so <span class='m'>0 &lt; x &lt; min(A,B)/2</span>.</p>"],
+    ["Step 2","Prove the hint: (A+B)² ≥ 3AB",
+     "<p>You will need this to know the FOC has real roots at all. Expand and move everything to one side:</p>"+
+     "<div class='fline'>(A+B)² − 3AB = A² + 2AB + B² − 3AB = A² − AB + B²</div>"+
+     "<p>Now complete the square — or, more simply, notice</p>"+
+     "<div class='fline'>A² − AB + B² = (A − B)² + AB</div>"+
+     "<p>Both terms are <span class='m'>≥ 0</span> when <span class='m'>A, B &gt; 0</span>, so the whole thing is. Equality needs <span class='m'>A = B</span> <em>and</em> <span class='m'>AB = 0</span>, impossible for a real sheet — so the inequality is strict and the two roots are distinct.</p>"],
+    ["Step 3","The FOC and its two roots",
+     "<div class='fline'>V′(x) = 12x² − 4(A+B)x + AB = 0<br>x = [(A+B) ± √((A+B)² − 3AB)]/6</div>"+
+     "<p>(Divide the quadratic formula through by 4 before simplifying — it keeps the surds small.) Write <span class='m'>D = (A+B)² − 3AB</span>, which Step 2 just showed is positive.</p>"],
+    ["Step 4","Choosing between the two candidates",
+     "<p>This is the part the problem is really asking about. Use the second derivative, <span class='m'>V″(x) = 24x − 4(A+B)</span>, and substitute each root:</p>"+
+     "<div class='fline'>V″(x±) = 24·[(A+B) ± √D]/6 − 4(A+B) = 4(A+B) ± 4√D − 4(A+B) = ±4√D</div>"+
+     "<p>Everything cancels and you are left with <span class='m'>−4√D &lt; 0</span> at the smaller root and <span class='m'>+4√D &gt; 0</span> at the larger one. So <strong>the smaller root is the maximum</strong>, always, with no case analysis.</p>"+
+     "<p>A second route, if you prefer not to compute <span class='m'>V″</span>: <span class='m'>V′</span> is an upward parabola, so it is positive, then negative, then positive. The first crossing is therefore where <span class='m'>V</span> switches from rising to falling — the maximum.</p>"],
+    ["Step 5","Would there be a corner solution?",
+     "<p>No. At both ends of the feasible interval the volume is zero: <span class='m'>V(0) = 0</span> (no height) and <span class='m'>V(min(A,B)/2) = 0</span> (no base). Inside, <span class='m'>V &gt; 0</span>. A continuous function that is zero at both endpoints and positive in between attains its maximum strictly inside — so the answer is interior and the FOC really does find it.</p>"+
+     "<p>One loose end: is <span class='m'>x₋</span> inside the interval? Take <span class='m'>A ≤ B</span> and evaluate <span class='m'>V′(A/2) = 3A² − 2A² − 2AB + AB = A(A − B) ≤ 0</span>. An upward parabola is negative only <em>between</em> its roots, so <span class='m'>x₋ ≤ A/2 ≤ x₊</span>. The smaller root is always feasible; the larger one often is not.</p>"],
+    ["Check it","Square sheets",
+     "<p>Set <span class='m'>A = B</span> with the sliders. Then <span class='m'>D = A²</span>, so <span class='m'>x₋ = (2A − A)/6 = A/6</span> and <span class='m'>x₊ = A/2</span> — the larger root sits exactly at the boundary, where the base has shrunk to nothing and the volume is zero. A minimum, as the sign of <span class='m'>V″</span> promised.</p>"]
+  ]
+}
+];
+var wpI=0, pWP;
+function drawWP(){
+  var P=WP[wpI], d=P.dom(), i, lo=Infinity, hi=-Infinity;
+  for(i=0;i<=300;i++){
+    var x=d[0]+(d[1]-d[0])*i/300, v=P.f(x);
+    if(isFinite(v)){ if(v<lo)lo=v; if(v>hi)hi=v; }
+  }
+  if(!isFinite(lo)){ lo=0; hi=1; }
+  if(hi-lo<1e-9){ lo-=1; hi+=1; }
+  var pad=(hi-lo)*0.14;
+  var xs=P.xstar(), ys=P.f(xs), inside=(xs>=d[0]&&xs<=d[1]);
+  var accent=pWP.css("--accent"), good=pWP.css("--good"), ink2=pWP.css("--ink2");
+  var spec={
+    X:[d[0]-(d[1]-d[0])*0.04, d[1]+(d[1]-d[0])*0.04], Y:[lo-pad,hi+pad],
+    vbands:[{x1:d[0],x2:d[1],fill:pWP.css("--sunk")}],
+    curves:[{f:function(x){ return (x<d[0]||x>d[1])?NaN:P.f(x); }, color:accent, w:2.6}],
+    points:[], vlines:[]
+  };
+  if(inside){
+    spec.vlines.push({x:xs,color:good,w:1.3,dash:[4,4]});
+    spec.points.push({x:xs,y:ys,color:good,r:4.5,ring:true});
+  }
+  if(P.xother){
+    var xo=P.xother();
+    if(xo>=d[0]&&xo<=d[1]) spec.points.push({x:xo,y:P.f(xo),color:ink2,r:4,ring:true});
+  }
+  pWP.render(spec);
+
+  document.getElementById("wpOut").innerHTML = kv(P.rows()) + "<div style='margin-top:8px'>"+P.verdict()+"</div>";
+  document.getElementById("wpGuide").innerHTML =
+    "<h3 style='margin-top:0'>"+P.title+"</h3><p class='intstate'>"+P.ask+"</p>" + steps(P.hints);
+  sliders(document.getElementById("wpParams"), "wp", P.uses, WCFG, W, drawWP);
+}
+
+/* =====================================================================
+   TAB 2 — convexity
+   ===================================================================== */
+var C={a:1, b:0, c:1, d:0};
+var CCFG={
+  a:{label:"a", min:-2, max:2, step:0.1, dp:1},
+  b:{label:"b", min:-4, max:4, step:0.1, dp:1},
+  c:{label:"c", min:-4, max:4, step:0.1, dp:1},
+  d:{label:"d", min:-3, max:3, step:0.5, dp:1}
+};
+function roots2(A,B,Cc){            /* real roots of Ax²+Bx+C, A may be 0 */
+  if(Math.abs(A)<1e-12){ if(Math.abs(B)<1e-12) return null; return [-Cc/B]; }
+  var disc=B*B-4*A*Cc;
+  if(disc<0) return [];
+  var s=Math.sqrt(disc);
+  return [(-B-s)/(2*A), (-B+s)/(2*A)].sort(function(p,q){return p-q;});
+}
+/* turn "sign of a quadratic" into a list of x-intervals where it is > 0 */
+function posSet(A,B,Cc,lo,hi){
+  var r=roots2(A,B,Cc), out=[];
+  function push(x1,x2){ if(x2>x1+1e-12) out.push([Math.max(x1,lo),Math.min(x2,hi)]); }
+  if(r===null){ if(Cc>0) push(lo,hi); return out; }
+  if(Math.abs(A)<1e-12){ if(B>0) push(r[0],hi); else push(lo,r[0]); return out; }
+  if(r.length===0){ if(A>0) push(lo,hi); return out; }
+  if(A>0){ push(lo,r[0]); push(r[1],hi); } else push(r[0],r[1]);
+  return out.filter(function(iv){ return iv[1]>iv[0]+1e-12; });
+}
+function ivStr(list,lo,hi){
+  if(!list.length) return "nowhere";
+  return list.map(function(iv){
+    var a=(iv[0]<=lo+1e-9)?"−∞":fmt(iv[0],3);
+    var b=(iv[1]>=hi-1e-9)?"+∞":fmt(iv[1],3);
+    return "("+a+", "+b+")";
+  }).join(" ∪ ");
+}
+
+var CX=[
+{
+  chip:"ax³+bx²+cx+d", uses:["a","b","c","d"], X:[-6,6],
+  title:"A cubic",
+  ask:"f(x) = ax³ + bx² + cx + d",
+  f:function(x){ return ((C.a*x+C.b)*x+C.c)*x+C.d; },
+  d2:function(x){ return 6*C.a*x+2*C.b; },
+  dom:function(){ return [[-1e9,1e9]]; },
+  convex:function(lo,hi){ return posSet(0, 6*C.a, 2*C.b, lo, hi); },
+  rows:function(){
+    var r=[["f″(x)","6ax + 2b = "+fmt(6*C.a,2)+"x + "+fmt(2*C.b,2)]];
+    if(Math.abs(C.a)<1e-9){
+      r.push(["a = 0, so f″ is constant","= "+fmt(2*C.b,2)]);
+      r.push(["verdict", Math.abs(C.b)<1e-9 ? "affine — both convex and concave" : (C.b>0?"convex everywhere":"concave everywhere")]);
+    } else {
+      r.push(["inflection point","x = −b/3a = "+fmt(-C.b/(3*C.a),4)]);
+      r.push(["convex on", ivStr(this.convex(-1e9,1e9),-1e9,1e9)]);
+      r.push(["concave on", ivStr(posSet(0,-6*C.a,-2*C.b,-1e9,1e9),-1e9,1e9)]);
+    }
+    return r;
+  },
+  verdict:function(){
+    if(Math.abs(C.a)<1e-9) return "With <b>a = 0</b> this is not a cubic at all — the sign of f″ never changes.";
+    return "A genuine cubic (<b>a ≠ 0</b>) is <span class='yes'>convex on one side of x = −b/3a and concave on the other</span>, always. It can never be convex everywhere.";
+  },
+  hints:[
+    ["Differentiate","Twice, and stop",
+     "<div class='fline'>f′(x) = 3ax² + 2bx + c<br>f″(x) = 6ax + 2b</div>"+
+     "<p>Notice <span class='m'>c</span> and <span class='m'>d</span> have vanished. They tilt and raise the graph but cannot change its curvature — so the answer cannot possibly depend on them. Slide them and watch the shaded region stay put.</p>"],
+    ["Read the sign","f″ is linear, so it changes sign once",
+     "<p><span class='m'>f″(x) = 6ax + 2b = 0</span> at <span class='m'>x = −b/(3a)</span>, provided <span class='m'>a ≠ 0</span>. Since <span class='m'>f″</span> is a straight line with slope <span class='m'>6a</span>:</p>"+
+     "<div class='fline'>a &gt; 0:  concave on (−∞, −b/3a),  convex on (−b/3a, +∞)<br>a &lt; 0:  convex on (−∞, −b/3a),  concave on (−b/3a, +∞)</div>"+
+     "<p>That single point is the <em>inflection point</em>. A non-degenerate cubic always has exactly one, which is why no cubic is convex on all of <span class='m'>ℝ</span>.</p>"],
+    ["Degenerate case","a = 0",
+     "<p>Then <span class='m'>f″ = 2b</span> is a constant and never changes sign: convex everywhere if <span class='m'>b &gt; 0</span>, concave everywhere if <span class='m'>b &lt; 0</span>, and if <span class='m'>b = 0</span> too, <span class='m'>f</span> is affine — which counts as <em>both</em> convex and concave, though neither strictly. Say so explicitly; an answer that assumes <span class='m'>a ≠ 0</span> without saying so is incomplete.</p>"]
+  ]
+},
+{
+  chip:"ln(ax²+bx+c)", uses:["a","b","c"], X:[-6,6],
+  title:"The log of a quadratic",
+  ask:"f(x) = ln(ax² + bx + c)",
+  q:function(x){ return (C.a*x+C.b)*x+C.c; },
+  f:function(x){ var q=this.q(x); return q>0?Math.log(q):NaN; },
+  d2:function(x){
+    var q=this.q(x); if(q<=0) return NaN;
+    var N=2*C.a*C.a*x*x + 2*C.a*C.b*x + (C.b*C.b-2*C.a*C.c);
+    return -N/(q*q);
+  },
+  dom:function(){ return posSet(C.a,C.b,C.c,-1e9,1e9); },
+  convex:function(lo,hi){
+    /* f'' > 0 ⇔ N < 0, intersected with the domain */
+    var neg=posSet(-2*C.a*C.a, -2*C.a*C.b, -(C.b*C.b-2*C.a*C.c), lo, hi);
+    return intersect(neg, this.dom().map(function(iv){ return [Math.max(iv[0],lo),Math.min(iv[1],hi)]; }));
+  },
+  rows:function(){
+    var a=C.a,b=C.b,c=C.c, dom=this.dom();
+    var r=[
+      ["domain: ax²+bx+c &gt; 0", ivStr(dom,-1e9,1e9)],
+      ["f′(x)","(2ax + b)/q"],
+      ["f″(x)","−N(x)/q²,  N = 2a²x² + 2abx + (b²−2ac)"]
+    ];
+    if(Math.abs(a)<1e-9){
+      r.push(["a = 0","f″ = −b²/(bx+c)² ≤ 0"]);
+      r.push(["verdict", Math.abs(b)<1e-9?"f is constant":"concave on the whole domain"]);
+    } else {
+      var disc=4*a*c-b*b;
+      r.push(["disc of N","4a²(4ac − b²), sign of 4ac − b² = "+fmt(disc,3)]);
+      r.push(["convex on", ivStr(this.convex(-1e9,1e9),-1e9,1e9)]);
+      r.push(["concave on", ivStr(intersect(posSet(2*a*a,2*a*b,b*b-2*a*c,-1e9,1e9), dom),-1e9,1e9)]);
+    }
+    return r;
+  },
+  verdict:function(){
+    var a=C.a,b=C.b,c=C.c;
+    if(Math.abs(a)<1e-9) return "With <b>a = 0</b> the inside is linear and <span class='yes'>f is concave wherever it is defined</span> — the logarithm's own curvature is all that is left.";
+    if(b*b-4*a*c>0) return "<span class='yes'>The quadratic has real roots, so f is concave on its whole domain.</span> Worth remembering: ln of a quadratic that crosses zero is always concave where it is defined.";
+    return "No real roots, so the domain is all of ℝ and f is <span class='yes'>convex in a band around the vertex and concave outside it</span>.";
+  },
+  hints:[
+    ["First","Where is it even defined?",
+     "<p>The problem flags this for a reason. <span class='m'>ln</span> needs a positive argument, so the domain is <span class='m'>{x : q(x) = ax² + bx + c &gt; 0}</span>, and that set depends on the parameters:</p>"+
+     "<div class='fline'>a &gt; 0, b² &lt; 4ac:  all of ℝ<br>a &gt; 0, b² &gt; 4ac:  two unbounded pieces, outside the roots<br>a &lt; 0, b² &gt; 4ac:  one bounded interval between the roots<br>a &lt; 0, b² &lt; 4ac:  empty — f does not exist anywhere<br>a = 0, b ≠ 0:    a half-line</div>"+
+     "<p>Anything you say about convexity is a statement about that set and nothing outside it. Move the sliders into the empty case and watch the plot go blank.</p>"],
+    ["Differentiate","Chain rule, then quotient rule",
+     "<div class='fline'>f′(x) = (2ax + b)/q(x)</div>"+
+     "<p>Now the quotient rule, with <span class='m'>q′ = 2ax + b</span>:</p>"+
+     "<div class='fline'>f″(x) = [2a·q − (2ax+b)²] / q²</div>"+
+     "<p>Expand the numerator and collect:</p>"+
+     "<div class='fline'>2a(ax²+bx+c) − (4a²x² + 4abx + b²)<br>= −2a²x² − 2abx + 2ac − b²<br>= −[2a²x² + 2abx + (b² − 2ac)]</div>"+
+     "<p>Write <span class='m'>N(x)</span> for the bracket, so <span class='m'>f″ = −N/q²</span>.</p>"],
+    ["Then","The denominator is a square, so ignore it",
+     "<p>On the domain <span class='m'>q &gt; 0</span>, so <span class='m'>q² &gt; 0</span> and</p>"+
+     "<div class='fline'>f convex ⇔ f″ ≥ 0 ⇔ N(x) ≤ 0</div>"+
+     "<p><span class='m'>N</span> has leading coefficient <span class='m'>2a² &gt; 0</span>, so it opens upward and is negative only <em>between</em> its roots. Its discriminant is</p>"+
+     "<div class='fline'>(2ab)² − 4·2a²·(b²−2ac) = 4a²(4ac − b²)</div>"+
+     "<p>whose sign is the sign of <span class='m'>4ac − b²</span>, i.e. the <em>opposite</em> of the discriminant of <span class='m'>q</span> itself. The roots, when they exist, are</p>"+
+     "<div class='fline'>x = −b/(2a) ± √(4ac − b²)/(2a)</div>"+
+     "<p>symmetric about <span class='m'>−b/(2a)</span>, the vertex of <span class='m'>q</span>.</p>"],
+    ["The punchline","Two clean cases",
+     "<p><strong>If <span class='m'>q</span> has real roots</span></strong> (<span class='m'>b² &gt; 4ac</span>), then <span class='m'>N</span> has none, so <span class='m'>N &gt; 0</span> throughout and <span class='m'>f″ &lt; 0</span>: <strong>concave on its entire domain</strong>. Intuition: as <span class='m'>x</span> approaches a root of <span class='m'>q</span>, <span class='m'>f → −∞</span>, and a function diving to <span class='m'>−∞</span> at both ends of an interval cannot be convex there.</p>"+
+     "<p><strong>If <span class='m'>q</span> has no real roots</span></strong> (<span class='m'>b² &lt; 4ac</span>, which with <span class='m'>a &gt; 0</span> makes the domain all of <span class='m'>ℝ</span>), then <span class='m'>N</span> does have roots and <span class='m'>f</span> is convex between them, concave outside. Try <span class='m'>a = 1, b = 0, c = 1</span>: <span class='m'>N = 2x² − 2</span>, so <span class='m'>ln(1+x²)</span> is convex exactly on <span class='m'>(−1, 1)</span>.</p>"]
+  ]
+},
+{
+  chip:"e^(ax²+bx+c)", uses:["a","b","c"], X:[-4,4],
+  title:"The exponential of a quadratic",
+  ask:"f(x) = e^(ax² + bx + c)",
+  g:function(x){ return (C.a*x+C.b)*x+C.c; },
+  f:function(x){ return Math.exp(this.g(x)); },
+  d2:function(x){
+    var M=4*C.a*C.a*x*x + 4*C.a*C.b*x + (C.b*C.b+2*C.a);
+    return M*Math.exp(this.g(x));
+  },
+  dom:function(){ return [[-1e9,1e9]]; },
+  convex:function(lo,hi){ return posSet(4*C.a*C.a, 4*C.a*C.b, C.b*C.b+2*C.a, lo, hi); },
+  rows:function(){
+    var a=C.a,b=C.b;
+    var r=[
+      ["domain","all of ℝ — no restriction"],
+      ["f′(x)","(2ax + b)·e^g"],
+      ["f″(x)","M(x)·e^g,  M = 4a²x² + 4abx + b² + 2a"]
+    ];
+    if(Math.abs(a)<1e-9){
+      r.push(["a = 0","f″ = b²e^(bx+c) ≥ 0"]);
+      r.push(["verdict", Math.abs(b)<1e-9?"constant":"convex everywhere"]);
+    } else if(a>0){
+      r.push(["disc of M","−32a³ = "+fmt(-32*a*a*a,2)+" &lt; 0 ⇒ M never zero"]);
+      r.push(["verdict","convex on all of ℝ"]);
+    } else {
+      r.push(["disc of M","−32a³ = "+fmt(-32*a*a*a,2)+" &gt; 0 ⇒ two inflections"]);
+      r.push(["inflections at","x = −b/2a ± √(−1/2a) = "+fmt(-b/(2*a)-Math.sqrt(-1/(2*a)),4)+", "+fmt(-b/(2*a)+Math.sqrt(-1/(2*a)),4)]);
+      r.push(["convex on", ivStr(this.convex(-1e9,1e9),-1e9,1e9)]);
+    }
+    return r;
+  },
+  verdict:function(){
+    if(Math.abs(C.a)<1e-9) return "With <b>a = 0</b> this is a plain exponential: <span class='yes'>convex everywhere</span>.";
+    if(C.a>0) return "<span class='yes'>a &gt; 0 ⇒ convex on all of ℝ.</span> Even where g is decreasing, e^g curves upward.";
+    return "<span class='yes'>a &lt; 0 ⇒ concave in the middle, convex in the two tails.</span> With a = −1, b = 0 this is the bell curve e^(−x²), and the switch points are its familiar shoulders at ±1/√2.";
+  },
+  hints:[
+    ["Differentiate","The exponential factor never leaves",
+     "<p>Chain rule, with <span class='m'>g(x) = ax² + bx + c</span> and <span class='m'>g′ = 2ax + b</span>:</p>"+
+     "<div class='fline'>f′(x) = (2ax + b)·e^g</div>"+
+     "<p>Now the product rule on that:</p>"+
+     "<div class='fline'>f″(x) = 2a·e^g + (2ax+b)·(2ax+b)e^g = [2a + (2ax + b)²]·e^g</div>"+
+     "<p>Keep it factored. Do <em>not</em> expand <span class='m'>e^g</span> away — that factor is the whole simplification, because it is positive for every <span class='m'>x</span>.</p>"],
+    ["Read the sign","Only the bracket matters",
+     "<div class='fline'>f convex ⇔ 2a + (2ax + b)² ≥ 0</div>"+
+     "<p>And now the case split writes itself, because <span class='m'>(2ax+b)² ≥ 0</span>:</p>"+
+     "<div class='fline'>a &gt; 0:  bracket ≥ 2a &gt; 0  ⇒ convex everywhere<br>a = 0:  bracket = b² ≥ 0     ⇒ convex everywhere<br>a &lt; 0:  bracket is negative near x = −b/2a, positive far away</div>"+
+     "<p>The leading case needs no algebra at all: a sum of a positive constant and a square is positive.</p>"],
+    ["The a &lt; 0 case","Where exactly does it switch?",
+     "<p>Solve <span class='m'>2a + (2ax+b)² = 0</span>, i.e. <span class='m'>(2ax + b)² = −2a</span> (positive, since <span class='m'>a &lt; 0</span>):</p>"+
+     "<div class='fline'>2ax + b = ±√(−2a)  ⇒  x = −b/(2a) ± √(−2a)/(2a)</div>"+
+     "<p>which simplifies to <span class='m'>x = −b/(2a) ± √(−1/(2a))</span>. The two points sit symmetrically about <span class='m'>−b/(2a)</span>, the peak of <span class='m'>g</span>. Between them <span class='m'>f</span> is concave; outside, convex.</p>"+
+     "<p>Check it on the bell curve: <span class='m'>a = −1, b = 0, c = 0</span> gives <span class='m'>x = ±√(1/2) ≈ ±0.707</span>. Those are the inflection points of the standard normal shape, one standard deviation out.</p>"],
+    ["Expanding the bracket","If you want M in standard form",
+     "<p>Equivalent and sometimes handier for the quadratic formula:</p>"+
+     "<div class='fline'>M(x) = 4a²x² + 4abx + (b² + 2a),   disc = 16a²b² − 16a²(b²+2a) = −32a³</div>"+
+     "<p>The discriminant collapses to <span class='m'>−32a³</span>: negative when <span class='m'>a &gt; 0</span> (no inflections), positive when <span class='m'>a &lt; 0</span> (two). That one expression carries the whole classification — and notice <span class='m'>b</span> and <span class='m'>c</span> have dropped out of it, so they shift the inflection points but never change how many there are.</p>"]
+  ]
+}
+];
+function intersect(as,bs){
+  var out=[];
+  as.forEach(function(p){ bs.forEach(function(q){
+    var lo=Math.max(p[0],q[0]), hi=Math.min(p[1],q[1]);
+    if(hi>lo+1e-12) out.push([lo,hi]);
+  }); });
+  return out.sort(function(p,q){ return p[0]-q[0]; });
+}
+var cxI=0, pCx;
+function drawCx(){
+  var F=CX[cxI], X=F.X, i, lo=Infinity, hi=-Infinity;
+  function scan(fn){
+    for(i=0;i<=400;i++){
+      var x=X[0]+(X[1]-X[0])*i/400, v=fn(x);
+      if(isFinite(v)&&Math.abs(v)<1e4){ if(v<lo)lo=v; if(v>hi)hi=v; }
+    }
+  }
+  scan(function(x){ return F.f(x); });
+  scan(function(x){ return F.d2(x); });
+  if(!isFinite(lo)){ lo=-1; hi=1; }
+  if(hi-lo<1e-9){ lo-=1; hi+=1; }
+  if(hi-lo>60){ lo=Math.max(lo,-30); hi=Math.min(hi,30); }
+  var pad=(hi-lo)*0.12;
+  var accent=pCx.css("--accent"), ink2=pCx.css("--ink2"), goodSoft=pCx.css("--good-soft");
+  pCx.render({
+    X:X, Y:[lo-pad,hi+pad],
+    vbands:F.convex(X[0],X[1]).map(function(iv){ return {x1:iv[0],x2:iv[1],fill:goodSoft}; }),
+    curves:[
+      {f:function(x){ return F.f(x); }, color:accent, w:2.6},
+      {f:function(x){ return F.d2(x); }, color:ink2, w:1.8, dash:[6,4]}
+    ]
+  });
+  document.getElementById("cxOut").innerHTML = kv(F.rows()) + "<div style='margin-top:8px'>"+F.verdict()+"</div>";
+  document.getElementById("cxGuide").innerHTML =
+    "<h3 style='margin-top:0'>"+F.title+"</h3><p class='intstate'>"+F.ask+"</p>" + steps(F.hints);
+  sliders(document.getElementById("cxParams"), "cx", F.uses, CCFG, C, drawCx);
+}
+
+/* =====================================================================
+   TAB 3 — f(x) = −(x−4)⁴
+   ===================================================================== */
+var D4=[
+  {chip:"f", f:function(x){ return -Math.pow(x-4,4); }, lab:"f(x) = −(x−4)⁴", at4:0},
+  {chip:"f′", f:function(x){ return -4*Math.pow(x-4,3); }, lab:"f′(x) = −4(x−4)³", at4:0},
+  {chip:"f″", f:function(x){ return -12*Math.pow(x-4,2); }, lab:"f″(x) = −12(x−4)²", at4:0},
+  {chip:"f‴", f:function(x){ return -24*(x-4); }, lab:"f‴(x) = −24(x−4)", at4:0},
+  {chip:"f⁴", f:function(x){ return -24; }, lab:"f⁽⁴⁾(x) = −24", at4:-24}
+];
+var d4I=0, zw=2.5, pD4;
+function drawD4(){
+  var S=D4[d4I], X=[4-zw,4+zw], i, lo=Infinity, hi=-Infinity;
+  for(i=0;i<=300;i++){
+    var x=X[0]+(X[1]-X[0])*i/300, v=S.f(x);
+    if(isFinite(v)){ if(v<lo)lo=v; if(v>hi)hi=v; }
+  }
+  if(hi-lo<1e-9){ lo-=1; hi+=1; }
+  var pad=(hi-lo)*0.16;
+  var accent=pD4.css("--accent"), good=pD4.css("--good");
+  pD4.render({
+    X:X, Y:[lo-pad,hi+pad],
+    vlines:[{x:4,color:good,w:1.3,dash:[4,4]}],
+    curves:[{f:S.f, color:accent, w:2.6}],
+    points:[{x:4,y:S.f(4),color:good,r:4.5,ring:true}]
+  });
+
+  var vals=D4.map(function(s,i){
+    return "<code class='"+(i===d4I?"hit":"")+"'>"+["f","f′","f″","f‴","f⁽⁴⁾"][i]+"(4) = "+fmt(s.at4,0)+"</code>";
+  }).join("");
+  var left=S.f(4-0.5), right=S.f(4+0.5);
+  document.getElementById("d4Out").innerHTML =
+    "<b>"+S.lab+"</b><div class='derow'>"+vals+"</div>"+
+    kv([
+      ["value at x = 4", fmt(S.f(4),4)],
+      ["at x = 3.5", fmt(left,4)],
+      ["at x = 4.5", fmt(right,4)],
+      ["first non-zero derivative at 4", "order 4, value −24"]
+    ])+
+    "<div style='margin-top:8px'>"+
+    (d4I<4 ? "This one vanishes at x = 4, so it cannot classify the point."
+           : "<span class='yes'>Order 4 is even and −24 &lt; 0 ⇒ x* = 4 is a maximum.</span>")+
+    "</div>";
+
+  var guide = "<h3 style='margin-top:0'>Climbing the derivatives</h3>"+
+  "<p class='intstate'>f(x) = −(x − 4)⁴,  x* = 4</p>"+
+  steps([
+    ["Set-up","Find the stationary point first",
+     "<div class='fline'>f′(x) = −4(x − 4)³ = 0  ⇔  x = 4</div>"+
+     "<p>A cube is zero only when its base is, so <span class='m'>x* = 4</span> really is the <em>only</em> stationary point, as the problem says. Nothing subtle yet.</p>"],
+    ["The problem","Why f″ is no help",
+     "<div class='fline'>f″(x) = −12(x − 4)²   ⇒   f″(4) = 0</div>"+
+     "<p>The second-derivative test needs <span class='m'>f″(x*) ≠ 0</span>. Here it is exactly zero, so the test returns no verdict — and “<span class='m'>f″ = 0</span> so it must be an inflection” is a <em>mistake</em>, not a conclusion. Compare <span class='m'>x⁴</span> (minimum), <span class='m'>−x⁴</span> (maximum) and <span class='m'>x³</span> (inflection) at the origin: all three have <span class='m'>f″(0) = 0</span>, and all three behave differently.</p>"],
+    ["Keep going","The third derivative is zero too",
+     "<div class='fline'>f‴(x) = −24(x − 4)   ⇒   f‴(4) = 0</div>"+
+     "<p>Still no information. Notice the pattern: each differentiation drops the power by one, and the factor <span class='m'>(x−4)</span> survives until the power is used up.</p>"],
+    ["The verdict","The fourth derivative decides",
+     "<div class='fline'>f⁽⁴⁾(x) = −24   ⇒   f⁽⁴⁾(4) = −24 ≠ 0</div>"+
+     "<p>The first non-vanishing derivative at <span class='m'>x* = 4</span> is of <strong>even</strong> order and is <strong>negative</strong>. By the rule in the table below the lab, that makes <span class='m'>x* = 4</span> a local maximum.</p>"+
+     "<p>Here you can see it without Taylor's theorem at all, because the expansion is exact:</p>"+
+     "<div class='fline'>f(4 + h) = −h⁴ ≤ 0 = f(4)   for every h</div>"+
+     "<p>So <span class='m'>f(4) = 0</span> is not just a local maximum but the global one, with equality only at <span class='m'>h = 0</span>. The <span class='m'>h⁴</span> is the point: an even power is positive on <em>both</em> sides, so the minus sign pushes <span class='m'>f</span> down in both directions.</p>"],
+    ["Alternative","The first-derivative test, if you prefer",
+     "<p>You can also avoid higher derivatives entirely by tracking the sign of <span class='m'>f′(x) = −4(x−4)³</span>:</p>"+
+     "<div class='fline'>x &lt; 4:  (x−4)³ &lt; 0  ⇒  f′ &gt; 0,  f rising<br>x &gt; 4:  (x−4)³ &gt; 0  ⇒  f′ &lt; 0,  f falling</div>"+
+     "<p>Rising then falling: a maximum. This test never fails because of a vanishing second derivative — it only needs the sign of <span class='m'>f′</span> on each side. It is often the quickest route when the second-derivative test stalls.</p>"],
+    ["Try this","Zoom right in",
+     "<p>Drag the window slider down to <span class='m'>±0.15</span>. The graph becomes visually indistinguishable from a horizontal line — a quartic is extraordinarily flat near its vertex, <span class='m'>10⁻⁴</span> of its height at a tenth of the distance. That flatness is precisely why <span class='m'>f″, f‴</span> all vanish there, and why your eye cannot settle the question either. The algebra can.</p>"]
+  ]);
+  document.getElementById("d4Guide").innerHTML=guide;
+}
+
+/* =====================================================================
+   TAB 4 — densities
+   ===================================================================== */
+var Dp={a:3, alpha:1.5};
+var DCFG={
+  a:{label:"a", min:0.5, max:6, step:0.1, dp:1},
+  alpha:{label:"α", min:0.3, max:4, step:0.1, dp:1}
+};
+var DENS=[
+{
+  chip:"a. 1/a on [0,a]", uses:["a"],
+  title:"Uniform on [0, a]",
+  ask:"f(x) = 1/a for x ∈ [0, a], and 0 otherwise",
+  sup:function(){ return [0, Dp.a]; },
+  f:function(x){ var s=this.sup(); return (x<s[0]||x>s[1])?0:1/Dp.a; },
+  closed:function(){ var a=Dp.a; return {I:1, Ex:a/2, Ex2:a*a/3,
+    fI:"1", fEx:"a/2", fEx2:"a²/3", fVar:"a²/12"}; },
+  hints:[
+    ["Total","∫f = 1 is immediate",
+     "<p>Outside <span class='m'>[0,a]</span> the integrand is zero, so the infinite limits collapse to the interval:</p>"+
+     "<div class='fline'>∫₋₍∞₎^∞ f dx = ∫₀^a (1/a) dx = (1/a)·[x]₀^a = (1/a)·a = 1 ✓</div>"+
+     "<p>This is the geometric picture too: a rectangle of width <span class='m'>a</span> and height <span class='m'>1/a</span> has area 1. That is <em>why</em> the height is <span class='m'>1/a</span> and not something else.</p>"],
+    ["Ex","The balance point",
+     "<div class='fline'>Ex = ∫₀^a x·(1/a) dx = (1/a)·[x²/2]₀^a = (1/a)·(a²/2) = a/2</div>"+
+     "<p>The midpoint, as symmetry demands. Whenever a density is symmetric about a point, that point is <span class='m'>Ex</span> — and you can quote the symmetry instead of integrating.</p>"],
+    ["Ex²","One power higher",
+     "<div class='fline'>Ex² = ∫₀^a x²·(1/a) dx = (1/a)·[x³/3]₀^a = a²/3</div>"+
+     "<p>Note <span class='m'>a²/3 &gt; (a/2)² = a²/4</span>, as it must be: the difference <span class='m'>a²/3 − a²/4 = a²/12</span> is the variance, and variances are positive. The mismatch between <span class='m'>Ex²</span> and <span class='m'>(Ex)²</span> is not an error — it <em>is</em> the spread.</p>"]
+  ]
+},
+{
+  chip:"b. 6x(1−x)", uses:[],
+  title:"A parabola on [0, 1]",
+  ask:"f(x) = 6x(1 − x) for x ∈ [0, 1], and 0 otherwise",
+  sup:function(){ return [0,1]; },
+  f:function(x){ return (x<0||x>1)?0:6*x*(1-x); },
+  closed:function(){ return {I:1, Ex:0.5, Ex2:0.3,
+    fI:"1", fEx:"1/2", fEx2:"3/10", fVar:"1/20"}; },
+  hints:[
+    ["Total","Expand before integrating",
+     "<div class='fline'>∫₀¹ 6x(1−x) dx = 6∫₀¹ (x − x²) dx = 6·[x²/2 − x³/3]₀¹ = 6(1/2 − 1/3) = 6·(1/6) = 1 ✓</div>"+
+     "<p>That is where the 6 comes from: <span class='m'>∫₀¹ x(1−x)dx = 1/6</span>, so the density needs a factor of 6 to normalise. The constant in front of any density is never arbitrary — it is whatever makes the total 1.</p>"],
+    ["Ex","Symmetry gives it away",
+     "<div class='fline'>Ex = 6∫₀¹ (x² − x³) dx = 6(1/3 − 1/4) = 6/12 = 1/2</div>"+
+     "<p>No surprise: <span class='m'>6x(1−x)</span> is symmetric about <span class='m'>x = 1/2</span>, since swapping <span class='m'>x ↔ 1−x</span> leaves it unchanged. Here the peak and the mean coincide — which is <em>not</em> generally true, as density (c) shows.</p>"],
+    ["Ex²","And the variance",
+     "<div class='fline'>Ex² = 6∫₀¹ (x³ − x⁴) dx = 6(1/4 − 1/5) = 6/20 = 3/10</div>"+
+     "<div class='fline'>Var = 3/10 − 1/4 = 1/20 = 0.05</div>"+
+     "<p>Compare with the uniform on <span class='m'>[0,1]</span>, whose variance is <span class='m'>1/12 ≈ 0.083</span>. This parabola is more concentrated in the middle, so its spread is smaller — and the numbers confirm the picture.</p>"]
+  ]
+},
+{
+  chip:"c. 2x/a² on [0,a]", uses:["a"],
+  title:"A rising wedge",
+  ask:"f(x) = 2x/a² for x ∈ [0, a], and 0 otherwise",
+  sup:function(){ return [0, Dp.a]; },
+  f:function(x){ var s=this.sup(); return (x<s[0]||x>s[1])?0:2*x/(Dp.a*Dp.a); },
+  closed:function(){ var a=Dp.a; return {I:1, Ex:2*a/3, Ex2:a*a/2,
+    fI:"1", fEx:"2a/3", fEx2:"a²/2", fVar:"a²/18"}; },
+  hints:[
+    ["Total","A triangle",
+     "<div class='fline'>∫₀^a (2x/a²) dx = (2/a²)·[x²/2]₀^a = (2/a²)·(a²/2) = 1 ✓</div>"+
+     "<p>Geometrically: a right triangle of base <span class='m'>a</span> and height <span class='m'>f(a) = 2/a</span>, so area <span class='m'>= ½·a·(2/a) = 1</span>. You can read the normalising constant straight off that picture.</p>"],
+    ["Ex","Not the midpoint",
+     "<div class='fline'>Ex = (2/a²)∫₀^a x² dx = (2/a²)·(a³/3) = 2a/3</div>"+
+     "<p>Two thirds of the way along, not a half — the density puts more weight on large <span class='m'>x</span>, so the balance point shifts right. This is the one in the set where guessing the midpoint by analogy with (a) and (b) goes wrong. Watch the green <span class='m'>Ex</span> marker sit well right of centre.</p>"],
+    ["Ex²","And the variance",
+     "<div class='fline'>Ex² = (2/a²)∫₀^a x³ dx = (2/a²)·(a⁴/4) = a²/2</div>"+
+     "<div class='fline'>Var = a²/2 − 4a²/9 = (9a² − 8a²)/18 = a²/18</div>"+
+     "<p>Smaller than the uniform's <span class='m'>a²/12</span> on the same interval. Tilting the weight toward one end pulls the mean across but also tightens the distribution around it.</p>"]
+  ]
+},
+{
+  chip:"d. αe^(−αx)", uses:["alpha"],
+  title:"The exponential density",
+  ask:"f(x) = αe^(−αx) for x ≥ 0, and 0 otherwise",
+  sup:function(){ return [0, 6/Dp.alpha]; },
+  ilim:function(){ return [0, 30/Dp.alpha]; },
+  f:function(x){ return x<0?0:Dp.alpha*Math.exp(-Dp.alpha*x); },
+  closed:function(){ var al=Dp.alpha; return {I:1, Ex:1/al, Ex2:2/(al*al),
+    fI:"1", fEx:"1/α", fEx2:"2/α²", fVar:"1/α²"}; },
+  hints:[
+    ["Total","An improper integral, done by a limit",
+     "<p>The support is unbounded, so write it as a limit and never as an evaluation “at <span class='m'>∞</span>”:</p>"+
+     "<div class='fline'>∫₀^T αe^(−αx) dx = [−e^(−αx)]₀^T = 1 − e^(−αT)  → 1  as T → ∞</div>"+
+     "<p>The convergence needs <span class='m'>α &gt; 0</span>: with <span class='m'>α ≤ 0</span> the integral diverges and there is no density at all. That is why the slider stays positive.</p>"],
+    ["Ex","By parts, once",
+     "<p><span class='m'>∫x·αe^(−αx)dx</span> is polynomial × exponential — integrate by parts, differentiating the <span class='m'>x</span>:</p>"+
+     "<div class='fline'>u = x, v′ = αe^(−αx) ⇒ u′ = 1, v = −e^(−αx)<br>∫₀^T = [−xe^(−αx)]₀^T + ∫₀^T e^(−αx) dx = −Te^(−αT) + (1 − e^(−αT))/α</div>"+
+     "<p>As <span class='m'>T → ∞</span> the first term → 0 (exponentials beat polynomials) and <span class='m'>Ex = 1/α</span>.</p>"+
+     "<p>A sanity check with no integration: a larger <span class='m'>α</span> makes the density fall off faster, so the mean should shrink. It does — like <span class='m'>1/α</span>.</p>"],
+    ["Ex²","By parts twice — or reuse Ex",
+     "<p>Apply parts again, and the <span class='m'>x²</span> integral reduces to the <span class='m'>x</span> one you just did:</p>"+
+     "<div class='fline'>Ex² = ∫₀^∞ x²αe^(−αx)dx = (2/α)·∫₀^∞ xαe^(−αx)dx = (2/α)·(1/α) = 2/α²</div>"+
+     "<p>The general pattern is <span class='m'>∫₀^∞ xⁿe^(−αx)dx = n!/αⁿ⁺¹</span>, so each extra power of <span class='m'>x</span> costs one factor of <span class='m'>n/α</span>. Worth recognising rather than re-deriving each time.</p>"+
+     "<div class='fline'>Var = 2/α² − 1/α² = 1/α²</div>"+
+     "<p>So the standard deviation is <span class='m'>1/α</span> — equal to the mean. That coincidence is a signature of the exponential distribution.</p>"]
+  ]
+}
+];
+var dnI=0, pDn;
+function drawDn(){
+  var D=DENS[dnI], s=D.sup(), i;
+  var self=D;
+  var fx=function(x){ return self.f(x); };
+  var hiY=0;
+  for(i=0;i<=300;i++){ var v=fx(s[0]+(s[1]-s[0])*i/300); if(isFinite(v)&&v>hiY) hiY=v; }
+  if(hiY<=0) hiY=1;
+  var span=s[1]-s[0];
+  var X=[s[0]-span*0.12, s[1]+span*0.12];
+  var cl=D.closed();
+  var accent=pDn.css("--accent"), accentSoft=pDn.css("--accent-soft"), good=pDn.css("--good");
+  pDn.render({
+    X:X, Y:[-hiY*0.1, hiY*1.2],
+    fills:[{f:fx, x1:s[0], x2:s[1], fill:accentSoft}],
+    curves:[{f:fx, color:accent, w:2.6}],
+    vlines:[{x:cl.Ex, color:good, w:1.4, dash:[4,4]}],
+    points:[{x:cl.Ex, y:0, color:good, r:4.5, ring:true}]
+  });
+
+  /* numerical column, from the same f */
+  var il=D.ilim?D.ilim():s;
+  var nI=simp(fx, il[0], il[1], 6000);
+  var nE=simp(function(x){ return x*fx(x); }, il[0], il[1], 6000);
+  var nE2=simp(function(x){ return x*x*fx(x); }, il[0], il[1], 6000);
+  var vClosed=cl.Ex2-cl.Ex*cl.Ex;
+  var ok=function(u,v){ return Math.abs(u-v)<=2e-3*(1+Math.abs(v)); };
+  var allok=ok(nI,cl.I)&&ok(nE,cl.Ex)&&ok(nE2,cl.Ex2);
+  document.getElementById("dnOut").innerHTML =
+    "<table class='kv'>"+
+    "<tr><td></td><td class='v'>closed form</td><td class='v'>numerical</td></tr>"+
+    "<tr><td>∫f dx = "+cl.fI+"</td><td class='v'>"+fmt(cl.I,4)+"</td><td class='v'>"+fmt(nI,4)+"</td></tr>"+
+    "<tr><td>Ex = "+cl.fEx+"</td><td class='v'>"+fmt(cl.Ex,4)+"</td><td class='v'>"+fmt(nE,4)+"</td></tr>"+
+    "<tr><td>Ex² = "+cl.fEx2+"</td><td class='v'>"+fmt(cl.Ex2,4)+"</td><td class='v'>"+fmt(nE2,4)+"</td></tr>"+
+    "<tr><td>Var = "+cl.fVar+"</td><td class='v'>"+fmt(vClosed,4)+"</td><td class='v'>"+fmt(nE2-nE*nE,4)+"</td></tr>"+
+    "</table>"+
+    "<div style='margin-top:8px'>"+
+    (allok ? "<span class='yes'>Closed forms and numerical integrals agree"+(dnI===3?" \u2014 the plot stops at 6/\u03B1 but the integral runs out to 30/\u03B1, where the tail is negligible":"")+".</span>"
+           : "<span class='no'>The two columns disagree — check the limits.</span>")+
+    (vClosed>0 ? " Var &gt; 0, as a variance must be." : " <span class='no'>Var ≤ 0 — impossible.</span>")+
+    "</div>";
+
+  document.getElementById("dnGuide").innerHTML =
+    "<h3 style='margin-top:0'>"+D.title+"</h3><p class='intstate'>"+D.ask+"</p>"+
+    (D.uses.length?"":"<p style='font-size:13px;color:var(--ink2)'>No parameters — this one is fully pinned down.</p>")+
+    steps(D.hints);
+  sliders(document.getElementById("dnParams"), "dn", D.uses, DCFG, Dp, drawDn);
+}
+
+/* ===== wiring ===== */
+function init(){
+  pWP=new Plot(document.getElementById("cvWP"));
+  pCx=new Plot(document.getElementById("cvCx"));
+  pD4=new Plot(document.getElementById("cvD4"));
+  pDn=new Plot(document.getElementById("cvDn"));
+
+  function rWP(){ picker(document.getElementById("pickWP"), WP.map(function(p){return p.chip;}),
+    function(i){return i===wpI;}, function(i){ wpI=i; rWP(); }); drawWP(); }
+  function rCx(){ picker(document.getElementById("pickCx"), CX.map(function(p){return p.chip;}),
+    function(i){return i===cxI;}, function(i){ cxI=i; rCx(); }); drawCx(); }
+  function rD4(){ picker(document.getElementById("pickD4"), D4.map(function(p){return p.chip;}),
+    function(i){return i===d4I;}, function(i){ d4I=i; rD4(); }); drawD4(); }
+  function rDn(){ picker(document.getElementById("pickDn"), DENS.map(function(p){return p.chip;}),
+    function(i){return i===dnI;}, function(i){ dnI=i; rDn(); }); drawDn(); }
+  rWP(); rCx(); rD4(); rDn();
+
+  var z=document.getElementById("zw");
+  z.addEventListener("input", function(){ zw=parseFloat(z.value);
+    document.getElementById("zwval").textContent=fmt(zw,2); drawD4(); });
+
+  var tabBtns=document.querySelectorAll("nav.tabs button");
+  Array.prototype.forEach.call(tabBtns, function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(tabBtns, function(o){
+        var on=(o===b);
+        o.setAttribute("aria-selected", on?"true":"false");
+        document.getElementById(o.getAttribute("aria-controls")).hidden=!on;
+      });
+      requestAnimationFrame(function(){
+        [pWP,pCx,pD4,pDn].forEach(function(p){ p.resize(); if(p.last) p.render(p.last); });
+      });
+    });
+  });
+
+  if(window.matchMedia){
+    var mq=window.matchMedia("(prefers-color-scheme: dark)");
+    var re=function(){ drawWP(); drawCx(); drawD4(); drawDn(); };
+    if(mq.addEventListener) mq.addEventListener("change", re); else if(mq.addListener) mq.addListener(re);
+  }
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>

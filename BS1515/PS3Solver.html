@@ -1,0 +1,782 @@
+<title>BS1515 Calculus Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: single reading column; sticky tab rail on top; one live plot per section. */
+:root{
+  --paper:#FBF8F6; --surface:#FFFFFF; --sunk:#F3EDE9;
+  --ink:#1C1715; --ink2:#6A5C57; --rule:#E6DCD6;
+  --accent:#C21F16; --accent-soft:rgba(194,31,22,.11); --accent-line:rgba(194,31,22,.55);
+  --good:#1C6F52; --good-soft:rgba(28,111,82,.12);
+  --warn:#8E5A10; --warn-soft:rgba(142,90,16,.13);
+  --display:"Literata",Georgia,"Times New Roman",serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+    --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+    --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+    --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+    --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+  --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+  --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+  --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+  --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+
+/* Masthead */
+header.mast{padding-block:30px 18px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,6vw,42px);line-height:1.08;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.mast p{color:var(--ink2);margin:10px 0 0;max-width:62ch;font-size:14.5px}
+
+/* Tabs */
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);
+  display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);margin-bottom:26px;
+  scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--body);font-size:13.5px;font-weight:500;color:var(--ink2);
+  padding:13px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:3px}
+nav.tabs .num{font-family:var(--mono);font-size:11px;opacity:.65;margin-right:6px}
+
+h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-weight:600;font-size:17px;margin:26px 0 8px}
+.lede{color:var(--ink2);margin:0 0 22px;max-width:64ch}
+p{max-width:66ch}
+
+/* Maths inline */
+.m{font-family:var(--display);font-style:italic;font-size:1.03em;white-space:nowrap}
+.m .op,.m .n{font-style:normal}
+code{font-family:var(--mono);font-size:.92em;background:var(--sunk);padding:1px 5px;border-radius:3px}
+
+/* Set picker */
+.picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.picker button{appearance:none;cursor:pointer;background:var(--surface);color:var(--ink2);
+  border:1px solid var(--rule);border-radius:999px;padding:6px 13px;font-family:var(--body);font-size:13px}
+.picker button:hover{border-color:var(--accent-line);color:var(--ink)}
+.picker button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.picker button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Lab */
+.lab{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:720px){.lab{grid-template-columns:1fr}}
+.stage{min-width:0}
+.canvas-box{position:relative;width:100%;aspect-ratio:1/1;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+.toolrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.toolrow button{appearance:none;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  color:var(--ink2);border-radius:3px;padding:6px 10px;font-family:var(--body);font-size:12.5px}
+.toolrow button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.toolrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.slider{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.slider input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.readout{margin-top:10px;min-height:68px;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+  background:var(--sunk);border-radius:4px;padding:10px 12px;color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+.readout .yes{color:var(--good)}
+.readout .no{color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11.5px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:16px;height:3px;border-radius:2px;flex:0 0 auto}
+
+/* Hint ladder */
+details.step{border-top:1px solid var(--rule);padding:0}
+details.step:last-of-type{border-bottom:1px solid var(--rule)}
+details.step>summary{list-style:none;cursor:pointer;padding:11px 2px;display:flex;align-items:baseline;gap:10px;
+  font-size:13.5px;color:var(--ink2)}
+details.step>summary::-webkit-details-marker{display:none}
+details.step>summary::after{content:"+";margin-left:auto;font-family:var(--mono);color:var(--accent);font-size:15px}
+details.step[open]>summary::after{content:"\2212"}
+details.step>summary:hover{color:var(--ink)}
+details.step>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.step .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);flex:0 0 auto}
+details.step .body{padding:0 2px 16px;font-size:14px;color:var(--ink)}
+details.step .body p{margin:0 0 9px}
+details.step .body p:last-child{margin-bottom:0}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 14px;margin:16px 0}
+.quiz .q{font-size:14px;margin:0 0 10px;max-width:none}
+.quiz .q+.q{margin-top:18px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{appearance:none;cursor:pointer;background:var(--paper);border:1px solid var(--rule);color:var(--ink);
+  border-radius:3px;padding:6px 14px;font-family:var(--body);font-size:13px}
+.opts button:hover{border-color:var(--accent-line)}
+.opts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts button.right{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:500}
+.opts button.wrong{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);text-decoration:line-through}
+.fb{margin-top:9px;font-size:13px;color:var(--ink2);border-left:2px solid var(--rule);padding-left:11px}
+.fb.on{border-left-color:var(--accent)}
+
+/* Callout */
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:13px 15px;border-radius:0 4px 4px 0;margin:22px 0;font-size:13.5px}
+.note strong{font-weight:600;color:var(--warn)}
+.note p{max-width:none;margin:0}
+.note p+p{margin-top:8px}
+
+/* Systems */
+.syscards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-bottom:20px}
+.syscard{appearance:none;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  border-radius:4px;padding:13px 14px;font-family:var(--mono);font-size:13px;color:var(--ink);line-height:1.75}
+.syscard:hover{border-color:var(--accent-line)}
+.syscard[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.syscard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.syscard .lbl{font-family:var(--body);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.checkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.checkrow label{font-size:13px;color:var(--ink2)}
+.checkrow input[type=text]{width:84px;font-family:var(--mono);font-size:13px;padding:6px 8px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:3px}
+.checkrow input[type=text]:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.checkrow .go{appearance:none;cursor:pointer;background:var(--ink);color:var(--paper);border:0;border-radius:3px;
+  padding:7px 15px;font-family:var(--body);font-size:13px;font-weight:500}
+.checkrow .go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{font-size:13px;margin-top:9px;min-height:20px}
+.verdict.ok{color:var(--good)}
+.verdict.bad{color:var(--accent)}
+
+table.rec{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+table.rec th,table.rec td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.rec th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:400}
+table.rec td:first-child{font-family:var(--display);font-style:italic;white-space:nowrap}
+.tw{overflow-x:auto}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);color:var(--ink2);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.canvas-box{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.methodchip{display:inline-block;font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;
+  text-transform:uppercase;padding:3px 9px;border-radius:999px;margin-bottom:10px;
+  border:1px solid var(--accent);color:var(--accent);background:var(--accent-soft)}
+.intstate{font-family:var(--display);font-size:17px;margin:4px 0 14px;line-height:1.5}
+.intstate sup,.intstate sub{font-size:.68em}
+.fline{font-family:var(--mono);font-size:12.5px;background:var(--sunk);border-radius:4px;padding:10px 12px;
+  margin:10px 0;color:var(--ink);line-height:1.7;overflow-x:auto}
+.picker button{font-family:var(--mono);font-size:12px}
+u{text-decoration-color:var(--accent);text-underline-offset:3px}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">BS1515 · Problem Set 3</p>
+  <h1>Limits, the rules that follow, and eight integrals</h1>
+  <p>This sheet is mostly proof. The lab will not prove anything for you, but it will show you the picture each proof is describing — the <span class="m">ε</span>-band a sequence eventually enters, the secant line sliding onto the tangent, the antiderivative you can test by differentiating it back.</p>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" id="t0" aria-controls="p0" aria-selected="true"><span class="num">1</span>Limits</button>
+  <button role="tab" id="t1" aria-controls="p1" aria-selected="false"><span class="num">2</span>Derivative rules</button>
+  <button role="tab" id="t2" aria-controls="p2" aria-selected="false"><span class="num">3</span>Integrals</button>
+</nav>
+
+<!-- ===== 1 ===== -->
+<section role="tabpanel" id="p0" aria-labelledby="t0">
+  <h2>Limits</h2>
+  <p class="lede">A limit <span class="m">L</span> means: name any tolerance <span class="m">ε &gt; 0</span>, and from some point on, every term sits within <span class="m">ε</span> of <span class="m">L</span>. Pick a sequence, set <span class="m">ε</span>, and the lab finds the smallest <span class="m">N</span> that works.</p>
+
+  <div class="picker" id="pickSeq"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cvSeq"></canvas></div>
+      <div class="slider">
+        <label for="eps">ε =</label>
+        <input type="range" id="eps" min="0.02" max="1" step="0.01" value="0.3">
+        <span id="epsval">0.30</span>
+      </div>
+      <div class="slider" id="Lrow" hidden>
+        <label for="Lcand">candidate L =</label>
+        <input type="range" id="Lcand" min="-0.5" max="1.5" step="0.05" value="0.5">
+        <span id="Lval">0.50</span>
+      </div>
+      <div class="readout" id="seqOut"></div>
+    </div>
+    <div class="guide" id="seqGuide"></div>
+  </div>
+
+  <h3>Continuous functions preserve convergence</h3>
+  <p>If <span class="m">a<span class="n">ₙ</span> → a</span> and <span class="m">f</span> is continuous at <span class="m">a</span>, then <span class="m">f(a<span class="n">ₙ</span>) → f(a)</span>. The proof is two definitions laid end to end.</p>
+  <details class="step"><summary><span class="tag">Proof</span>Chain the two ε–δ statements</summary>
+    <div class="body">
+      <p>Fix <span class="m">ε &gt; 0</span>. Continuity at <span class="m">a</span> hands you a <span class="m">δ &gt; 0</span> such that <span class="m">|x − a| &lt; δ</span> implies <span class="m">|f(x) − f(a)| &lt; ε</span>.</p>
+      <p>Now feed that <span class="m">δ</span> back into the convergence of <span class="m">a<span class="n">ₙ</span></span>, treating it as the tolerance: there is an <span class="m">N</span> with <span class="m">|a<span class="n">ₙ</span> − a| &lt; δ</span> for every <span class="m">n ≥ N</span>.</p>
+      <p>Combine: for <span class="m">n ≥ N</span> we get <span class="m">|f(a<span class="n">ₙ</span>) − f(a)| &lt; ε</span>. That is exactly the statement <span class="m">f(a<span class="n">ₙ</span>) → f(a)</span>.</p>
+      <p>The direction matters. You choose <span class="m">ε</span> for the <em>output</em>, continuity converts it into a <span class="m">δ</span> for the <em>input</em>, and convergence of the sequence then delivers that <span class="m">δ</span>. Writing it the other way round proves nothing.</p>
+    </div>
+  </details>
+
+  <div class="note">
+    <p><strong>Where completeness enters.</strong> Both monotone-convergence proofs rest on a supremum or infimum existing, and that is a property of <span class="m">ℝ</span>, not of <span class="m">ℚ</span>. The same argument inside <span class="m">ℚ</span> fails: the decreasing bounded rational sequence <span class="m">1, 1.4, 1.41, 1.414, …</span> has no rational limit.</p>
+  </div>
+</section>
+
+<!-- ===== 2 ===== -->
+<section role="tabpanel" id="p1" aria-labelledby="t1" hidden>
+  <h2>Derivative rules</h2>
+  <p class="lede">Every rule below comes out of one difference quotient and one algebraic trick. Watch the secant slide onto the tangent first, then read the proofs.</p>
+
+  <div class="picker" id="pickFn"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cvSec"></canvas></div>
+      <div class="slider">
+        <label for="x0">x₀ =</label>
+        <input type="range" id="x0" min="0.3" max="3.2" step="0.05" value="1.5">
+        <span id="x0val">1.50</span>
+      </div>
+      <div class="slider">
+        <label for="hh">h =</label>
+        <input type="range" id="hh" min="0.01" max="1.5" step="0.01" value="1">
+        <span id="hval">1.00</span>
+      </div>
+      <div class="readout" id="secOut"></div>
+    </div>
+    <div class="guide" id="secGuide"></div>
+  </div>
+
+  <h3>The three rules to prove</h3>
+
+  <details class="step"><summary><span class="tag">Sum</span><span class="m">(f + g)′ = f′ + g′</span></summary>
+    <div class="body">
+      <p>Write the difference quotient and split it:</p>
+      <p style="font-family:var(--mono);font-size:12.5px">[f(x+h)+g(x+h) − f(x)−g(x)] / h &nbsp;=&nbsp; [f(x+h)−f(x)]/h &nbsp;+&nbsp; [g(x+h)−g(x)]/h</p>
+      <p>Both pieces converge, because <span class="m">f</span> and <span class="m">g</span> are assumed differentiable. The limit of a sum of two convergent things is the sum of their limits, so the whole quotient tends to <span class="m">f′(x) + g′(x)</span>.</p>
+      <p>No trick here, which is the point: the split is legitimate only once you know each half converges separately.</p>
+    </div>
+  </details>
+
+  <details class="step"><summary><span class="tag">Product</span><span class="m">(fg)′ = f′g + g′f</span></summary>
+    <div class="body">
+      <p>The obstacle is that <span class="m">f(x+h)g(x+h) − f(x)g(x)</span> does not split. The trick is to add and subtract a bridging term:</p>
+      <p style="font-family:var(--mono);font-size:12.5px">f(x+h)g(x+h) − <u>f(x+h)g(x)</u> + <u>f(x+h)g(x)</u> − f(x)g(x)</p>
+      <p>Group and divide by <span class="m">h</span>:</p>
+      <p style="font-family:var(--mono);font-size:12.5px">f(x+h) · [g(x+h)−g(x)]/h &nbsp;+&nbsp; g(x) · [f(x+h)−f(x)]/h</p>
+      <p>As <span class="m">h → 0</span> the two quotients become <span class="m">g′(x)</span> and <span class="m">f′(x)</span>. The leading factor <span class="m">f(x+h)</span> tends to <span class="m">f(x)</span> — and that step needs <span class="m">f</span> to be <em>continuous</em> at <span class="m">x</span>, which differentiability guarantees. Result: <span class="m">f(x)g′(x) + g(x)f′(x)</span>.</p>
+    </div>
+  </details>
+
+  <details class="step"><summary><span class="tag">Chain</span><span class="m">(f ∘ g)′ = f′(g(x))·g′(x)</span></summary>
+    <div class="body">
+      <p>The one-line version multiplies and divides by <span class="m">g(x+h) − g(x)</span>:</p>
+      <p style="font-family:var(--mono);font-size:12.5px">[f(g(x+h))−f(g(x))] / [g(x+h)−g(x)] &nbsp;×&nbsp; [g(x+h)−g(x)] / h</p>
+      <p>and lets <span class="m">h → 0</span>. The second factor tends to <span class="m">g′(x)</span>; the first is a difference quotient for <span class="m">f</span> at <span class="m">g(x)</span> with step <span class="m">k = g(x+h) − g(x)</span>, which tends to <span class="m">0</span>, so it tends to <span class="m">f′(g(x))</span>.</p>
+      <p><strong>The gap.</strong> If <span class="m">g</span> is locally constant, <span class="m">k = 0</span> and you have divided by zero. Patch it by defining</p>
+      <p style="font-family:var(--mono);font-size:12.5px">φ(k) = [f(u+k) − f(u)] / k for k ≠ 0, &nbsp; φ(0) = f′(u), &nbsp; u = g(x)</p>
+      <p>Then <span class="m">φ</span> is continuous at <span class="m">0</span> by the definition of <span class="m">f′(u)</span>, and the identity <span class="m">[f(g(x+h)) − f(g(x))]/h = φ(k)·(k/h)</span> now holds for every small <span class="m">h</span>, including those with <span class="m">k = 0</span>. Take limits and the chain rule follows with no division by zero anywhere.</p>
+    </div>
+  </details>
+
+  <h3>Four results to establish</h3>
+
+  <details class="step"><summary><span class="tag">Power</span><span class="m">(x<span class="n">ᴺ</span>)′ = Nx<span class="n">ᴺ⁻¹</span></span> for <span class="m">N ∈ ℕ</span></summary>
+    <div class="body">
+      <p>Induction, with the product rule doing the work.</p>
+      <p><strong>Base.</strong> <span class="m">N = 1</span>: the difference quotient is <span class="m">[(x+h) − x]/h = 1</span>, and <span class="m">1·x<span class="n">⁰</span> = 1</span>. ✓</p>
+      <p><strong>Step.</strong> Assume <span class="m">(x<span class="n">ᴺ</span>)′ = Nx<span class="n">ᴺ⁻¹</span></span> for some <span class="m">N ≥ 1</span>. Then</p>
+      <p style="font-family:var(--mono);font-size:12.5px">(x<sup>N+1</sup>)′ = (x · x<sup>N</sup>)′ = 1·x<sup>N</sup> + x·Nx<sup>N−1</sup> = x<sup>N</sup> + Nx<sup>N</sup> = (N+1)x<sup>N</sup></p>
+      <p>which is the claim at <span class="m">N + 1</span>. Note the inductive hypothesis must be stated for <em>some</em> <span class="m">N</span>, not all of them — assuming it for all <span class="m">N</span> assumes what you are proving.</p>
+    </div>
+  </details>
+
+  <details class="step"><summary><span class="tag">Root</span><span class="m">(x<span class="n">^½</span>)′ = ½x<span class="n">^−½</span></span></summary>
+    <div class="body">
+      <p>The induction above does not reach fractional powers, so go back to the quotient and rationalise the numerator:</p>
+      <p style="font-family:var(--mono);font-size:12.5px">[√(x+h) − √x]/h &nbsp;×&nbsp; [√(x+h) + √x]/[√(x+h) + √x] &nbsp;=&nbsp; (x+h−x) / (h[√(x+h)+√x]) &nbsp;=&nbsp; 1/[√(x+h)+√x]</p>
+      <p>The <span class="m">h</span> has cancelled, so the limit is immediate: <span class="m">1/(2√x) = ½x<span class="n">^−½</span></span>, valid for <span class="m">x &gt; 0</span>.</p>
+    </div>
+  </details>
+
+  <details class="step"><summary><span class="tag">Reciprocal</span><span class="m">(1/f)′ = −f′/f<span class="n">²</span></span></summary>
+    <div class="body">
+      <p>Fastest route: differentiate the identity <span class="m">f(x) · (1/f(x)) = 1</span> with the product rule. The right side is constant, so its derivative is zero:</p>
+      <p style="font-family:var(--mono);font-size:12.5px">f′(x)·(1/f(x)) + f(x)·(1/f)′(x) = 0</p>
+      <p>Solve for the unknown: <span class="m">(1/f)′ = −f′/f<span class="n">²</span></span>, wherever <span class="m">f(x) ≠ 0</span>.</p>
+      <p>This assumes <span class="m">1/f</span> is differentiable. To avoid assuming that, use the chain rule on <span class="m">u ↦ 1/u</span> instead, after proving <span class="m">(1/u)′ = −1/u<span class="n">²</span></span> from the difference quotient directly.</p>
+    </div>
+  </details>
+
+  <details class="step"><summary><span class="tag">Log</span><span class="m">(ln x)′ = 1/x</span>, given <span class="m">(e<span class="n">ˣ</span>)′ = e<span class="n">ˣ</span></span></summary>
+    <div class="body">
+      <p>Start from the identity that defines the logarithm: <span class="m">e<span class="n">^(ln x)</span> = x</span> for <span class="m">x &gt; 0</span>.</p>
+      <p>Differentiate both sides. The left needs the chain rule with outer function <span class="m">e<span class="n">ᵘ</span></span> and inner function <span class="m">ln x</span>:</p>
+      <p style="font-family:var(--mono);font-size:12.5px">e<sup>ln x</sup> · (ln x)′ = 1 &nbsp;⟹&nbsp; x · (ln x)′ = 1 &nbsp;⟹&nbsp; (ln x)′ = 1/x</p>
+      <p>The whole proof is one application of the chain rule to a tautology. The same move gives the derivative of any inverse function.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ===== 3 ===== -->
+<section role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+  <h2>Eight indefinite integrals</h2>
+  <p class="lede">Pick one. The plot draws the integrand against the numerical derivative of the proposed antiderivative — if the two curves lie on top of each other, the answer is right. That check works for every integral you will ever meet.</p>
+
+  <div class="picker" id="pickInt"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cvInt"></canvas></div>
+      <div id="paramRows"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i>the integrand</span>
+        <span><i class="swatch" style="background:var(--ink2);height:3px;background:repeating-linear-gradient(90deg,var(--ink2) 0 5px,transparent 5px 10px)"></i>derivative of the answer</span>
+      </div>
+      <div class="readout" id="intOut"></div>
+    </div>
+    <div class="guide" id="intGuide"></div>
+  </div>
+
+  <h3>Choosing the method</h3>
+  <div class="tw"><table class="rec">
+    <tr><th>Shape</th><th>Method</th><th>What to look for</th></tr>
+    <tr><td>A power of x</td><td>Formula</td><td>Raise the exponent by one, divide by the new exponent. The one exception is <span class="m">x<span class="n">⁻¹</span></span>, where that division is by zero.</td></tr>
+    <tr><td>g′(x)·(something in g(x))</td><td>Substitution</td><td>Spot an inner function whose derivative is already sitting in the integrand, up to a constant. Set <span class="m">u = g(x)</span>.</td></tr>
+    <tr><td>polynomial × e<sup>kx</sup></td><td>By parts</td><td>Differentiate the polynomial, integrate the exponential. Repeat until the polynomial is gone.</td></tr>
+  </table></div>
+
+  <div class="note">
+    <p><strong>Always differentiate your answer.</strong> Integration has no systematic algorithm, but checking does: differentiate what you wrote and compare with the integrand. It costs thirty seconds and catches every sign and constant error. That is precisely what this plot is doing numerically.</p>
+  </div>
+</section>
+
+<footer>Built for BS1515 Problem Set 3. Every curve is evaluated from the formulas as written; the check curve is a central difference on the stated antiderivative, not a stored answer.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== compact function plotter ===== */
+function Plot(cv){
+  this.cv=cv; this.ctx=cv.getContext("2d");
+  this.pad={l:46,r:14,t:14,b:30};
+  var self=this; this.resize();
+  if(window.ResizeObserver) new ResizeObserver(function(){ self.resize(); if(self.last) self.render(self.last); }).observe(cv.parentNode);
+  else window.addEventListener("resize", function(){ self.resize(); if(self.last) self.render(self.last); });
+}
+Plot.prototype.css=function(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
+Plot.prototype.resize=function(){
+  var r=this.cv.parentNode.getBoundingClientRect();
+  this.w=Math.max(220,Math.round(r.width)); this.h=Math.max(170,Math.round(r.height));
+  this.dpr=Math.min(window.devicePixelRatio||1,2);
+  this.cv.width=Math.round(this.w*this.dpr); this.cv.height=Math.round(this.h*this.dpr);
+};
+Plot.prototype.px=function(x){ return this.pad.l + (x-this.X[0])/(this.X[1]-this.X[0])*(this.w-this.pad.l-this.pad.r); };
+Plot.prototype.py=function(y){ return this.h-this.pad.b - (y-this.Y[0])/(this.Y[1]-this.Y[0])*(this.h-this.pad.t-this.pad.b); };
+Plot.prototype.ticks=function(lo,hi){
+  var span=hi-lo, step=Math.pow(10,Math.floor(Math.log(span/4)/Math.LN10));
+  if(span/step>8) step*=2; if(span/step>8) step*=2.5;
+  var out=[], t=Math.ceil(lo/step)*step;
+  for(; t<=hi+1e-9 && out.length<12; t+=step) out.push(Math.abs(t)<step/1000?0:t);
+  return out;
+};
+Plot.prototype.render=function(spec){
+  this.last=spec;
+  var c=this.ctx, i;
+  this.X=spec.X; this.Y=spec.Y;
+  c.setTransform(this.dpr,0,0,this.dpr,0,0);
+  c.clearRect(0,0,this.w,this.h);
+  c.fillStyle=this.css("--surface"); c.fillRect(0,0,this.w,this.h);
+
+  var rule=this.css("--rule"), ink2=this.css("--ink2"), ink=this.css("--ink"), accent=this.css("--accent"), good=this.css("--good");
+  var xs=this.ticks(this.X[0],this.X[1]), ys=this.ticks(this.Y[0],this.Y[1]);
+  c.font="11px "+(this.css("--mono")||"monospace"); c.fillStyle=ink2;
+  c.strokeStyle=rule; c.lineWidth=1;
+  for(i=0;i<xs.length;i++){ var p=Math.round(this.px(xs[i]))+0.5;
+    c.beginPath(); c.moveTo(p,this.pad.t); c.lineTo(p,this.h-this.pad.b); c.stroke();
+    c.textAlign="center"; c.textBaseline="top"; c.fillText(trimNum(xs[i]), p, this.h-this.pad.b+6); }
+  for(i=0;i<ys.length;i++){ var q=Math.round(this.py(ys[i]))+0.5;
+    c.beginPath(); c.moveTo(this.pad.l,q); c.lineTo(this.w-this.pad.r,q); c.stroke();
+    c.textAlign="right"; c.textBaseline="middle"; c.fillText(trimNum(ys[i]), this.pad.l-7, q); }
+  c.strokeStyle=ink2; c.lineWidth=1.2;
+  if(this.Y[0]<=0&&this.Y[1]>=0){ var z=Math.round(this.py(0))+0.5; c.beginPath(); c.moveTo(this.pad.l,z); c.lineTo(this.w-this.pad.r,z); c.stroke(); }
+  if(this.X[0]<=0&&this.X[1]>=0){ var z2=Math.round(this.px(0))+0.5; c.beginPath(); c.moveTo(z2,this.pad.t); c.lineTo(z2,this.h-this.pad.b); c.stroke(); }
+
+  c.save(); c.beginPath();
+  c.rect(this.pad.l, this.pad.t, this.w-this.pad.l-this.pad.r, this.h-this.pad.t-this.pad.b); c.clip();
+
+  (spec.bands||[]).forEach(function(b){
+    c.fillStyle=b.fill; c.fillRect(this.pad.l, this.py(b.hi), this.w-this.pad.l-this.pad.r, this.py(b.lo)-this.py(b.hi));
+  }, this);
+  (spec.hlines||[]).forEach(function(L){
+    c.strokeStyle=L.color; c.lineWidth=L.w||1.4; c.setLineDash(L.dash||[]);
+    c.beginPath(); c.moveTo(this.pad.l, this.py(L.y)); c.lineTo(this.w-this.pad.r, this.py(L.y)); c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.vlines||[]).forEach(function(L){
+    c.strokeStyle=L.color; c.lineWidth=L.w||1.4; c.setLineDash(L.dash||[]);
+    c.beginPath(); c.moveTo(this.px(L.x), this.pad.t); c.lineTo(this.px(L.x), this.h-this.pad.b); c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.curves||[]).forEach(function(cu){
+    c.strokeStyle=cu.color; c.lineWidth=cu.w||2.2; c.setLineDash(cu.dash||[]);
+    c.beginPath(); var started=false, N=cu.N||420, k, x, y;
+    for(k=0;k<=N;k++){
+      x=this.X[0]+(this.X[1]-this.X[0])*k/N; y=cu.f(x);
+      if(!isFinite(y) || y<this.Y[0]-1e6 || y>this.Y[1]+1e6){ started=false; continue; }
+      if(!started){ c.moveTo(this.px(x),this.py(y)); started=true; } else c.lineTo(this.px(x),this.py(y));
+    }
+    c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.segs||[]).forEach(function(s){
+    c.strokeStyle=s.color; c.lineWidth=s.w||2; c.setLineDash(s.dash||[]);
+    c.beginPath(); c.moveTo(this.px(s.x1),this.py(s.y1)); c.lineTo(this.px(s.x2),this.py(s.y2)); c.stroke(); c.setLineDash([]);
+  }, this);
+  (spec.points||[]).forEach(function(pt){
+    c.fillStyle=pt.color; c.beginPath(); c.arc(this.px(pt.x),this.py(pt.y),pt.r||3.5,0,Math.PI*2); c.fill();
+    if(pt.ring){ c.strokeStyle=this.css("--surface"); c.lineWidth=1.4; c.stroke(); }
+  }, this);
+  c.restore();
+};
+function trimNum(v){
+  if(Math.abs(v)>=1000||((Math.abs(v)<0.01)&&v!==0)) return v.toExponential(0);
+  var s=(Math.round(v*1000)/1000).toString();
+  return s.replace("-","−");
+}
+function fmt(v,d){ d=(d==null)?3:d; if(!isFinite(v)) return "—"; var s=(Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toFixed(d); return s.replace("-","−"); }
+
+/* ===== tab 1: sequences ===== */
+var SEQS=[
+ {k:"1/n", chip:"1/n", f:function(n){ return 1/n; }, L:0, hasL:true,
+  title:"aₙ = 1/n",
+  proof:"<p>Decreasing and bounded below by <span class='m'>0</span>, so it must converge — but you can name the limit directly.</p>"+
+        "<p><strong>Claim:</strong> the limit is <span class='m'>0</span>. Fix <span class='m'>ε &gt; 0</span>. By the Archimedean property there is an <span class='m'>N ∈ ℕ</span> with <span class='m'>N &gt; 1/ε</span>. For every <span class='m'>n ≥ N</span>,</p>"+
+        "<p style='font-family:var(--mono);font-size:12.5px'>|1/n − 0| = 1/n ≤ 1/N &lt; ε</p>"+
+        "<p>which is the definition met. Drag <span class='m'>ε</span> and watch <span class='m'>N</span> track <span class='m'>⌈ 1/ε ⌉</span>.</p>"},
+ {k:"1,0,1,0,…", chip:"1,0,1,0,…", f:function(n){ return (n%2===1)?1:0; }, L:null, hasL:false,
+  title:"aₙ = 1, 0, 1, 0, …",
+  proof:"<p>No limit exists. Suppose one did, call it <span class='m'>L</span>, and take <span class='m'>ε = ½</span>.</p>"+
+        "<p>Then beyond some <span class='m'>N</span> every term lies within <span class='m'>½</span> of <span class='m'>L</span>. But both <span class='m'>1</span> and <span class='m'>0</span> occur beyond any <span class='m'>N</span>, so</p>"+
+        "<p style='font-family:var(--mono);font-size:12.5px'>|1 − L| &lt; ½ &nbsp;and&nbsp; |0 − L| &lt; ½</p>"+
+        "<p>The first forces <span class='m'>L &gt; ½</span>, the second forces <span class='m'>L &lt; ½</span>. Contradiction, so no such <span class='m'>L</span> exists.</p>"+
+        "<p>Slide the candidate <span class='m'>L</span> below and keep <span class='m'>ε</span> at or under <span class='m'>0.5</span>: the band can never swallow the tail, wherever you put it.</p>"},
+ {k:"1 − 1/n", chip:"1 − 1/n", f:function(n){ return 1-1/n; }, L:1, hasL:true,
+  title:"aₙ = 1 − 1/n",
+  proof:"<p>Increasing and bounded above by <span class='m'>1</span>. The monotone convergence theorem says it converges; the limit is the supremum of its terms, which is <span class='m'>1</span>.</p>"+
+        "<p><strong>The general proof, increasing case.</strong> Let <span class='m'>L = sup{aₙ}</span>, which exists because the set is non-empty and bounded above — this is where completeness of <span class='m'>ℝ</span> is used.</p>"+
+        "<p>Fix <span class='m'>ε &gt; 0</span>. Since <span class='m'>L − ε</span> is smaller than the supremum, it is not an upper bound, so some term <span class='m'>a_N &gt; L − ε</span>. For <span class='m'>n ≥ N</span> monotonicity gives <span class='m'>aₙ ≥ a_N &gt; L − ε</span>, and <span class='m'>aₙ ≤ L</span> always. So <span class='m'>|aₙ − L| &lt; ε</span>.</p>"},
+ {k:"(−1)ⁿ/n", chip:"(−1)ⁿ/n", f:function(n){ return Math.pow(-1,n)/n; }, L:0, hasL:true,
+  title:"aₙ = (−1)ⁿ / n",
+  proof:"<p>Not monotone — it alternates sign on every step — yet it converges to <span class='m'>0</span>. Monotonicity is sufficient for convergence, never necessary.</p>"+
+        "<p>The proof is the same as for <span class='m'>1/n</span>, because <span class='m'>|(−1)ⁿ/n − 0| = 1/n</span>. The definition of a limit only ever looks at distances, so the sign flipping is invisible to it.</p>"},
+ {k:"(1+1/n)ⁿ", chip:"(1+1/n)ⁿ", f:function(n){ return Math.pow(1+1/n,n); }, L:Math.E, hasL:true,
+  title:"aₙ = (1 + 1/n)ⁿ",
+  proof:"<p>Increasing and bounded above by <span class='m'>3</span>, so by monotone convergence it has a limit — and the theorem gives you that conclusion <em>without</em> telling you the value.</p>"+
+        "<p>This is how <span class='m'>e ≈ 2.71828</span> is usually defined: as the limit this sequence is guaranteed to have. The existence proof and the identification of the number are genuinely separate steps.</p>"+
+        "<p>Note how slowly it converges. At <span class='m'>n = 60</span> it is still only around <span class='m'>2.69</span> — convergence says nothing about speed.</p>"}
+];
+var seqI=0, eps=0.3, Lcand=0.5;
+var pSeq;
+function drawSeq(){
+  var s=SEQS[seqI], N=60, i, pts=[], lo=Infinity, hi=-Infinity;
+  for(i=1;i<=N;i++){ var v=s.f(i); pts.push({x:i,y:v}); if(v<lo)lo=v; if(v>hi)hi=v; }
+  var L = s.hasL ? s.L : Lcand;
+  lo=Math.min(lo,L-eps); hi=Math.max(hi,L+eps);
+  var padY=(hi-lo)*0.18+0.05;
+  var accent=pSeq.css("--accent"), ink=pSeq.css("--ink"), good=pSeq.css("--good"), ink2=pSeq.css("--ink2");
+
+  // smallest N with |a_n - L| < eps for all n >= N (searched up to 400)
+  var found=null;
+  for(i=1;i<=400;i++){
+    var ok=true;
+    for(var j=i;j<=Math.min(i+120,400);j++) if(Math.abs(s.f(j)-L)>=eps){ ok=false; break; }
+    if(ok){ found=i; break; }
+  }
+  pSeq.render({
+    X:[0,N+1], Y:[lo-padY,hi+padY],
+    bands:[{lo:L-eps, hi:L+eps, fill:pSeq.css("--accent-soft")}],
+    hlines:[{y:L, color:accent, w:1.6, dash:[5,4]}],
+    vlines: found!==null && found<=N ? [{x:found, color:good, w:1.4, dash:[3,3]}] : [],
+    points: pts.map(function(p){ return {x:p.x,y:p.y,color:Math.abs(p.y-L)<eps?ink2:ink,r:2.6}; })
+  });
+
+  var out=document.getElementById("seqOut");
+  var h = "<b>"+s.title+"</b> &nbsp; ε = "+fmt(eps,2)+"<br>";
+  h += (s.hasL ? "limit L = " : "candidate L = ") + fmt(L,4) + "<br>";
+  if(found===null) h += "<span class='no'>No N works at this ε.</span> The tail never settles inside the band.";
+  else h += "smallest N with |aₙ − L| &lt; ε for all n ≥ N: <b>"+found+"</b>" +
+            (found>N ? " (beyond the plot)" : "");
+  out.innerHTML=h;
+
+  document.getElementById("seqGuide").innerHTML =
+    "<h3 style='margin-top:0'>"+s.title+"</h3>" +
+    "<details class='step' open><summary><span class='tag'>Proof</span>What to write down</summary><div class='body'>"+s.proof+"</div></details>" +
+    "<details class='step'><summary><span class='tag'>Definition</span>The statement you are verifying</summary><div class='body'>" +
+    "<p><span class='m'>a<span class='n'>ₙ</span> → L</span> means: for every <span class='m'>ε &gt; 0</span> there exists <span class='m'>N ∈ ℕ</span> such that <span class='m'>|a<span class='n'>ₙ</span> − L| &lt; ε</span> for all <span class='m'>n ≥ N</span>.</p>" +
+    "<p>Three quantifiers in that order. <span class='m'>N</span> is allowed to depend on <span class='m'>ε</span> — and must, in every interesting case — but not on <span class='m'>n</span>. Shrink <span class='m'>ε</span> on the slider and watch the required <span class='m'>N</span> grow.</p></div></details>";
+  document.getElementById("Lrow").hidden = s.hasL;
+}
+
+/* ===== tab 2: secant to tangent ===== */
+var FNS=[
+ {k:"x²", chip:"x²", f:function(x){return x*x;}, d:function(x){return 2*x;}, dstr:"2x", X:[0,3.6]},
+ {k:"x³", chip:"x³", f:function(x){return x*x*x;}, d:function(x){return 3*x*x;}, dstr:"3x²", X:[0,2.6]},
+ {k:"√x", chip:"√x", f:function(x){return Math.sqrt(x);}, d:function(x){return 0.5/Math.sqrt(x);}, dstr:"½x^(−½)", X:[0,4.2]},
+ {k:"ln x", chip:"ln x", f:function(x){return Math.log(x);}, d:function(x){return 1/x;}, dstr:"1/x", X:[0.05,4.2]},
+ {k:"eˣ", chip:"eˣ", f:function(x){return Math.exp(x);}, d:function(x){return Math.exp(x);}, dstr:"eˣ", X:[0,2.4]},
+ {k:"1/x", chip:"1/x", f:function(x){return 1/x;}, d:function(x){return -1/(x*x);}, dstr:"−1/x²", X:[0.25,3.6]}
+];
+var fnI=0, x0=1.5, hh=1.0;
+var pSec;
+function drawSec(){
+  var F=FNS[fnI], lo=Infinity, hi=-Infinity, i;
+  var X=F.X.slice();
+  if(x0+hh > X[1]) X[1] = x0+hh+0.3;
+  for(i=0;i<=200;i++){ var x=X[0]+(X[1]-X[0])*i/200, v=F.f(x); if(isFinite(v)){ if(v<lo)lo=v; if(v>hi)hi=v; } }
+  if(hi-lo>40){ hi=lo+40; }
+  var pad=(hi-lo)*0.15+0.2;
+  var y0=F.f(x0), y1=F.f(x0+hh), slope=(y1-y0)/hh, tru=F.d(x0);
+  var accent=pSec.css("--accent"), ink=pSec.css("--ink"), good=pSec.css("--good"), ink2=pSec.css("--ink2");
+  var Yl=lo-pad, Yh=hi+pad;
+  function lineAt(m, px, py){ return function(x){ return py + m*(x-px); }; }
+  pSec.render({
+    X:X, Y:[Yl,Yh],
+    curves:[
+      {f:F.f, color:accent, w:2.4},
+      {f:lineAt(tru,x0,y0), color:good, w:1.6, dash:[5,4]},
+      {f:lineAt(slope,x0,y0), color:ink, w:1.8}
+    ],
+    segs:[{x1:x0+hh,y1:y1,x2:x0+hh,y2:y0,color:ink2,w:1.2,dash:[3,3]},
+          {x1:x0,y1:y0,x2:x0+hh,y2:y0,color:ink2,w:1.2,dash:[3,3]}],
+    points:[{x:x0,y:y0,color:ink,r:4,ring:true},{x:x0+hh,y:y1,color:ink,r:4,ring:true}]
+  });
+  document.getElementById("secOut").innerHTML =
+    "<b>f(x) = "+F.k+"</b> at x₀ = "+fmt(x0,2)+", h = "+fmt(hh,2)+"<br>" +
+    "secant slope [f(x₀+h) − f(x₀)]/h = <b>"+fmt(slope,4)+"</b><br>" +
+    "f′(x₀) = "+F.dstr+" = <b>"+fmt(tru,4)+"</b><br>" +
+    "gap = "+fmt(Math.abs(slope-tru),4);
+  document.getElementById("secGuide").innerHTML =
+    "<h3 style='margin-top:0'>The difference quotient</h3>" +
+    "<p style='font-size:14px'>The solid black line joins <span class='m'>(x₀, f(x₀))</span> to <span class='m'>(x₀+h, f(x₀+h))</span>; its slope is the quotient you take the limit of. The dashed green line is the tangent, with slope <span class='m'>f′(x₀)</span>.</p>" +
+    "<p style='font-size:14px'>Drag <span class='m'>h</span> toward zero. The two lines merge, and the gap in the readout falls roughly in proportion to <span class='m'>h</span>. That shrinking gap <em>is</em> the derivative existing.</p>" +
+    "<details class='step'><summary><span class='tag'>Note</span>Why the limit might fail</summary><div class='body'>" +
+    "<p>Nothing here guarantees the two lines meet. For <span class='m'>f(x) = |x|</span> at <span class='m'>x₀ = 0</span> the secant slope is <span class='m'>+1</span> for positive <span class='m'>h</span> and <span class='m'>−1</span> for negative <span class='m'>h</span>, so the limit does not exist and there is no tangent to converge to.</p>" +
+    "<p>Try <span class='m'>√x</span> with <span class='m'>x₀</span> pushed to its smallest value: the tangent becomes near-vertical, the derivative blows up, and the function is not differentiable at <span class='m'>0</span> even though it is continuous there.</p></div></details>";
+}
+
+/* ===== tab 3: integrals ===== */
+var P={a:1,b:2,c:1,alpha:2};
+var INTS=[
+{k:"∫x^α dx", chip:"x^α", method:"formula", uses:["alpha"], X:[0.1,3],
+ stat:"∫ x<sup>α</sup> dx, &nbsp; α ≠ −1",
+ F:"x<sup>α+1</sup>/(α+1) + C",
+ f:function(x){ return Math.pow(x,P.alpha); },
+ A:function(x){ return Math.pow(x,P.alpha+1)/(P.alpha+1); },
+ hints:[["Hint","Guess and correct","<p>Differentiating <span class='m'>x<span class='n'>^(α+1)</span></span> gives <span class='m'>(α+1)x<span class='n'>^α</span></span> — the right shape with the wrong constant in front. Divide it out.</p>"],
+        ["Answer","The power rule, reversed","<p><span class='m'>∫x<span class='n'>^α</span>dx = x<span class='n'>^(α+1)</span>/(α+1) + C</span>.</p><p>The exclusion <span class='m'>α ≠ −1</span> is not a technicality: at <span class='m'>α = −1</span> the formula divides by zero, and the antiderivative is a logarithm instead. Slide <span class='m'>α</span> toward <span class='m'>−1</span> and watch the answer curve blow up.</p>"]]},
+
+{k:"∫dx/x", chip:"1/x", method:"formula", uses:[], X:[0.15,4],
+ stat:"∫ x<sup>−1</sup> dx",
+ F:"ln|x| + C",
+ f:function(x){ return 1/x; },
+ A:function(x){ return Math.log(Math.abs(x)); },
+ hints:[["Hint","The gap the power rule leaves","<p>This is the one exponent the previous formula cannot reach. You already know a function whose derivative is <span class='m'>1/x</span>.</p>"],
+        ["Answer","Why the absolute value","<p><span class='m'>∫x<span class='n'>⁻¹</span>dx = ln|x| + C</span>.</p><p>The integrand is defined for negative <span class='m'>x</span> too, but <span class='m'>ln x</span> is not. For <span class='m'>x &lt; 0</span>, the chain rule gives <span class='m'>(ln(−x))′ = (−1)/(−x) = 1/x</span> — the same derivative. Writing <span class='m'>ln|x|</span> covers both sides at once.</p><p>Strictly, the constant <span class='m'>C</span> can differ on the two sides, since the domain is disconnected.</p>"]]},
+
+{k:"∫(ax²+bx+c)dx", chip:"ax²+bx+c", method:"formula", uses:["a","b","c"], X:[-2,2],
+ stat:"∫ (ax<sup>2</sup> + bx + c) dx",
+ F:"ax<sup>3</sup>/3 + bx<sup>2</sup>/2 + cx + C",
+ f:function(x){ return P.a*x*x + P.b*x + P.c; },
+ A:function(x){ return P.a*x*x*x/3 + P.b*x*x/2 + P.c*x; },
+ hints:[["Hint","Linearity","<p>Integration is linear: the integral of a sum is the sum of the integrals, and constants come out front. Handle each term on its own.</p>"],
+        ["Answer","Term by term","<p><span class='m'>ax<span class='n'>³</span>/3 + bx<span class='n'>²</span>/2 + cx + C</span>.</p><p>One constant, not three — three arbitrary constants added together are still just one arbitrary constant.</p>"]]},
+
+{k:"∫5(x−4)√(x²−8x)dx", chip:"5(x−4)√(x²−8x)", method:"substitution", uses:[], X:[8.05,13],
+ stat:"∫ 5(x − 4)√(x<sup>2</sup> − 8x) dx",
+ F:"(5/3)(x<sup>2</sup> − 8x)<sup>3/2</sup> + C",
+ f:function(x){ var u=x*x-8*x; return u<0?NaN:5*(x-4)*Math.sqrt(u); },
+ A:function(x){ var u=x*x-8*x; return u<0?NaN:(5/3)*Math.pow(u,1.5); },
+ hints:[["Hint","Look for a derivative already present","<p>The awkward part is <span class='m'>x<span class='n'>²</span> − 8x</span> under the root. Differentiate it and compare with the factor sitting outside.</p>"],
+        ["Step","Make the substitution","<p>Let <span class='m'>u = x<span class='n'>²</span> − 8x</span>, so <span class='m'>du = (2x − 8)dx = 2(x − 4)dx</span>. Therefore <span class='m'>5(x−4)dx = (5/2)du</span>, and the integral becomes</p><p style='font-family:var(--mono);font-size:12.5px'>(5/2) ∫ √u du</p>"],
+        ["Answer","Integrate and substitute back","<p><span class='m'>(5/2)·(2/3)u<span class='n'>^(3/2)</span> = (5/3)(x<span class='n'>²</span> − 8x)<span class='n'>^(3/2)</span> + C</span>.</p><p>Defined only where <span class='m'>x<span class='n'>²</span> − 8x ≥ 0</span>, that is <span class='m'>x ≤ 0</span> or <span class='m'>x ≥ 8</span>. The plot sits on the right branch.</p>"]]},
+
+{k:"∫(7y−2y³)e^(y⁴−7y²)dy", chip:"(7y−2y³)e^(y⁴−7y²)", method:"substitution", uses:[], X:[-2.6,2.6],
+ stat:"∫ (7y − 2y<sup>3</sup>) e<sup>y⁴ − 7y²</sup> dy",
+ F:"−½ e<sup>y⁴ − 7y²</sup> + C",
+ f:function(y){ return (7*y-2*y*y*y)*Math.exp(y*y*y*y-7*y*y); },
+ A:function(y){ return -0.5*Math.exp(y*y*y*y-7*y*y); },
+ hints:[["Hint","The exponent is the substitution","<p>Whenever you see <span class='m'>e</span> to a complicated power, try setting <span class='m'>u</span> equal to that power and see whether <span class='m'>du</span> matches what is multiplying it.</p>"],
+        ["Step","Match the differential","<p><span class='m'>u = y<span class='n'>⁴</span> − 7y<span class='n'>²</span></span> gives <span class='m'>du = (4y<span class='n'>³</span> − 14y)dy = −2(7y − 2y<span class='n'>³</span>)dy</span>.</p><p>So <span class='m'>(7y − 2y<span class='n'>³</span>)dy = −du/2</span>, and the integral is <span class='m'>−½∫e<span class='n'>ᵘ</span>du</span>.</p>"],
+        ["Answer","Done in one line","<p><span class='m'>−½ e<span class='n'>^(y⁴ − 7y²)</span> + C</span>.</p><p>Watch the sign. The derivative of the exponent runs the <em>opposite</em> way from the factor in front, which is where the minus comes from — the commonest error on this one.</p>"]]},
+
+{k:"∫3x/(1+9x²)⁴ dx", chip:"3x/(1+9x²)⁴", method:"substitution", uses:[], X:[-1,1],
+ stat:"∫ 3x / (1 + 9x<sup>2</sup>)<sup>4</sup> dx",
+ F:"−1 / [18(1 + 9x<sup>2</sup>)<sup>3</sup>] + C",
+ f:function(x){ return 3*x/Math.pow(1+9*x*x,4); },
+ A:function(x){ return -1/(18*Math.pow(1+9*x*x,3)); },
+ hints:[["Hint","Inside the bracket","<p>Set <span class='m'>u</span> to the thing being raised to the fourth power and check whether its derivative is the <span class='m'>x</span> out front.</p>"],
+        ["Step","Substitute","<p><span class='m'>u = 1 + 9x<span class='n'>²</span></span>, <span class='m'>du = 18x dx</span>, so <span class='m'>3x dx = du/6</span>. The integral becomes <span class='m'>(1/6)∫u<span class='n'>⁻⁴</span>du</span>.</p>"],
+        ["Answer","Apply the power rule","<p><span class='m'>(1/6)·u<span class='n'>⁻³</span>/(−3) = −1/(18u<span class='n'>³</span>) = −1/[18(1+9x<span class='n'>²</span>)<span class='n'>³</span>] + C</span>.</p><p>Two signs have to survive: the <span class='m'>1/6</span> from the substitution and the <span class='m'>−1/3</span> from the power rule. The integrand is odd — negative for <span class='m'>x &lt; 0</span>, positive for <span class='m'>x &gt; 0</span> — so its antiderivative falls, bottoms out at <span class='m'>x = 0</span>, then rises. The plot shows both curves.</p>"]]},
+
+{k:"∫(bx+c)e^(−2x)dx", chip:"(bx+c)e^(−2x)", method:"by parts", uses:["b","c"], X:[0,3],
+ stat:"∫ (bx + c) e<sup>−2x</sup> dx",
+ F:"−e<sup>−2x</sup>(2bx + 2c + b)/4 + C",
+ f:function(x){ return (P.b*x+P.c)*Math.exp(-2*x); },
+ A:function(x){ return -Math.exp(-2*x)*(2*P.b*x+2*P.c+P.b)/4; },
+ hints:[["Hint","Which factor to differentiate","<p>By parts trades one integral for another. Choose the part to differentiate so that it gets <em>simpler</em>: the polynomial becomes a constant, while the exponential never gets worse.</p>"],
+        ["Step","Set it up","<p><span class='m'>u = bx + c</span>, <span class='m'>dv = e<span class='n'>⁻²ˣ</span>dx</span>; then <span class='m'>du = b dx</span> and <span class='m'>v = −½e<span class='n'>⁻²ˣ</span></span>.</p><p style='font-family:var(--mono);font-size:12.5px'>∫u dv = uv − ∫v du = −½(bx+c)e<sup>−2x</sup> + (b/2)∫e<sup>−2x</sup>dx</p>"],
+        ["Answer","Finish the easy integral","<p><span class='m'>−½(bx+c)e<span class='n'>⁻²ˣ</span> − (b/4)e<span class='n'>⁻²ˣ</span> + C</span>, which collects to</p><p style='font-family:var(--mono);font-size:12.5px'>−e<sup>−2x</sup>(2bx + 2c + b)/4 + C</p>"]]},
+
+{k:"∫(ax²+bx+c)e^(−2x)dx", chip:"(ax²+bx+c)e^(−2x)", method:"by parts", uses:["a","b","c"], X:[0,3],
+ stat:"∫ (ax<sup>2</sup> + bx + c) e<sup>−2x</sup> dx",
+ F:"−e<sup>−2x</sup>[ P/2 + P′/4 + P″/8 ] + C, &nbsp; P = ax<sup>2</sup>+bx+c",
+ f:function(x){ return (P.a*x*x+P.b*x+P.c)*Math.exp(-2*x); },
+ A:function(x){ var Q=(P.a*x*x+P.b*x+P.c)/2 + (2*P.a*x+P.b)/4 + (2*P.a)/8; return -Math.exp(-2*x)*Q; },
+ hints:[["Hint","Twice, not once","<p>One round of by parts leaves a linear polynomial times the exponential — which is the previous question. Do it again.</p>"],
+        ["Step","Spot the pattern","<p>Each round differentiates the polynomial and divides by another <span class='m'>2</span>. Writing <span class='m'>P = ax<span class='n'>²</span>+bx+c</span>, the result is</p><p style='font-family:var(--mono);font-size:12.5px'>−e<sup>−2x</sup> [ P/2 + P′/4 + P″/8 ] + C</p><p>The series stops because <span class='m'>P‴ = 0</span>.</p>"],
+        ["Answer","Check it by differentiating","<p>With <span class='m'>Q = P/2 + P′/4 + P″/8</span>, the derivative of <span class='m'>−e<span class='n'>⁻²ˣ</span>Q</span> is <span class='m'>e<span class='n'>⁻²ˣ</span>(2Q − Q′)</span>. Now <span class='m'>2Q = P + P′/2 + P″/4</span> and <span class='m'>Q′ = P′/2 + P″/4</span>, so <span class='m'>2Q − Q′ = P</span> exactly. ✓</p><p>The same pattern handles any polynomial times <span class='m'>e<span class='n'>^(kx)</span></span>: alternate signs, divide by <span class='m'>k</span> each round.</p>"]]}
+];
+var intI=0, pInt;
+function numDeriv(f,x){
+  var h=1e-5*Math.max(1,Math.abs(x));
+  return (f(x+h)-f(x-h))/(2*h);
+}
+function drawInt(){
+  var I=INTS[intI], i, lo=Infinity, hi=-Infinity;
+  for(i=0;i<=300;i++){
+    var x=I.X[0]+(I.X[1]-I.X[0])*i/300, v=I.f(x);
+    if(isFinite(v)){ if(v<lo)lo=v; if(v>hi)hi=v; }
+  }
+  if(!isFinite(lo)){ lo=-1; hi=1; }
+  if(hi-lo<1e-9){ lo-=1; hi+=1; }
+  if(hi-lo>200){ lo=Math.max(lo,-100); hi=Math.min(hi,100); }
+  var pad=(hi-lo)*0.16+0.05;
+  var accent=pInt.css("--accent"), ink2=pInt.css("--ink2");
+  pInt.render({
+    X:I.X, Y:[lo-pad,hi+pad],
+    curves:[
+      {f:I.f, color:accent, w:2.6},
+      {f:function(x){ return numDeriv(I.A,x); }, color:ink2, w:2, dash:[6,4]}
+    ]
+  });
+  // residual
+  var maxerr=0, n=0;
+  for(i=0;i<=120;i++){
+    var xx=I.X[0]+(I.X[1]-I.X[0])*i/120;
+    var a=I.f(xx), b=numDeriv(I.A,xx);
+    if(isFinite(a)&&isFinite(b)){ maxerr=Math.max(maxerr, Math.abs(a-b)/(1+Math.abs(a))); n++; }
+  }
+  document.getElementById("intOut").innerHTML =
+    "<b>d/dx [ answer ] vs the integrand</b><br>" +
+    "largest relative gap across the window: <b>"+(maxerr<1e-4?"&lt; 0.0001":fmt(maxerr,5))+"</b><br>" +
+    (maxerr<1e-3 ? "<span class='yes'>The two curves coincide — the antiderivative is correct.</span>"
+                 : "<span class='no'>The curves separate somewhere.</span>");
+
+  var h = "<h3 style='margin-top:0'><span class='methodchip'>"+I.method+"</span></h3>" +
+    "<p class='intstate'>"+I.stat+"</p>" +
+    "<div class='fline'>answer: "+I.F+"</div>";
+  I.hints.forEach(function(t){
+    h += "<details class='step'><summary><span class='tag'>"+t[0]+"</span>"+t[1]+"</summary><div class='body'>"+t[2]+"</div></details>";
+  });
+  document.getElementById("intGuide").innerHTML=h;
+
+  // parameter sliders
+  var cfg={a:{min:-2,max:3,step:0.25,label:"a"},b:{min:-3,max:3,step:0.25,label:"b"},
+           c:{min:-3,max:3,step:0.25,label:"c"},alpha:{min:-3,max:3,step:0.25,label:"α"}};
+  var rows=document.getElementById("paramRows");
+  rows.innerHTML="";
+  I.uses.forEach(function(key){
+    var d=cfg[key];
+    var wrap=document.createElement("div"); wrap.className="slider";
+    wrap.innerHTML = "<label for='pp-"+key+"'>"+d.label+" =</label>" +
+      "<input type='range' id='pp-"+key+"' min='"+d.min+"' max='"+d.max+"' step='"+d.step+"' value='"+P[key]+"'>" +
+      "<span id='pv-"+key+"'>"+fmt(P[key],2)+"</span>";
+    rows.appendChild(wrap);
+    var inp=wrap.querySelector("input");
+    inp.addEventListener("input", function(){
+      var v=parseFloat(inp.value);
+      if(key==="alpha" && Math.abs(v+1)<1e-9) v = -0.75;
+      P[key]=v;
+      document.getElementById("pv-"+key).textContent=fmt(v,2);
+      drawInt();
+    });
+  });
+}
+
+/* ===== wiring ===== */
+function picker(el, items, isOn, onPick){
+  el.innerHTML="";
+  items.forEach(function(it,i){
+    var b=document.createElement("button"); b.type="button"; b.innerHTML=it;
+    b.setAttribute("aria-pressed", isOn(i)?"true":"false");
+    b.addEventListener("click", function(){ onPick(i); });
+    el.appendChild(b);
+  });
+}
+function init(){
+  pSeq=new Plot(document.getElementById("cvSeq"));
+  pSec=new Plot(document.getElementById("cvSec"));
+  pInt=new Plot(document.getElementById("cvInt"));
+
+  function refreshSeq(){
+    picker(document.getElementById("pickSeq"), SEQS.map(function(s){return s.chip;}),
+      function(i){return i===seqI;}, function(i){ seqI=i; refreshSeq(); });
+    drawSeq();
+  }
+  refreshSeq();
+  var e=document.getElementById("eps");
+  e.addEventListener("input", function(){ eps=parseFloat(e.value); document.getElementById("epsval").textContent=fmt(eps,2); drawSeq(); });
+  var lc=document.getElementById("Lcand");
+  lc.addEventListener("input", function(){ Lcand=parseFloat(lc.value); document.getElementById("Lval").textContent=fmt(Lcand,2); drawSeq(); });
+
+  function refreshFn(){
+    picker(document.getElementById("pickFn"), FNS.map(function(f){return f.chip;}),
+      function(i){return i===fnI;}, function(i){ fnI=i; refreshFn(); });
+    drawSec();
+  }
+  refreshFn();
+  var xs=document.getElementById("x0");
+  xs.addEventListener("input", function(){ x0=parseFloat(xs.value); document.getElementById("x0val").textContent=fmt(x0,2); drawSec(); });
+  var hs=document.getElementById("hh");
+  hs.addEventListener("input", function(){ hh=parseFloat(hs.value); document.getElementById("hval").textContent=fmt(hh,2); drawSec(); });
+
+  function refreshInt(){
+    picker(document.getElementById("pickInt"), INTS.map(function(x){return x.chip;}),
+      function(i){return i===intI;}, function(i){ intI=i; refreshInt(); });
+    drawInt();
+  }
+  refreshInt();
+
+  var tabBtns=document.querySelectorAll("nav.tabs button");
+  Array.prototype.forEach.call(tabBtns, function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(tabBtns, function(o){
+        var on=(o===b);
+        o.setAttribute("aria-selected", on?"true":"false");
+        document.getElementById(o.getAttribute("aria-controls")).hidden=!on;
+      });
+      requestAnimationFrame(function(){
+        [pSeq,pSec,pInt].forEach(function(p){ p.resize(); if(p.last) p.render(p.last); });
+      });
+    });
+  });
+
+  if(window.matchMedia){
+    var mq=window.matchMedia("(prefers-color-scheme: dark)");
+    var re=function(){ drawSeq(); drawSec(); drawInt(); };
+    if(mq.addEventListener) mq.addEventListener("change", re); else if(mq.addListener) mq.addListener(re);
+  }
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>

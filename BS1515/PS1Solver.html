@@ -1,0 +1,1111 @@
+<title>BS1515 Set Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: single reading column; sticky tab rail on top; one live plot per section. */
+:root{
+  --paper:#FBF8F6; --surface:#FFFFFF; --sunk:#F3EDE9;
+  --ink:#1C1715; --ink2:#6A5C57; --rule:#E6DCD6;
+  --accent:#C21F16; --accent-soft:rgba(194,31,22,.11); --accent-line:rgba(194,31,22,.55);
+  --good:#1C6F52; --good-soft:rgba(28,111,82,.12);
+  --warn:#8E5A10; --warn-soft:rgba(142,90,16,.13);
+  --display:"Literata",Georgia,"Times New Roman",serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+    --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+    --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+    --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+    --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+  --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+  --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+  --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+  --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+
+/* Masthead */
+header.mast{padding-block:30px 18px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,6vw,42px);line-height:1.08;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.mast p{color:var(--ink2);margin:10px 0 0;max-width:62ch;font-size:14.5px}
+
+/* Tabs */
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);
+  display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);margin-bottom:26px;
+  scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--body);font-size:13.5px;font-weight:500;color:var(--ink2);
+  padding:13px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:3px}
+nav.tabs .num{font-family:var(--mono);font-size:11px;opacity:.65;margin-right:6px}
+
+h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-weight:600;font-size:17px;margin:26px 0 8px}
+.lede{color:var(--ink2);margin:0 0 22px;max-width:64ch}
+p{max-width:66ch}
+
+/* Maths inline */
+.m{font-family:var(--display);font-style:italic;font-size:1.03em;white-space:nowrap}
+.m .op,.m .n{font-style:normal}
+code{font-family:var(--mono);font-size:.92em;background:var(--sunk);padding:1px 5px;border-radius:3px}
+
+/* Set picker */
+.picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.picker button{appearance:none;cursor:pointer;background:var(--surface);color:var(--ink2);
+  border:1px solid var(--rule);border-radius:999px;padding:6px 13px;font-family:var(--body);font-size:13px}
+.picker button:hover{border-color:var(--accent-line);color:var(--ink)}
+.picker button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.picker button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Lab */
+.lab{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:720px){.lab{grid-template-columns:1fr}}
+.stage{min-width:0}
+.canvas-box{position:relative;width:100%;aspect-ratio:1/1;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+.toolrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.toolrow button{appearance:none;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  color:var(--ink2);border-radius:3px;padding:6px 10px;font-family:var(--body);font-size:12.5px}
+.toolrow button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.toolrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.slider{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.slider input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.readout{margin-top:10px;min-height:68px;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+  background:var(--sunk);border-radius:4px;padding:10px 12px;color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+.readout .yes{color:var(--good)}
+.readout .no{color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11.5px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:16px;height:3px;border-radius:2px;flex:0 0 auto}
+
+/* Hint ladder */
+details.step{border-top:1px solid var(--rule);padding:0}
+details.step:last-of-type{border-bottom:1px solid var(--rule)}
+details.step>summary{list-style:none;cursor:pointer;padding:11px 2px;display:flex;align-items:baseline;gap:10px;
+  font-size:13.5px;color:var(--ink2)}
+details.step>summary::-webkit-details-marker{display:none}
+details.step>summary::after{content:"+";margin-left:auto;font-family:var(--mono);color:var(--accent);font-size:15px}
+details.step[open]>summary::after{content:"\2212"}
+details.step>summary:hover{color:var(--ink)}
+details.step>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.step .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);flex:0 0 auto}
+details.step .body{padding:0 2px 16px;font-size:14px;color:var(--ink)}
+details.step .body p{margin:0 0 9px}
+details.step .body p:last-child{margin-bottom:0}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 14px;margin:16px 0}
+.quiz .q{font-size:14px;margin:0 0 10px;max-width:none}
+.quiz .q+.q{margin-top:18px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{appearance:none;cursor:pointer;background:var(--paper);border:1px solid var(--rule);color:var(--ink);
+  border-radius:3px;padding:6px 14px;font-family:var(--body);font-size:13px}
+.opts button:hover{border-color:var(--accent-line)}
+.opts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts button.right{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:500}
+.opts button.wrong{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);text-decoration:line-through}
+.fb{margin-top:9px;font-size:13px;color:var(--ink2);border-left:2px solid var(--rule);padding-left:11px}
+.fb.on{border-left-color:var(--accent)}
+
+/* Callout */
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:13px 15px;border-radius:0 4px 4px 0;margin:22px 0;font-size:13.5px}
+.note strong{font-weight:600;color:var(--warn)}
+.note p{max-width:none;margin:0}
+.note p+p{margin-top:8px}
+
+/* Systems */
+.syscards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-bottom:20px}
+.syscard{appearance:none;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  border-radius:4px;padding:13px 14px;font-family:var(--mono);font-size:13px;color:var(--ink);line-height:1.75}
+.syscard:hover{border-color:var(--accent-line)}
+.syscard[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.syscard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.syscard .lbl{font-family:var(--body);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.checkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.checkrow label{font-size:13px;color:var(--ink2)}
+.checkrow input[type=text]{width:84px;font-family:var(--mono);font-size:13px;padding:6px 8px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:3px}
+.checkrow input[type=text]:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.checkrow .go{appearance:none;cursor:pointer;background:var(--ink);color:var(--paper);border:0;border-radius:3px;
+  padding:7px 15px;font-family:var(--body);font-size:13px;font-weight:500}
+.checkrow .go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{font-size:13px;margin-top:9px;min-height:20px}
+.verdict.ok{color:var(--good)}
+.verdict.bad{color:var(--accent)}
+
+table.rec{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+table.rec th,table.rec td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.rec th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:400}
+table.rec td:first-child{font-family:var(--display);font-style:italic;white-space:nowrap}
+.tw{overflow-x:auto}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);color:var(--ink2);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">BS1515 · Problem Set 1</p>
+  <h1>Sets, boundaries and two straight lines</h1>
+  <p>Work through each question yourself first, then open the steps. The plot is live: drag the slider, click a point to drop an <span class="m">ε</span>-ball on it, or click twice to lay a chord across the set.</p>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" id="t0" aria-controls="p0" aria-selected="true"><span class="num">1</span>Plot the sets</button>
+  <button role="tab" id="t1" aria-controls="p1" aria-selected="false"><span class="num">2</span>Open &amp; closed</button>
+  <button role="tab" id="t2" aria-controls="p2" aria-selected="false"><span class="num">3</span>Convex</button>
+  <button role="tab" id="t3" aria-controls="p3" aria-selected="false"><span class="num">4</span>Systems</button>
+</nav>
+
+<!-- ============ PANEL 1 ============ -->
+<section role="tabpanel" id="p0" aria-labelledby="t0">
+  <h2>Plot the sets</h2>
+  <p class="lede">Seven sets, all living in <span class="m">ℝ<span class="n">²₊</span></span> — the closed first quadrant, axes included. Pick one, guess its shape, then check.</p>
+
+  <div class="picker" id="pick0"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cv0"></canvas></div>
+      <div class="slider" id="sl0" hidden>
+        <label for="arange">a =</label>
+        <input type="range" id="arange" min="-2" max="9" step="0.25" value="4">
+        <span id="aval">4.00</span>
+      </div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent-soft);height:10px;border:1px solid var(--accent-line)"></i>in the set</span>
+        <span><i class="swatch" style="background:repeating-linear-gradient(90deg,var(--accent) 0 5px,transparent 5px 9px)"></i>boundary excluded</span>
+        <span><i class="swatch" style="background:var(--accent)"></i>boundary included</span>
+      </div>
+      <div class="readout" id="ro0">Click anywhere on the plot to test a point.</div>
+    </div>
+    <div class="guide" id="guide0"></div>
+  </div>
+
+  <div class="note">
+    <p><strong>The quiet trap.</strong> <span class="m">ℝ<span class="n">²₊</span></span> includes the axes. So a set like <span class="m">{x &gt; 2y}</span> contains the whole positive <span class="m">x</span>-axis, and the three utility sets drawn with <span class="m">u(x,y) = √x + √y</span> or <span class="m">x<span class="n">²</span> + y<span class="n">²</span></span> reach the axes too. Only the Cobb–Douglas one, <span class="m">x<span class="n">^0.3</span>y<span class="n">^0.5</span></span>, keeps clear of them — which changes its answer in question 2.</p>
+  </div>
+</section>
+
+<!-- ============ PANEL 2 ============ -->
+<section role="tabpanel" id="p1" aria-labelledby="t1" hidden>
+  <h2>Open and closed</h2>
+  <p class="lede">A set <span class="m">A</span> is open in a space <span class="m">S</span> if every point of <span class="m">A</span> has a ball around it — intersected with <span class="m">S</span> — that stays inside <span class="m">A</span>. Which space you are asked about does all the work here.</p>
+
+  <div class="picker" id="pick1"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cv1"></canvas></div>
+      <div class="toolrow">
+        <button id="ballOn" aria-pressed="true">Drop an ε-ball</button>
+        <button id="ballClr">Clear</button>
+      </div>
+      <div class="slider">
+        <label for="erange">ε =</label>
+        <input type="range" id="erange" min="0.1" max="2" step="0.05" value="0.7">
+        <span id="eval">0.70</span>
+      </div>
+      <div class="readout" id="ro1">Click a point in the set. The ball shows what a neighbourhood of it looks like.</div>
+    </div>
+    <div class="guide" id="guide1"></div>
+  </div>
+
+  <h3>Draw a set in <span class="m">ℝ<span class="n">²₊</span></span> that is neither open nor closed</h3>
+  <p>You need one point that fails openness and one limit point that fails closedness. A half-open box does both at once.</p>
+  <details class="step"><summary><span class="tag">Answer</span>A worked example</summary>
+    <div class="body">
+      <p><span class="m">B = {(x,y) ∈ ℝ<span class="n">²₊</span> : x &lt; 2, 0 ≤ y ≤ 2}</span>.</p>
+      <p><strong>Not open in <span class="m">ℝ<span class="n">²₊</span></span>:</strong> take the point <span class="m">(1, 2)</span>. Every relative ball around it contains points with <span class="m">y &gt; 2</span>, which are in <span class="m">ℝ<span class="n">²₊</span></span> but not in <span class="m">B</span>.</p>
+      <p><strong>Not closed in <span class="m">ℝ<span class="n">²₊</span></span>:</strong> the sequence <span class="m">(2 − 1/n, 1)</span> lies in <span class="m">B</span> and converges to <span class="m">(2, 1)</span>, which is not in <span class="m">B</span>. A closed set contains all its limits.</p>
+    </div>
+  </details>
+
+  <h3>Draw a set that is open in <span class="m">ℝ<span class="n">²₊</span></span> but closed in <span class="m">ℝ<span class="n">²</span></span></h3>
+  <p>Try a few candidates before opening this one. The answer is shorter than you expect.</p>
+  <details class="step"><summary><span class="tag">Hint</span>What does "closed in <span class="m">ℝ<span class="n">²</span></span>" buy you?</summary>
+    <div class="body"><p>If <span class="m">S ⊆ ℝ<span class="n">²₊</span></span> is closed in <span class="m">ℝ<span class="n">²</span></span>, then it is also closed in <span class="m">ℝ<span class="n">²₊</span></span>. So you are hunting for a set that is open <em>and</em> closed in <span class="m">ℝ<span class="n">²₊</span></span> at the same time.</p></div>
+  </details>
+  <details class="step"><summary><span class="tag">Answer</span><span class="m">ℝ<span class="n">²₊</span></span> itself, and nothing else</summary>
+    <div class="body">
+      <p>The whole space is always open in itself, and <span class="m">ℝ<span class="n">²₊</span> = {x ≥ 0, y ≥ 0}</span> is closed in <span class="m">ℝ<span class="n">²</span></span> because both inequalities are weak. So it works.</p>
+      <p>It is also the only non-empty answer. By the hint, any such set is both open and closed in <span class="m">ℝ<span class="n">²₊</span></span>. The quarter-plane is connected — you can walk between any two of its points without leaving it — and a connected space has exactly two clopen subsets, the empty set and the whole thing.</p>
+    </div>
+  </details>
+</section>
+
+<!-- ============ PANEL 3 ============ -->
+<section role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+  <h2>Convex</h2>
+  <p class="lede">A set is convex if the straight segment between any two of its points never leaves it. Click two points on the plot to lay down a chord and watch it pass or fail.</p>
+
+  <div class="picker" id="pick2"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cv2"></canvas></div>
+      <div class="toolrow">
+        <button id="tgtSet" aria-pressed="true">Test the set</button>
+        <button id="tgtComp" aria-pressed="false">Test the complement</button>
+        <button id="chordClr">Clear chord</button>
+      </div>
+      <div class="readout" id="ro2">Click two points to draw a chord. The complement is taken inside <span style="font-style:italic">ℝ²₊</span>.</div>
+    </div>
+    <div class="guide" id="guide2"></div>
+  </div>
+
+  <h3>The pattern worth remembering</h3>
+  <div class="tw">
+  <table class="rec">
+    <tr><th>Set</th><th>Convex?</th><th>Complement in ℝ²₊ convex?</th><th>Why</th></tr>
+    <tr><td>x² &lt; a</td><td>Yes</td><td>Yes</td><td>Both are half-planes cut by a vertical line.</td></tr>
+    <tr><td>y² &gt; a</td><td>Yes</td><td>Yes</td><td>Both are horizontal strips.</td></tr>
+    <tr><td>x &gt; 2y</td><td>Yes</td><td>Yes</td><td>A linear inequality splits the plane into two convex halves.</td></tr>
+    <tr><td>√x + √y</td><td>Yes</td><td>No</td><td>Concave utility, so the upper contour set is convex.</td></tr>
+    <tr><td>x<sup>0.3</sup>y<sup>0.5</sup></td><td>Yes</td><td>No</td><td>Cobb–Douglas is quasiconcave at any exponents.</td></tr>
+    <tr><td>x + ln y</td><td>Yes</td><td>No</td><td>Quasi-linear, also concave.</td></tr>
+    <tr><td>x² + y²</td><td><strong>No</strong></td><td>Yes</td><td>The upper contour set is the outside of a disc. Convex preferences fail.</td></tr>
+  </table>
+  </div>
+  <p>The economics behind the table: an upper contour set <span class="m">{u(x,y) ≥ k}</span> is convex for every <span class="m">k</span> exactly when <span class="m">u</span> is quasiconcave — which is what "the consumer likes averages at least as much as extremes" means. Three of these four utilities pass. <span class="m">x<span class="n">²</span> + y<span class="n">²</span></span> fails, and the chord tool shows you where.</p>
+</section>
+
+<!-- ============ PANEL 4 ============ -->
+<section role="tabpanel" id="p3" aria-labelledby="t3" hidden>
+  <h2>Solve the systems</h2>
+  <p class="lede">Each system is two lines in <span class="m">ℝ<span class="n">²</span></span>. The determinant tells you which of the three pictures you are in before you solve anything.</p>
+
+  <div class="syscards" id="syscards"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box"><canvas id="cv3"></canvas></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent)"></i>first equation</span>
+        <span><i class="swatch" style="background:var(--ink2)"></i>second equation</span>
+      </div>
+      <div class="checkrow">
+        <label for="ansx">x =</label><input type="text" id="ansx" inputmode="decimal" placeholder="e.g. 41/17">
+        <label for="ansy">y =</label><input type="text" id="ansy" inputmode="decimal" placeholder="e.g. -1/17">
+        <button class="go" id="checkbtn">Check</button>
+      </div>
+      <div class="verdict" id="verdict"></div>
+    </div>
+    <div class="guide" id="guide3"></div>
+  </div>
+
+  <h3>How the determinant decides</h3>
+  <p>For <span class="m">ax + by = e</span> and <span class="m">cx + dy = f</span>, write <span class="m">D = ad − bc</span>.</p>
+  <ul>
+    <li><span class="m">D ≠ 0</span>: the lines cross once. Unique solution, <span class="m">x = (ed − bf)/D</span>, <span class="m">y = (af − ec)/D</span>.</li>
+    <li><span class="m">D = 0</span> and the constants scale the same way: the two equations are the same line. Infinitely many solutions.</li>
+    <li><span class="m">D = 0</span> and they do not: parallel lines that never meet. No solution.</li>
+  </ul>
+
+  <div class="note">
+    <p><strong>Check the question's last line.</strong> The problem set says some systems have multiple solutions. Work the four determinants: you get <span class="m">−1</span>, <span class="m">0</span>, <span class="m">17</span> and <span class="m">−16</span>, so three systems have exactly one solution and one has none. None of the four has infinitely many.</p>
+    <p>Change the second system's right-hand side from <span class="m">5</span> to <span class="m">14</span> and <span class="m">6x + 8y = 14</span> becomes twice <span class="m">3x + 4y = 7</span> — one line, infinitely many solutions. The button on that card does it, so you can see all three pictures.</p>
+  </div>
+</section>
+
+<footer>Built for BS1515 Problem Set 1. Every plot is computed live from the inequalities as written; nothing here is pre-drawn.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ---------- maths helpers ---------- */
+var C1 = Math.sqrt(2) + Math.sqrt(3);                 // u(2,3) for sqrt(x)+sqrt(y)
+var C2 = Math.pow(2,0.3) * Math.pow(3,0.5);           // u(2,3) for Cobb-Douglas
+var C3 = 2 + Math.log(3);                             // u(2,3) for x + ln y
+var C4 = 13;                                          // u(2,3) for x^2 + y^2
+var R4 = Math.sqrt(13);
+
+function inQuad(x,y){ return x >= 0 && y >= 0; }
+function fmt(v,d){ d = d==null?2:d; return (Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toFixed(d); }
+
+/* ---------- the seven sets ---------- */
+var SETS = [
+{
+  id:"s1", chip:"x² < a", title:"{ (x,y) | x² &lt; a }", needsA:true,
+  fn:function(x,y,a){ return x*x < a; },
+  curve:function(a,X,Y){ return a>0 ? [[[Math.sqrt(a),Y[0]],[Math.sqrt(a),Y[1]]]] : []; },
+  hints:[
+   ["Hint","Use what ℝ²₊ gives you","<p>In ℝ²₊ you already know <span class='m'>x ≥ 0</span>. A non-negative number squared is increasing, so the square can be removed without flipping anything. And notice what the inequality never mentions.</p>"],
+   ["Step","Remove the square","<p>For <span class='m'>a &gt; 0</span>: <span class='m'>x<span class='n'>²</span> &lt; a</span> together with <span class='m'>x ≥ 0</span> means <span class='m'>0 ≤ x &lt; √a</span>. For <span class='m'>a ≤ 0</span> the set is empty, since <span class='m'>x<span class='n'>²</span> ≥ 0</span> always.</p><p><span class='m'>y</span> appears nowhere, so <span class='m'>y</span> is free: any <span class='m'>y ≥ 0</span> is allowed.</p>"],
+   ["Answer","The shape","<p>A vertical strip of width <span class='m'>√a</span> running up the whole quadrant: <span class='m'>[0, √a) × [0, ∞)</span>. The left edge (the <span class='m'>y</span>-axis) and the bottom edge (the <span class='m'>x</span>-axis) belong to the set; the right edge <span class='m'>x = √a</span> does not.</p><p>Slide <span class='m'>a</span> below zero and the strip vanishes.</p>"]
+  ],
+  openR2:false, openQ:true, closedR2:false,
+  openWhy:"<p><strong>Open in ℝ²₊: yes.</strong> Any point of the strip has a relative ball — a ball intersected with the quadrant — that stays inside, because <span class='m'>x &lt; √a</span> is a strict inequality and <span class='m'>y</span> is unconstrained.</p><p><strong>Open in ℝ²: no.</strong> Take <span class='m'>(0.5, 0)</span>, sitting on the <span class='m'>x</span>-axis. Every ball around it in ℝ² contains points with <span class='m'>y &lt; 0</span>, and those are not in the set. Drop an ε-ball there and look.</p><p><strong>Closed: no</strong>, in either space. Points <span class='m'>(√a − 1/n, 1)</span> are in the set but converge to <span class='m'>(√a, 1)</span>, which is not.</p><p><strong>Complement:</strong> inside ℝ²₊ it is <span class='m'>{x ≥ √a}</span>, which is closed there. Inside ℝ², the complement is not closed, precisely because the set is not open in ℝ².</p>",
+  cvxSet:true, cvxComp:true,
+  cvxWhy:"<p>Both convex. A vertical strip and a vertical half-plane are each defined by linear inequalities in <span class='m'>x</span>, and any intersection of half-planes is convex. Try to find a failing chord — you cannot.</p>"
+},
+{
+  id:"s2", chip:"y² > a", title:"{ (x,y) | y² &gt; a }", needsA:true,
+  fn:function(x,y,a){ return y*y > a; },
+  curve:function(a,X,Y){ var lvl = a>0 ? Math.sqrt(a) : (a===0 ? 0 : null); return lvl===null?[]:[[[X[0],lvl],[X[1],lvl]]]; },
+  hints:[
+   ["Hint","Same move, other variable","<p>Again <span class='m'>y ≥ 0</span> in ℝ²₊. Take square roots carefully, and treat <span class='m'>a &gt; 0</span>, <span class='m'>a = 0</span> and <span class='m'>a &lt; 0</span> separately.</p>"],
+   ["Step","Three cases","<p><span class='m'>a &gt; 0</span>: the condition is <span class='m'>y &gt; √a</span>.<br><span class='m'>a = 0</span>: it is <span class='m'>y &gt; 0</span>, so only the <span class='m'>x</span>-axis is cut out.<br><span class='m'>a &lt; 0</span>: every point satisfies it, so the set is all of ℝ²₊.</p>"],
+   ["Answer","The shape","<p>A horizontal half-strip: everything strictly above the line <span class='m'>y = √a</span>, with <span class='m'>x</span> free. The <span class='m'>y</span>-axis above that height is in the set; the line <span class='m'>y = √a</span> is not.</p>"]
+  ],
+  openR2:false, openQ:true, closedR2:false,
+  openWhy:"<p><strong>Open in ℝ²₊: yes</strong>, by the strict inequality.</p><p><strong>Open in ℝ²: no.</strong> The set contains points on the <span class='m'>y</span>-axis, such as <span class='m'>(0, √a + 1)</span>. A ball around a point with <span class='m'>x = 0</span> always leaks into <span class='m'>x &lt; 0</span>.</p><p><strong>Closed: no.</strong> <span class='m'>(1, √a + 1/n)</span> converges to <span class='m'>(1, √a)</span>, which is missing.</p><p><strong>Complement in ℝ²₊</strong> is the band <span class='m'>{0 ≤ y ≤ √a}</span>, closed in ℝ²₊.</p>",
+  cvxSet:true, cvxComp:true,
+  cvxWhy:"<p>Both convex. The set is a half-plane; the complement is a band between two horizontal lines. Bands are intersections of two half-planes, so they are convex too.</p>"
+},
+{
+  id:"s3", chip:"x > 2y", title:"{ (x,y) | x &gt; 2y }", needsA:false,
+  fn:function(x,y){ return x > 2*y; },
+  curve:function(a,X,Y){ return [[[0,0],[Math.min(X[1], 2*Y[1]), Math.min(X[1],2*Y[1])/2]]]; },
+  hints:[
+   ["Hint","It is linear","<p>Nothing is squared. Put it in the form <span class='m'>y &lt; something</span> and draw the line you get.</p>"],
+   ["Step","Rearrange","<p><span class='m'>x &gt; 2y</span> is the same as <span class='m'>y &lt; x/2</span>. The boundary is the ray through the origin with slope <span class='m'>½</span>.</p>"],
+   ["Answer","The shape","<p>An open wedge between the <span class='m'>x</span>-axis and the ray <span class='m'>y = x/2</span>. The <span class='m'>x</span>-axis is <em>in</em> the set for every <span class='m'>x &gt; 0</span> — check <span class='m'>(3, 0)</span>: <span class='m'>3 &gt; 0</span>. The ray itself is out, and so is the origin, where <span class='m'>0 &gt; 0</span> is false.</p>"]
+  ],
+  openR2:false, openQ:true, closedR2:false,
+  openWhy:"<p><strong>Open in ℝ²₊: yes.</strong></p><p><strong>Open in ℝ²: no</strong> — and this is the clearest case. The point <span class='m'>(3, 0)</span> is in the set, but any ball around it reaches <span class='m'>y &lt; 0</span>, which is outside ℝ²₊ and therefore outside the set. Shrink ε as far as you like; the ball never fits.</p><p><strong>Closed: no.</strong> Points <span class='m'>(2 + 1/n, 1)</span> are in the set and converge to <span class='m'>(2, 1)</span>, which sits on the excluded ray.</p>",
+  cvxSet:true, cvxComp:true,
+  cvxWhy:"<p>Both convex. <span class='m'>x &gt; 2y</span> is a strict linear inequality and its complement in ℝ²₊ is the weak one, <span class='m'>x ≤ 2y</span>. Half-planes, open or closed, are always convex.</p>"
+},
+{
+  id:"u1", chip:"√x + √y", title:"{ (x,y) | √x + √y &gt; u(2,3) }", needsA:false,
+  fn:function(x,y){ return Math.sqrt(x)+Math.sqrt(y) > C1; },
+  curve:function(a,X,Y){ var pts=[],i,x; for(i=0;i<=200;i++){ x = (C1*C1)*i/200; if(x>X[1]) break; pts.push([x, Math.pow(C1-Math.sqrt(x),2)]); } return [pts]; },
+  ref:[2,3],
+  hints:[
+   ["Hint","Find the number first","<p>Every one of these four sets is an upper contour set: the bundles at least as good as <span class='m'>(2,3)</span>. So compute <span class='m'>u(2,3)</span> before drawing anything.</p>"],
+   ["Step","The indifference curve","<p><span class='m'>u(2,3) = √2 + √3 ≈ 3.146</span>. The boundary is <span class='m'>√x + √y = 3.146</span>, which rearranges to <span class='m'>y = (3.146 − √x)<span class='n'>²</span></span>. It meets the axes at <span class='m'>(9.90, 0)</span> and <span class='m'>(0, 9.90)</span>, and passes through <span class='m'>(2,3)</span> by construction.</p>"],
+   ["Answer","The shape","<p>Everything strictly above and to the right of that curve. The curve bows <em>toward</em> the origin, which is the visual signature of a concave utility and a convex upper contour set.</p><p>The set does touch both axes — <span class='m'>(9.95, 0)</span> gives <span class='m'>√9.95 ≈ 3.154 &gt; 3.146</span>.</p>"]
+  ],
+  openR2:false, openQ:true, closedR2:false,
+  openWhy:"<p><strong>Open in ℝ²₊: yes.</strong> <span class='m'>√x + √y</span> is continuous on the quadrant and the inequality is strict.</p><p><strong>Open in ℝ²: no.</strong> The set contains axis points such as <span class='m'>(9.95, 0)</span>, and no ball around an axis point stays in ℝ²₊.</p><p><strong>Closed: no.</strong> The indifference curve itself is made of limit points that are excluded.</p>",
+  cvxSet:true, cvxComp:false,
+  cvxWhy:"<p><strong>The set: convex.</strong> <span class='m'>√x + √y</span> is concave, so each upper contour set is convex.</p><p><strong>The complement: not convex.</strong> Chord <span class='m'>(9.9, 0)</span> to <span class='m'>(0, 9.9)</span> — both just outside the set. Its midpoint <span class='m'>(4.95, 4.95)</span> gives <span class='m'>2√4.95 ≈ 4.45 &gt; 3.146</span>, so the chord cuts straight through the set. Draw it.</p>"
+},
+{
+  id:"u2", chip:"x^0.3·y^0.5", title:"{ (x,y) | x<sup>0.3</sup>y<sup>0.5</sup> &gt; u(2,3) }", needsA:false,
+  fn:function(x,y){ return x>0 && y>0 && Math.pow(x,0.3)*Math.pow(y,0.5) > C2; },
+  curve:function(a,X,Y){ var pts=[],i,x; for(i=1;i<=300;i++){ x = X[1]*i/300; pts.push([x, Math.pow(C2/Math.pow(x,0.3),2)]); } return [pts]; },
+  ref:[2,3],
+  hints:[
+   ["Hint","Logs make it a curve you know","<p>Products with fractional powers are painful. Take logs of both sides — the inequality direction survives, because <span class='m'>ln</span> is increasing.</p>"],
+   ["Step","Solve for y","<p><span class='m'>0.3 ln x + 0.5 ln y &gt; ln C</span> with <span class='m'>C = 2<span class='n'>^0.3</span>·3<span class='n'>^0.5</span> ≈ 2.132</span>. Rearranged: <span class='m'>y &gt; C<span class='n'>²</span>/x<span class='n'>^0.6</span> ≈ 4.547/x<span class='n'>^0.6</span></span>.</p>"],
+   ["Answer","The shape","<p>The region above a Cobb–Douglas indifference curve, asymptotic to both axes. It never touches either one: with <span class='m'>x = 0</span> or <span class='m'>y = 0</span> the utility is exactly <span class='m'>0</span>, which is not greater than <span class='m'>2.132</span>.</p><p>That detail is the whole reason this set answers question 2 differently from the other six.</p>"]
+  ],
+  openR2:true, openQ:true, closedR2:false,
+  openWhy:"<p><strong>Open in ℝ²₊: yes.</strong></p><p><strong>Open in ℝ²: yes — the one exception in this list.</strong> The set lies entirely in the <em>open</em> quadrant <span class='m'>x &gt; 0, y &gt; 0</span>, because the utility is zero on the axes. Every point of the set has <span class='m'>x &gt; 0</span> and <span class='m'>y &gt; 0</span> with room to spare, so a genuine ℝ² ball fits. Drop an ε-ball and shrink it: unlike the other sets, it eventually fits entirely inside.</p><p><strong>Closed: no.</strong> The indifference curve is excluded but is the limit of points inside.</p><p><strong>Complement:</strong> because the set is open in ℝ², its complement in ℝ² <em>is</em> closed. For the other six sets that fails.</p>",
+  cvxSet:true, cvxComp:false,
+  cvxWhy:"<p><strong>The set: convex.</strong> Cobb–Douglas is quasiconcave for any positive exponents, so every upper contour set is convex — here the exponents sum to <span class='m'>0.8 &lt; 1</span>, so the function is also concave outright.</p><p><strong>The complement: not convex.</strong> Take <span class='m'>(10, 0.01)</span> and <span class='m'>(0.01, 10)</span>, both far outside. Their midpoint <span class='m'>(5.005, 5.005)</span> has utility <span class='m'>≈ 3.63 &gt; 2.132</span> — inside.</p>"
+},
+{
+  id:"u3", chip:"x + ln y", title:"{ (x,y) | x + ln y &gt; u(2,3) }", needsA:false,
+  fn:function(x,y){ return y>0 && (x + Math.log(y)) > C3; },
+  curve:function(a,X,Y){ var pts=[],i,x; for(i=0;i<=300;i++){ x = X[1]*i/300; pts.push([x, 3*Math.exp(2-x)]); } return [pts]; },
+  ref:[2,3],
+  hints:[
+   ["Hint","Where is this even defined?","<p><span class='m'>ln y</span> needs <span class='m'>y &gt; 0</span>, so the whole <span class='m'>x</span>-axis is out of play before you start. Then exponentiate.</p>"],
+   ["Step","Solve for y","<p><span class='m'>u(2,3) = 2 + ln 3 ≈ 3.099</span>. From <span class='m'>x + ln y &gt; 2 + ln 3</span> you get <span class='m'>ln y &gt; 2 + ln 3 − x</span>, so <span class='m'>y &gt; 3e<span class='n'>^(2−x)</span></span>.</p>"],
+   ["Answer","The shape","<p>Everything above the falling exponential <span class='m'>y = 3e<span class='n'>^(2−x)</span></span>, which passes through <span class='m'>(2,3)</span>. It collapses fast: at <span class='m'>x = 4</span> you only need <span class='m'>y &gt; 0.41</span>, but at <span class='m'>x = 0</span> you need <span class='m'>y &gt; 3e<span class='n'>²</span> ≈ 22.2</span>, well above this window — which is why the set looks empty near the <span class='m'>y</span>-axis here.</p><p>These are quasi-linear preferences: every indifference curve is the same shape shifted sideways.</p>"]
+  ],
+  openR2:false, openQ:true, closedR2:false,
+  openWhy:"<p><strong>Open in ℝ²₊: yes.</strong></p><p><strong>Open in ℝ²: no</strong>, though it is close. The <span class='m'>x</span>-axis is excluded automatically, but the <span class='m'>y</span>-axis is not: <span class='m'>(0, 25)</span> satisfies <span class='m'>0 + ln 25 ≈ 3.22 &gt; 3.099</span>. A point with <span class='m'>x = 0</span> has no ℝ² ball inside the quadrant.</p><p>Compare with the Cobb–Douglas set, which excludes <em>both</em> axes and so does come out open in ℝ².</p><p><strong>Closed: no.</strong></p>",
+  cvxSet:true, cvxComp:false,
+  cvxWhy:"<p><strong>The set: convex.</strong> <span class='m'>x + ln y</span> is concave, so upper contour sets are convex.</p><p><strong>The complement: not convex.</strong> <span class='m'>(0, 1)</span> and <span class='m'>(10, 0.001)</span> both lie outside the set; the midpoint <span class='m'>(5, 0.5005)</span> gives <span class='m'>5 + ln 0.5005 ≈ 4.31 &gt; 3.099</span>, inside.</p>"
+},
+{
+  id:"u4", chip:"x² + y²", title:"{ (x,y) | x² + y² &gt; u(2,3) }", needsA:false,
+  fn:function(x,y){ return x*x + y*y > C4; },
+  curve:function(a,X,Y){ var pts=[],i,x; for(i=0;i<=200;i++){ x = R4*i/200; pts.push([x, Math.sqrt(Math.max(0,C4-x*x))]); } return [pts]; },
+  ref:[2,3],
+  hints:[
+   ["Hint","You know this curve","<p>Compute <span class='m'>u(2,3)</span> and then ask what <span class='m'>x<span class='n'>²</span> + y<span class='n'>²</span> = k</span> draws.</p>"],
+   ["Step","A circle","<p><span class='m'>u(2,3) = 4 + 9 = 13</span>. The boundary <span class='m'>x<span class='n'>²</span> + y<span class='n'>²</span> = 13</span> is the circle of radius <span class='m'>√13 ≈ 3.606</span> centred at the origin, and <span class='m'>(2,3)</span> sits on it.</p>"],
+   ["Answer","The shape","<p>Everything in ℝ²₊ strictly <em>outside</em> the quarter-circle of radius <span class='m'>√13</span>. The boundary arc is excluded; the axes beyond <span class='m'>3.606</span> are included.</p><p>Notice the curve bends the opposite way from the first three utilities. That single fact is what makes this set the odd one out for convexity.</p>"]
+  ],
+  openR2:false, openQ:true, closedR2:false,
+  openWhy:"<p><strong>Open in ℝ²₊: yes.</strong></p><p><strong>Open in ℝ²: no.</strong> <span class='m'>(4, 0)</span> is in the set since <span class='m'>16 &gt; 13</span>, and it sits on the <span class='m'>x</span>-axis.</p><p><strong>Closed: no</strong> — the arc is excluded but is a limit of interior points.</p>",
+  cvxSet:false, cvxComp:true,
+  cvxWhy:"<p><strong>The set: not convex.</strong> This is the one. Take <span class='m'>(4, 0)</span> and <span class='m'>(0, 4)</span>: both are outside the circle, so both are in the set. Their midpoint is <span class='m'>(2, 2)</span>, where <span class='m'>x<span class='n'>²</span> + y<span class='n'>²</span> = 8 &lt; 13</span> — the chord dives inside the disc. Draw exactly that chord.</p><p><strong>The complement: convex.</strong> It is the quarter-disc <span class='m'>{x<span class='n'>²</span> + y<span class='n'>²</span> ≤ 13} ∩ ℝ<span class='n'>²₊</span></span>, and discs are convex.</p><p>In consumer theory this utility gives preferences for extremes over averages, which is why <span class='m'>x<span class='n'>²</span> + y<span class='n'>²</span></span> never appears as a well-behaved utility function.</p>"
+}
+];
+
+/* ---------- canvas plotting ---------- */
+function Plot(canvas, win){
+  this.cv = canvas; this.ctx = canvas.getContext("2d");
+  this.X = win.X; this.Y = win.Y;
+  this.pad = {l:40,r:14,t:14,b:32};
+  this.off = document.createElement("canvas");
+  this.cacheKey = null;
+  this.dpr = 1;
+  var self = this;
+  this.resize();
+  if(window.ResizeObserver){
+    new ResizeObserver(function(){ self.resize(); if(self.redraw) self.redraw(); }).observe(canvas.parentNode);
+  } else {
+    window.addEventListener("resize", function(){ self.resize(); if(self.redraw) self.redraw(); });
+  }
+}
+Plot.prototype.css = function(name){
+  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+};
+Plot.prototype.resize = function(){
+  var r = this.cv.parentNode.getBoundingClientRect();
+  this.w = Math.max(200, Math.round(r.width));
+  this.h = Math.max(200, Math.round(r.height));
+  this.dpr = Math.min(window.devicePixelRatio || 1, 2);
+  this.cv.width = Math.round(this.w*this.dpr);
+  this.cv.height = Math.round(this.h*this.dpr);
+  this.cacheKey = null;
+};
+Plot.prototype.px = function(x){
+  var pw = this.w - this.pad.l - this.pad.r;
+  return this.pad.l + (x - this.X[0])/(this.X[1]-this.X[0]) * pw;
+};
+Plot.prototype.py = function(y){
+  var ph = this.h - this.pad.t - this.pad.b;
+  return this.h - this.pad.b - (y - this.Y[0])/(this.Y[1]-this.Y[0]) * ph;
+};
+Plot.prototype.ux = function(p){
+  var pw = this.w - this.pad.l - this.pad.r;
+  return this.X[0] + (p - this.pad.l)/pw * (this.X[1]-this.X[0]);
+};
+Plot.prototype.uy = function(p){
+  var ph = this.h - this.pad.t - this.pad.b;
+  return this.Y[0] + (this.h - this.pad.b - p)/ph * (this.Y[1]-this.Y[0]);
+};
+Plot.prototype.shade = function(key, test, rgba){
+  // offscreen mask at half device resolution for speed, cached by key
+  if(this.cacheKey === key) return;
+  this.cacheKey = key;
+  var W = Math.round(this.w), H = Math.round(this.h);
+  this.off.width = W; this.off.height = H;
+  var octx = this.off.getContext("2d");
+  var img = octx.createImageData(W,H);
+  var d = img.data, i, px, py, x, y, o;
+  for(py=0; py<H; py++){
+    for(px=0; px<W; px++){
+      x = this.ux(px+0.5); y = this.uy(py+0.5);
+      o = (py*W+px)*4;
+      if(x>=this.X[0] && x<=this.X[1] && y>=this.Y[0] && y<=this.Y[1] && test(x,y)){
+        d[o]=rgba[0]; d[o+1]=rgba[1]; d[o+2]=rgba[2]; d[o+3]=rgba[3];
+      }
+    }
+  }
+  octx.putImageData(img,0,0);
+};
+Plot.prototype.axes = function(opts){
+  var c = this.ctx, i, t, p;
+  var rule = this.css("--rule"), ink2 = this.css("--ink2");
+  c.save();
+  c.strokeStyle = rule; c.lineWidth = 1;
+  c.font = "11px " + (this.css("--mono") || "monospace");
+  c.fillStyle = ink2;
+  var xs = opts.xticks, ys = opts.yticks;
+  // grid
+  for(i=0;i<xs.length;i++){
+    p = Math.round(this.px(xs[i]))+0.5;
+    c.beginPath(); c.moveTo(p, this.pad.t); c.lineTo(p, this.h-this.pad.b); c.stroke();
+    c.textAlign="center"; c.textBaseline="top";
+    c.fillText(String(xs[i]), p, this.h-this.pad.b+7);
+  }
+  for(i=0;i<ys.length;i++){
+    p = Math.round(this.py(ys[i]))+0.5;
+    c.beginPath(); c.moveTo(this.pad.l, p); c.lineTo(this.w-this.pad.r, p); c.stroke();
+    c.textAlign="right"; c.textBaseline="middle";
+    c.fillText(String(ys[i]), this.pad.l-8, p);
+  }
+  // axes through 0 if in range
+  c.strokeStyle = ink2; c.lineWidth = 1.2;
+  if(this.Y[0] <= 0 && this.Y[1] >= 0){
+    p = Math.round(this.py(0))+0.5;
+    c.beginPath(); c.moveTo(this.pad.l, p); c.lineTo(this.w-this.pad.r, p); c.stroke();
+  }
+  if(this.X[0] <= 0 && this.X[1] >= 0){
+    p = Math.round(this.px(0))+0.5;
+    c.beginPath(); c.moveTo(p, this.pad.t); c.lineTo(p, this.h-this.pad.b); c.stroke();
+  }
+  c.restore();
+};
+Plot.prototype.begin = function(){
+  var c = this.ctx;
+  c.setTransform(this.dpr,0,0,this.dpr,0,0);
+  c.clearRect(0,0,this.w,this.h);
+  c.fillStyle = this.css("--surface");
+  c.fillRect(0,0,this.w,this.h);
+};
+Plot.prototype.poly = function(pts, style){
+  var c = this.ctx, i, started=false;
+  c.save();
+  c.lineWidth = style.w || 2;
+  c.strokeStyle = style.color;
+  if(style.dash) c.setLineDash(style.dash);
+  c.beginPath();
+  for(i=0;i<pts.length;i++){
+    var x = pts[i][0], y = pts[i][1];
+    if(!isFinite(x) || !isFinite(y) || y < this.Y[0]-1e-9 || y > this.Y[1]+1e-9 || x < this.X[0]-1e-9 || x > this.X[1]+1e-9){
+      started = false; continue;
+    }
+    if(!started){ c.moveTo(this.px(x), this.py(y)); started = true; }
+    else c.lineTo(this.px(x), this.py(y));
+  }
+  c.stroke();
+  c.restore();
+};
+Plot.prototype.dot = function(x,y,color,r,label){
+  var c = this.ctx;
+  c.save();
+  c.fillStyle = color;
+  c.beginPath(); c.arc(this.px(x), this.py(y), r||4, 0, Math.PI*2); c.fill();
+  c.strokeStyle = this.css("--surface"); c.lineWidth = 1.5; c.stroke();
+  if(label){
+    c.fillStyle = this.css("--ink");
+    c.font = "11px " + (this.css("--mono")||"monospace");
+    c.textAlign = "left"; c.textBaseline = "bottom";
+    c.fillText(label, this.px(x)+7, this.py(y)-5);
+  }
+  c.restore();
+};
+
+function hexToRgb(h){
+  h = h.replace("#","");
+  if(h.length===3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  return [parseInt(h.slice(0,2),16), parseInt(h.slice(2,4),16), parseInt(h.slice(4,6),16)];
+}
+
+/* draw the included parts of the two axes as solid accent segments */
+function axisRuns(plot, test, color){
+  var i, N=240, x, y, runs, started, a0;
+  var c = plot.ctx;
+  c.save(); c.strokeStyle = color; c.lineWidth = 3; c.lineCap="butt";
+  // x-axis (y = 0)
+  started=false; a0=0;
+  for(i=0;i<=N;i++){
+    x = plot.X[0] + (plot.X[1]-plot.X[0])*i/N;
+    var inS = test(x, 0);
+    if(inS && !started){ started=true; a0=x; }
+    if((!inS || i===N) && started){
+      c.beginPath(); c.moveTo(plot.px(a0), plot.py(0)); c.lineTo(plot.px(x), plot.py(0)); c.stroke();
+      started=false;
+    }
+  }
+  // y-axis (x = 0)
+  started=false; a0=0;
+  for(i=0;i<=N;i++){
+    y = plot.Y[0] + (plot.Y[1]-plot.Y[0])*i/N;
+    var inS2 = test(0, y);
+    if(inS2 && !started){ started=true; a0=y; }
+    if((!inS2 || i===N) && started){
+      c.beginPath(); c.moveTo(plot.px(0), plot.py(a0)); c.lineTo(plot.px(0), plot.py(y)); c.stroke();
+      started=false;
+    }
+  }
+  c.restore();
+}
+
+/* ---------- shared lab state ---------- */
+var state = { set:0, a:4, eps:0.7, point:null, chord:[], target:"set", mode:"ball" };
+var TICKS = [0,2,4,6,8,10];
+var WIN = { X:[0,10], Y:[0,10] };
+
+function testFor(s){
+  var a = state.a;
+  return function(x,y){ return inQuad(x,y) && !!s.fn(x,y,a); };
+}
+function compTestFor(s){
+  var a = state.a;
+  return function(x,y){ return inQuad(x,y) && !s.fn(x,y,a); };
+}
+
+/* build a lab panel's plot */
+function drawLab(plot, panel){
+  var s = SETS[state.set];
+  var accent = this_accent();
+  var rgb = hexToRgb(accent);
+  var tgtComp = (panel===2 && state.target==="comp");
+  var test = tgtComp ? compTestFor(s) : testFor(s);
+  var key = s.id + "|" + (s.needsA?state.a:"") + "|" + plot.w + "x" + plot.h + "|" + (tgtComp?"c":"s") + "|" + accent;
+  plot.shade(key, test, [rgb[0],rgb[1],rgb[2], 56]);
+
+  plot.begin();
+  plot.axes({xticks:TICKS, yticks:TICKS});
+  plot.ctx.drawImage(plot.off, 0, 0, plot.w, plot.h);
+
+  // boundary curve, dashed (always excluded: strict inequalities)
+  var curves = s.curve(state.a, plot.X, plot.Y) || [];
+  for(var i=0;i<curves.length;i++) plot.poly(curves[i], {color:accent, w:2, dash:[6,4]});
+  // included axis runs, solid
+  axisRuns(plot, testFor(s), accent);
+
+  if(s.ref) plot.dot(s.ref[0], s.ref[1], plot.css("--ink"), 4, "(2,3)");
+
+  // overlays
+  if(panel===1 && state.point){
+    var p = state.point, e = state.eps, c = plot.ctx;
+    c.save();
+    c.strokeStyle = plot.css("--ink"); c.lineWidth = 1.6; c.setLineDash([4,3]);
+    c.beginPath();
+    var rx = Math.abs(plot.px(e) - plot.px(0));
+    c.arc(plot.px(p[0]), plot.py(p[1]), rx, 0, Math.PI*2); c.stroke();
+    c.restore();
+    plot.dot(p[0], p[1], plot.css("--ink"), 4);
+  }
+  if(panel===2 && state.chord.length){
+    var c2 = plot.ctx, A = state.chord[0], B = state.chord[1];
+    if(B){
+      var bad = chordBad(A,B,test);
+      c2.save();
+      c2.lineWidth = 2.4;
+      c2.strokeStyle = bad ? plot.css("--ink") : plot.css("--good");
+      c2.beginPath(); c2.moveTo(plot.px(A[0]),plot.py(A[1])); c2.lineTo(plot.px(B[0]),plot.py(B[1])); c2.stroke();
+      c2.restore();
+      if(bad) plot.dot(bad[0], bad[1], plot.css("--ink"), 4.5, "leaves here");
+    }
+    plot.dot(A[0],A[1], plot.css("--good"), 4);
+    if(B) plot.dot(B[0],B[1], plot.css("--good"), 4);
+  }
+}
+function this_accent(){
+  return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim();
+}
+function chordBad(A,B,test){
+  var N=400, i, t, x, y;
+  for(i=0;i<=N;i++){
+    t = i/N; x = A[0]+(B[0]-A[0])*t; y = A[1]+(B[1]-A[1])*t;
+    if(!test(x,y)) return [x,y];
+  }
+  return null;
+}
+
+/* ---------- build pickers and guides ---------- */
+function buildPicker(el, panel){
+  el.innerHTML = "";
+  SETS.forEach(function(s, i){
+    var b = document.createElement("button");
+    b.type = "button";
+    b.innerHTML = s.chip;
+    b.setAttribute("aria-pressed", i===state.set ? "true" : "false");
+    b.addEventListener("click", function(){
+      state.set = i; state.point=null; state.chord=[];
+      syncAll();
+    });
+    el.appendChild(b);
+  });
+}
+
+function guideHTML(panel){
+  var s = SETS[state.set];
+  var h = "<h3 style='margin-top:0'>" + s.title + "</h3>";
+  if(panel===0){
+    s.hints.forEach(function(t){
+      h += "<details class='step'><summary><span class='tag'>"+t[0]+"</span>"+t[1]+"</summary><div class='body'>"+t[2]+"</div></details>";
+    });
+  }
+  if(panel===1){
+    h += "<div class='quiz'>" +
+      "<p class='q'>Is this set open in <span class='m'>ℝ<span class='n'>²</span></span>?</p>" +
+      optHTML("q-r2", s.openR2) +
+      "<p class='q'>Is it open in <span class='m'>ℝ<span class='n'>²₊</span></span>?</p>" +
+      optHTML("q-rq", s.openQ) +
+      "<p class='q'>Is it closed in <span class='m'>ℝ<span class='n'>²</span></span>?</p>" +
+      optHTML("q-cl", s.closedR2) +
+      "<div class='fb' id='fb1'>Answer all three, then open the explanation.</div></div>";
+    h += "<details class='step'><summary><span class='tag'>Answer</span>Why, in full</summary><div class='body'>"+s.openWhy+"</div></details>";
+  }
+  if(panel===2){
+    h += "<div class='quiz'>" +
+      "<p class='q'>Is the set convex?</p>" + optHTML("q-cv", s.cvxSet) +
+      "<p class='q'>Is its complement in <span class='m'>ℝ<span class='n'>²₊</span></span> convex?</p>" + optHTML("q-cc", s.cvxComp) +
+      "<div class='fb' id='fb2'>Use the chord tool to convince yourself before answering.</div></div>";
+    h += "<details class='step'><summary><span class='tag'>Answer</span>Why, in full</summary><div class='body'>"+s.cvxWhy+"</div></details>";
+  }
+  return h;
+}
+function optHTML(name, correct){
+  return "<div class='opts' data-correct='"+(correct?"yes":"no")+"'>" +
+    "<button type='button' data-v='yes'>Yes</button>" +
+    "<button type='button' data-v='no'>No</button></div>";
+}
+function wireQuiz(root, fbId, msgs){
+  var groups = root.querySelectorAll(".opts");
+  Array.prototype.forEach.call(groups, function(g){
+    Array.prototype.forEach.call(g.querySelectorAll("button"), function(b){
+      b.addEventListener("click", function(){
+        var ok = (b.getAttribute("data-v") === g.getAttribute("data-correct"));
+        b.classList.remove("right","wrong");
+        b.classList.add(ok ? "right" : "wrong");
+        var fb = root.querySelector("#"+fbId);
+        if(fb){
+          fb.classList.add("on");
+          fb.textContent = ok ? msgs.ok : msgs.no;
+        }
+      });
+    });
+  });
+}
+
+/* ---------- panels ---------- */
+var plots = {};
+function syncAll(){
+  var s = SETS[state.set];
+  ["pick0","pick1","pick2"].forEach(function(id){
+    var el = document.getElementById(id);
+    Array.prototype.forEach.call(el.querySelectorAll("button"), function(b,i){
+      b.setAttribute("aria-pressed", i===state.set ? "true":"false");
+    });
+  });
+  document.getElementById("sl0").hidden = !s.needsA;
+
+  var g0 = document.getElementById("guide0"); g0.innerHTML = guideHTML(0);
+  var g1 = document.getElementById("guide1"); g1.innerHTML = guideHTML(1);
+  wireQuiz(g1, "fb1", {ok:"That's right. Open the explanation to see the argument written out.", no:"Not quite — try dropping an ε-ball on a point near an axis, then read the explanation."});
+  var g2 = document.getElementById("guide2"); g2.innerHTML = guideHTML(2);
+  wireQuiz(g2, "fb2", {ok:"Correct. The chord tool will show you the same thing.", no:"Have another look. A single chord that leaves the set is enough to kill convexity."});
+
+  readout0();
+  readout1();
+  readout2();
+  [0,1,2].forEach(function(p){ if(plots[p]) drawLab(plots[p], p); });
+}
+
+function readout0(){
+  var el = document.getElementById("ro0");
+  var s = SETS[state.set];
+  if(!state.point0){
+    el.innerHTML = "Click anywhere on the plot to test a point against the inequality.";
+    return;
+  }
+  var p = state.point0, inS = testFor(s)(p[0],p[1]);
+  el.innerHTML = "<b>(" + fmt(p[0]) + ", " + fmt(p[1]) + ")</b><br>" +
+    (inS ? "<span class='yes'>in the set</span>" : "<span class='no'>not in the set</span>") +
+    "<br>" + valueLine(s, p[0], p[1]);
+}
+function valueLine(s,x,y){
+  var a = state.a;
+  switch(s.id){
+    case "s1": return "x² = " + fmt(x*x) + (x*x<a?" &lt; ":" ≥ ") + "a = " + fmt(a);
+    case "s2": return "y² = " + fmt(y*y) + (y*y>a?" &gt; ":" ≤ ") + "a = " + fmt(a);
+    case "s3": return "x = " + fmt(x) + (x>2*y?" &gt; ":" ≤ ") + "2y = " + fmt(2*y);
+    case "u1": return "√x+√y = " + fmt(Math.sqrt(x)+Math.sqrt(y),3) + " vs u(2,3) = " + fmt(C1,3);
+    case "u2": return "x^0.3·y^0.5 = " + fmt(Math.pow(Math.max(x,0),0.3)*Math.pow(Math.max(y,0),0.5),3) + " vs u(2,3) = " + fmt(C2,3);
+    case "u3": return "x+ln y = " + (y>0 ? fmt(x+Math.log(y),3) : "undefined") + " vs u(2,3) = " + fmt(C3,3);
+    case "u4": return "x²+y² = " + fmt(x*x+y*y,2) + " vs u(2,3) = 13";
+  }
+  return "";
+}
+function readout1(){
+  var el = document.getElementById("ro1");
+  var s = SETS[state.set];
+  if(!state.point){
+    el.innerHTML = "Click a point, then shrink ε. The ball shows what a neighbourhood of that point looks like.";
+    return;
+  }
+  var p = state.point, e = state.eps, test = testFor(s);
+  var inS = test(p[0],p[1]);
+  var fitsR2 = ballInside(p, e, test, false);
+  var fitsQ  = ballInside(p, e, test, true);
+  el.innerHTML = "<b>(" + fmt(p[0]) + ", " + fmt(p[1]) + ")</b> &nbsp; ε = " + fmt(e) + "<br>" +
+    (inS ? "<span class='yes'>in the set</span>" : "<span class='no'>not in the set</span>") + "<br>" +
+    "ball ⊆ set (in ℝ²): " + (fitsR2 ? "<span class='yes'>yes</span>" : "<span class='no'>no</span>") + "<br>" +
+    "ball ∩ ℝ²₊ ⊆ set: " + (fitsQ ? "<span class='yes'>yes</span>" : "<span class='no'>no</span>");
+}
+function ballInside(p, e, test, relative){
+  var i,j,N=26,th,r,x,y;
+  for(i=0;i<=N;i++){
+    for(j=1;j<=6;j++){
+      th = 2*Math.PI*i/N; r = e*j/6;
+      x = p[0]+r*Math.cos(th); y = p[1]+r*Math.sin(th);
+      if(relative && !inQuad(x,y)) continue;
+      if(!test(x,y)) return false;
+    }
+  }
+  return true;
+}
+function readout2(){
+  var el = document.getElementById("ro2");
+  var s = SETS[state.set];
+  var tgt = state.target==="comp" ? "complement" : "set";
+  if(state.chord.length < 2){
+    el.innerHTML = "Testing the <b>" + tgt + "</b>. Click two points inside it to lay a chord.";
+    return;
+  }
+  var test = state.target==="comp" ? compTestFor(s) : testFor(s);
+  var A = state.chord[0], B = state.chord[1];
+  var inA = test(A[0],A[1]), inB = test(B[0],B[1]);
+  if(!inA || !inB){
+    el.innerHTML = "Testing the <b>" + tgt + "</b>.<br><span class='no'>At least one endpoint is outside it.</span> Convexity only cares about chords between points that are both in.";
+    return;
+  }
+  var bad = chordBad(A,B,test);
+  el.innerHTML = "Testing the <b>" + tgt + "</b>.<br>(" + fmt(A[0]) + ", " + fmt(A[1]) + ") → (" + fmt(B[0]) + ", " + fmt(B[1]) + ")<br>" +
+    (bad ? "<span class='no'>The chord leaves at (" + fmt(bad[0]) + ", " + fmt(bad[1]) + "). Not convex.</span>"
+         : "<span class='yes'>The chord stays inside.</span> One chord is not a proof, but keep trying.");
+}
+
+/* ---------- systems ---------- */
+var SYS = [
+ {name:"System 1", a:2,b:3,e:5, c:3,d:4,f:7},
+ {name:"System 2", a:6,b:8,e:5, c:3,d:4,f:7, flip:14},
+ {name:"System 3", a:2,b:-3,e:5, c:3,d:4,f:7},
+ {name:"System 4", a:2,b:8,e:0, c:3,d:4,f:0}
+];
+var sysState = { i:0, flipped:false };
+
+function sysOf(k){
+  var s = SYS[k], e = (k===1 && sysState.flipped) ? s.flip : s.e;
+  return {a:s.a,b:s.b,e:e,c:s.c,d:s.d,f:s.f,name:s.name,flip:s.flip};
+}
+function solve(S){
+  var D = S.a*S.d - S.b*S.c;
+  if(Math.abs(D) > 1e-12){
+    return {kind:"unique", D:D, x:(S.e*S.d - S.b*S.f)/D, y:(S.a*S.f - S.e*S.c)/D};
+  }
+  // D = 0: consistent?
+  var k = (S.c !== 0) ? S.a/S.c : (S.d !== 0 ? S.b/S.d : 0);
+  var consistent = Math.abs(S.e - k*S.f) < 1e-12;
+  return {kind: consistent ? "many" : "none", D:0, k:k};
+}
+function eqStr(a,b,e){
+  var s = "";
+  s += a + "x";
+  s += (b < 0 ? " − " + Math.abs(b) : " + " + b) + "y";
+  s += " = " + e;
+  return s;
+}
+function buildSysCards(){
+  var el = document.getElementById("syscards");
+  el.innerHTML = "";
+  SYS.forEach(function(raw, k){
+    var S = sysOf(k);
+    var b = document.createElement("button");
+    b.type="button"; b.className="syscard";
+    b.setAttribute("aria-pressed", k===sysState.i ? "true":"false");
+    b.innerHTML = "<span class='lbl'>"+S.name+"</span>" + eqStr(S.a,S.b,S.e) + "<br>" + eqStr(S.c,S.d,S.f);
+    b.addEventListener("click", function(){ sysState.i = k; syncSys(); });
+    el.appendChild(b);
+  });
+}
+function syncSys(){
+  buildSysCards();
+  var S = sysOf(sysState.i), R = solve(S);
+  var g = document.getElementById("guide3");
+  var geo = R.kind==="unique" ? "The two lines have different slopes, so they cross exactly once."
+          : R.kind==="none" ? "Same slope, different intercepts: two parallel lines that never meet."
+          : "Multiply the second equation by " + fmt(R.k,0) + " and you get the first. One line, drawn twice.";
+  var sol = R.kind==="unique"
+      ? "<p><span class='m'>x = (ed − bf)/D = (" + S.e + "·" + S.d + " − " + S.b + "·" + S.f + ")/" + R.D + " = " + frac(S.e*S.d - S.b*S.f, R.D) + " ≈ " + fmt(R.x,4) + "</span></p>" +
+        "<p><span class='m'>y = (af − ec)/D = (" + S.a + "·" + S.f + " − " + S.e + "·" + S.c + ")/" + R.D + " = " + frac(S.a*S.f - S.e*S.c, R.D) + " ≈ " + fmt(R.y,4) + "</span></p>"
+      : R.kind==="none"
+      ? "<p>No solution. Scaling the second equation by " + fmt(R.k,0) + " gives <span class='m'>" + eqStr(S.c*R.k, S.d*R.k, S.f*R.k) + "</span>, which contradicts <span class='m'>" + eqStr(S.a,S.b,S.e) + "</span>. The left sides agree, the right sides do not.</p>"
+      : "<p>Infinitely many solutions — every point of the line <span class='m'>" + eqStr(S.c,S.d,S.f) + "</span>. In parametric form: <span class='m'>y = t</span>, <span class='m'>x = (" + S.f + " − " + S.d + "t)/" + S.c + "</span> for any real <span class='m'>t</span>.</p>";
+
+  var h = "<h3 style='margin-top:0'>" + S.name + "</h3>" +
+    "<p style='font-family:var(--mono);font-size:13px;line-height:1.8;margin-top:0'>" + eqStr(S.a,S.b,S.e) + "<br>" + eqStr(S.c,S.d,S.f) + "</p>" +
+    "<details class='step'><summary><span class='tag'>Step 1</span>The determinant</summary><div class='body'><p><span class='m'>D = ad − bc = (" + S.a + ")(" + S.d + ") − (" + S.b + ")(" + S.c + ") = " + (S.a*S.d) + " − " + (S.b*S.c) + " = " + R.D + "</span></p><p>" + (R.D!==0 ? "Non-zero, so there is exactly one solution and the formulas apply." : "Zero, so the two lines are parallel. The remaining question is whether they are the <em>same</em> line.") + "</p></div></details>" +
+    "<details class='step'><summary><span class='tag'>Step 2</span>The picture</summary><div class='body'><p>" + geo + "</p></div></details>" +
+    "<details class='step'><summary><span class='tag'>Answer</span>The solution</summary><div class='body'>" + sol + "</div></details>";
+
+  if(sysState.i === 1){
+    h += "<div class='toolrow'><button id='flipbtn' aria-pressed='" + (sysState.flipped?"true":"false") + "'>" +
+         (sysState.flipped ? "Put 5 back" : "Change 5 to 14") + "</button></div>" +
+         "<p style='font-size:13px;color:var(--ink2)'>" +
+         (sysState.flipped ? "Now the two equations describe one line, and the system has infinitely many solutions." : "As written this system has none. Flip the constant to see the third case.") +
+         "</p>";
+  }
+  g.innerHTML = h;
+
+  var fb = document.getElementById("flipbtn");
+  if(fb) fb.addEventListener("click", function(){ sysState.flipped = !sysState.flipped; syncSys(); });
+
+  var ax = document.getElementById("ansx"), ay = document.getElementById("ansy");
+  var dis = (R.kind !== "unique");
+  ax.disabled = dis; ay.disabled = dis;
+  document.getElementById("checkbtn").disabled = dis;
+  document.getElementById("verdict").textContent = dis
+    ? (R.kind==="none" ? "Nothing to check: this system has no solution." : "Nothing to check: every point on the line works.")
+    : "";
+  ax.value = ""; ay.value = "";
+  drawSys();
+}
+function frac(n,d){
+  // reduce n/d to a readable fraction or integer
+  function g(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=b; b=a%b; a=t; } return a||1; }
+  var sign = (n/d) < 0 ? "−" : "";
+  var N = Math.abs(n), D = Math.abs(d), k = g(N,D);
+  N/=k; D/=k;
+  return D===1 ? (sign + N) : (sign + N + "/" + D);
+}
+function parseNum(str){
+  if(!str) return NaN;
+  str = str.trim().replace(/−/g,"-").replace(/\s+/g,"");
+  if(str.indexOf("/") > -1){
+    var p = str.split("/");
+    var a = parseFloat(p[0]), b = parseFloat(p[1]);
+    if(isFinite(a) && isFinite(b) && b !== 0) return a/b;
+    return NaN;
+  }
+  return parseFloat(str);
+}
+function drawSys(){
+  var plot = plots[3];
+  if(!plot) return;
+  var S = sysOf(sysState.i), R = solve(S);
+  plot.begin();
+  plot.axes({xticks:[-2,0,2,4,6], yticks:[-2,0,2,4]});
+  var accent = this_accent(), ink2 = plot.css("--ink2");
+  function lineOf(a,b,e,color){
+    var pts;
+    if(Math.abs(b) > 1e-12){
+      pts = [[plot.X[0], (e - a*plot.X[0])/b],[plot.X[1], (e - a*plot.X[1])/b]];
+    } else {
+      pts = [[e/a, plot.Y[0]],[e/a, plot.Y[1]]];
+    }
+    plot.poly(pts, {color:color, w:2.4});
+  }
+  lineOf(S.a,S.b,S.e, accent);
+  lineOf(S.c,S.d,S.f, ink2);
+  if(R.kind==="unique") plot.dot(R.x, R.y, plot.css("--ink"), 5, "(" + fmt(R.x,2) + ", " + fmt(R.y,2) + ")");
+}
+
+/* ---------- wiring ---------- */
+function init(){
+  buildPicker(document.getElementById("pick0"), 0);
+  buildPicker(document.getElementById("pick1"), 1);
+  buildPicker(document.getElementById("pick2"), 2);
+
+  plots[0] = new Plot(document.getElementById("cv0"), WIN);
+  plots[1] = new Plot(document.getElementById("cv1"), WIN);
+  plots[2] = new Plot(document.getElementById("cv2"), WIN);
+  plots[3] = new Plot(document.getElementById("cv3"), {X:[-2,6], Y:[-3,4]});
+
+  // let each plot redraw itself when its box changes size
+  [0,1,2].forEach(function(i){
+    plots[i].redraw = function(){ plots[i].cacheKey=null; drawLab(plots[i], i); };
+  });
+  plots[3].redraw = function(){ plots[3].cacheKey=null; drawSys(); };
+
+  // tabs
+  var tabBtns = document.querySelectorAll("nav.tabs button");
+  Array.prototype.forEach.call(tabBtns, function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(tabBtns, function(o){
+        var on = (o===b);
+        o.setAttribute("aria-selected", on?"true":"false");
+        document.getElementById(o.getAttribute("aria-controls")).hidden = !on;
+      });
+      var idx = Array.prototype.indexOf.call(tabBtns, b);
+      requestAnimationFrame(function(){
+        if(plots[idx]){ plots[idx].resize(); plots[idx].cacheKey=null; idx===3 ? drawSys() : drawLab(plots[idx], idx); }
+      });
+    });
+  });
+
+  // a slider
+  var ar = document.getElementById("arange"), av = document.getElementById("aval");
+  ar.addEventListener("input", function(){
+    state.a = parseFloat(ar.value); av.textContent = fmt(state.a);
+    readout0(); readout1(); readout2();
+    [0,1,2].forEach(function(p){ drawLab(plots[p], p); });
+  });
+  // eps slider
+  var er = document.getElementById("erange"), ev = document.getElementById("eval");
+  er.addEventListener("input", function(){
+    state.eps = parseFloat(er.value); ev.textContent = fmt(state.eps);
+    readout1(); drawLab(plots[1], 1);
+  });
+
+  // canvas clicks
+  function clickXY(plot, ev){
+    var r = plot.cv.getBoundingClientRect();
+    var cx = (ev.touches ? ev.touches[0].clientX : ev.clientX) - r.left;
+    var cy = (ev.touches ? ev.touches[0].clientY : ev.clientY) - r.top;
+    return [plot.ux(cx * plot.w / r.width), plot.uy(cy * plot.h / r.height)];
+  }
+  plots[0].cv.addEventListener("click", function(ev){
+    state.point0 = clickXY(plots[0], ev); readout0(); drawLab(plots[0],0);
+  });
+  plots[1].cv.addEventListener("click", function(ev){
+    state.point = clickXY(plots[1], ev); readout1(); drawLab(plots[1],1);
+  });
+  plots[2].cv.addEventListener("click", function(ev){
+    var p = clickXY(plots[2], ev);
+    if(state.chord.length >= 2) state.chord = [];
+    state.chord.push(p);
+    readout2(); drawLab(plots[2],2);
+  });
+
+  document.getElementById("ballClr").addEventListener("click", function(){
+    state.point = null; readout1(); drawLab(plots[1],1);
+  });
+  document.getElementById("chordClr").addEventListener("click", function(){
+    state.chord = []; readout2(); drawLab(plots[2],2);
+  });
+  var tS = document.getElementById("tgtSet"), tC = document.getElementById("tgtComp");
+  function setTarget(t){
+    state.target = t; state.chord = [];
+    tS.setAttribute("aria-pressed", t==="set"?"true":"false");
+    tC.setAttribute("aria-pressed", t==="comp"?"true":"false");
+    plots[2].cacheKey = null;
+    readout2(); drawLab(plots[2],2);
+  }
+  tS.addEventListener("click", function(){ setTarget("set"); });
+  tC.addEventListener("click", function(){ setTarget("comp"); });
+
+  // systems check
+  document.getElementById("checkbtn").addEventListener("click", function(){
+    var S = sysOf(sysState.i), R = solve(S);
+    var v = document.getElementById("verdict");
+    var x = parseNum(document.getElementById("ansx").value);
+    var y = parseNum(document.getElementById("ansy").value);
+    if(!isFinite(x) || !isFinite(y)){
+      v.className = "verdict bad"; v.textContent = "Enter both numbers. Fractions like 41/17 are fine.";
+      return;
+    }
+    var r1 = S.a*x + S.b*y - S.e, r2 = S.c*x + S.d*y - S.f;
+    if(Math.abs(x-R.x) < 5e-3 && Math.abs(y-R.y) < 5e-3){
+      v.className = "verdict ok";
+      v.textContent = "Correct. Both equations hold: " + eqStr(S.a,S.b,S.e) + " and " + eqStr(S.c,S.d,S.f) + ".";
+    } else {
+      v.className = "verdict bad";
+      v.textContent = "Not yet. Your point misses the first equation by " + fmt(r1,3) + " and the second by " + fmt(r2,3) + ".";
+    }
+  });
+
+  // redraw on theme change
+  if(window.matchMedia){
+    var mq = window.matchMedia("(prefers-color-scheme: dark)");
+    var onTheme = function(){ [0,1,2].forEach(function(p){ plots[p].cacheKey=null; drawLab(plots[p],p); }); drawSys(); };
+    if(mq.addEventListener) mq.addEventListener("change", onTheme);
+    else if(mq.addListener) mq.addListener(onTheme);
+  }
+
+  syncAll();
+  syncSys();
+}
+
+if(document.readyState === "loading") document.addEventListener("DOMContentLoaded", init);
+else init();
+})();
+</script>

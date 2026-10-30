@@ -1,0 +1,867 @@
+<title>BS1515 Matrix Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: single reading column; sticky tab rail on top; one live plot per section. */
+:root{
+  --paper:#FBF8F6; --surface:#FFFFFF; --sunk:#F3EDE9;
+  --ink:#1C1715; --ink2:#6A5C57; --rule:#E6DCD6;
+  --accent:#C21F16; --accent-soft:rgba(194,31,22,.11); --accent-line:rgba(194,31,22,.55);
+  --good:#1C6F52; --good-soft:rgba(28,111,82,.12);
+  --warn:#8E5A10; --warn-soft:rgba(142,90,16,.13);
+  --display:"Literata",Georgia,"Times New Roman",serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+    --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+    --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+    --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+    --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+  --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+  --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+  --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+  --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+
+/* Masthead */
+header.mast{padding-block:30px 18px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,6vw,42px);line-height:1.08;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.mast p{color:var(--ink2);margin:10px 0 0;max-width:62ch;font-size:14.5px}
+
+/* Tabs */
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);
+  display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);margin-bottom:26px;
+  scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--body);font-size:13.5px;font-weight:500;color:var(--ink2);
+  padding:13px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:3px}
+nav.tabs .num{font-family:var(--mono);font-size:11px;opacity:.65;margin-right:6px}
+
+h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-weight:600;font-size:17px;margin:26px 0 8px}
+.lede{color:var(--ink2);margin:0 0 22px;max-width:64ch}
+p{max-width:66ch}
+
+/* Maths inline */
+.m{font-family:var(--display);font-style:italic;font-size:1.03em;white-space:nowrap}
+.m .op,.m .n{font-style:normal}
+code{font-family:var(--mono);font-size:.92em;background:var(--sunk);padding:1px 5px;border-radius:3px}
+
+/* Set picker */
+.picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.picker button{appearance:none;cursor:pointer;background:var(--surface);color:var(--ink2);
+  border:1px solid var(--rule);border-radius:999px;padding:6px 13px;font-family:var(--body);font-size:13px}
+.picker button:hover{border-color:var(--accent-line);color:var(--ink)}
+.picker button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.picker button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Lab */
+.lab{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:720px){.lab{grid-template-columns:1fr}}
+.stage{min-width:0}
+.canvas-box{position:relative;width:100%;aspect-ratio:1/1;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+.toolrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.toolrow button{appearance:none;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  color:var(--ink2);border-radius:3px;padding:6px 10px;font-family:var(--body);font-size:12.5px}
+.toolrow button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.toolrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.slider{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.slider input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.readout{margin-top:10px;min-height:68px;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+  background:var(--sunk);border-radius:4px;padding:10px 12px;color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+.readout .yes{color:var(--good)}
+.readout .no{color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11.5px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:16px;height:3px;border-radius:2px;flex:0 0 auto}
+
+/* Hint ladder */
+details.step{border-top:1px solid var(--rule);padding:0}
+details.step:last-of-type{border-bottom:1px solid var(--rule)}
+details.step>summary{list-style:none;cursor:pointer;padding:11px 2px;display:flex;align-items:baseline;gap:10px;
+  font-size:13.5px;color:var(--ink2)}
+details.step>summary::-webkit-details-marker{display:none}
+details.step>summary::after{content:"+";margin-left:auto;font-family:var(--mono);color:var(--accent);font-size:15px}
+details.step[open]>summary::after{content:"\2212"}
+details.step>summary:hover{color:var(--ink)}
+details.step>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.step .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);flex:0 0 auto}
+details.step .body{padding:0 2px 16px;font-size:14px;color:var(--ink)}
+details.step .body p{margin:0 0 9px}
+details.step .body p:last-child{margin-bottom:0}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 14px;margin:16px 0}
+.quiz .q{font-size:14px;margin:0 0 10px;max-width:none}
+.quiz .q+.q{margin-top:18px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{appearance:none;cursor:pointer;background:var(--paper);border:1px solid var(--rule);color:var(--ink);
+  border-radius:3px;padding:6px 14px;font-family:var(--body);font-size:13px}
+.opts button:hover{border-color:var(--accent-line)}
+.opts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts button.right{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:500}
+.opts button.wrong{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);text-decoration:line-through}
+.fb{margin-top:9px;font-size:13px;color:var(--ink2);border-left:2px solid var(--rule);padding-left:11px}
+.fb.on{border-left-color:var(--accent)}
+
+/* Callout */
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:13px 15px;border-radius:0 4px 4px 0;margin:22px 0;font-size:13.5px}
+.note strong{font-weight:600;color:var(--warn)}
+.note p{max-width:none;margin:0}
+.note p+p{margin-top:8px}
+
+/* Systems */
+.syscards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-bottom:20px}
+.syscard{appearance:none;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  border-radius:4px;padding:13px 14px;font-family:var(--mono);font-size:13px;color:var(--ink);line-height:1.75}
+.syscard:hover{border-color:var(--accent-line)}
+.syscard[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.syscard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.syscard .lbl{font-family:var(--body);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.checkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.checkrow label{font-size:13px;color:var(--ink2)}
+.checkrow input[type=text]{width:84px;font-family:var(--mono);font-size:13px;padding:6px 8px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:3px}
+.checkrow input[type=text]:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.checkrow .go{appearance:none;cursor:pointer;background:var(--ink);color:var(--paper);border:0;border-radius:3px;
+  padding:7px 15px;font-family:var(--body);font-size:13px;font-weight:500}
+.checkrow .go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{font-size:13px;margin-top:9px;min-height:20px}
+.verdict.ok{color:var(--good)}
+.verdict.bad{color:var(--accent)}
+
+table.rec{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+table.rec th,table.rec td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.rec th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:400}
+table.rec td:first-child{font-family:var(--display);font-style:italic;white-space:nowrap}
+.tw{overflow-x:auto}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);color:var(--ink2);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.panelcard{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px}
+.cardlbl{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--accent);margin:0 0 10px}
+.mat{display:inline-grid;gap:2px;font-family:var(--mono);font-size:13px;position:relative;padding:4px 10px;
+  border-left:2px solid var(--ink2);border-right:2px solid var(--ink2);border-radius:3px}
+.mat i{font-style:normal;text-align:right;padding:3px 7px;min-width:34px;border-radius:2px;
+  font-variant-numeric:tabular-nums}
+.mat i.hot{background:var(--accent);color:#fff}
+.mat i.lit{background:var(--accent-soft);color:var(--accent)}
+.matname{font-family:var(--display);font-style:italic;font-size:16px;margin-right:6px;color:var(--ink2)}
+.matline{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin:8px 0}
+.matout{font-family:var(--mono);font-size:12.5px;background:var(--sunk);border-radius:4px;padding:11px 12px;margin-top:10px;color:var(--ink2);line-height:1.7}
+.matout b{color:var(--ink);font-weight:500}
+.matout .yes{color:var(--good)} .matout .no{color:var(--accent)}
+.vecrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.vecrow label{font-family:var(--display);font-style:italic;font-size:14px;color:var(--ink2)}
+.vecrow input{width:74px;font-family:var(--mono);font-size:13px;padding:6px 8px;background:var(--paper);
+  color:var(--ink);border:1px solid var(--rule);border-radius:3px}
+.vecrow input:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.go{appearance:none;cursor:pointer;background:var(--ink);color:var(--paper);border:0;border-radius:3px;
+  padding:7px 14px;font-family:var(--body);font-size:13px;font-weight:500}
+.go:disabled{opacity:.45;cursor:default}
+.go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.dualpick{display:flex;flex-wrap:wrap;gap:22px;margin-bottom:16px}
+.dualpick .pl{font-family:var(--mono);font-size:10.5px;letter-spacing:.11em;text-transform:uppercase;color:var(--ink2);display:block;margin-bottom:6px}
+.prodrow{display:flex;flex-wrap:wrap;gap:16px;align-items:center;background:var(--surface);
+  border:1px solid var(--rule);border-radius:4px;padding:16px;overflow-x:auto}
+.prodrow .eq{font-family:var(--mono);font-size:18px;color:var(--ink2)}
+.dotline{margin-top:10px;font-family:var(--mono);font-size:12.5px;color:var(--ink2);
+  background:var(--sunk);border-radius:4px;padding:10px 12px;min-height:40px;line-height:1.6}
+.dotline b{color:var(--ink);font-weight:500}
+.steps{font-family:var(--mono);font-size:12px;line-height:1.5}
+.steps .op{color:var(--accent);font-size:11.5px;margin:12px 0 4px;display:block}
+.aug{display:inline-flex;align-items:stretch;gap:0}
+.aug .bar{width:1px;background:var(--rule);margin:0 9px}
+.flags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+.flag{font-family:var(--mono);font-size:11px;padding:4px 9px;border-radius:999px;border:1px solid var(--rule);color:var(--ink2)}
+.flag.pd{color:var(--good);border-color:var(--good);background:var(--good-soft)}
+.flag.nd{color:var(--accent);border-color:var(--accent);background:var(--accent-soft)}
+.flag.ind{color:var(--warn);border-color:var(--warn);background:var(--warn-soft)}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">BS1515 · Problem Set 2</p>
+  <h1>Matrices, inverses and what survives them</h1>
+  <p>Every number on this page is computed from the matrices as written — products and inverses exactly, in fractions; eigenvalues numerically. Work each part by hand first, then use the lab to check.</p>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" id="t0" aria-controls="p0" aria-selected="true"><span class="num">1</span>Solve by inverting</button>
+  <button role="tab" id="t1" aria-controls="p1" aria-selected="false"><span class="num">2</span>Null &amp; column space</button>
+  <button role="tab" id="t2" aria-controls="p2" aria-selected="false"><span class="num">3</span>Products</button>
+  <button role="tab" id="t3" aria-controls="p3" aria-selected="false"><span class="num">4</span>Determinant &amp; inverse</button>
+  <button role="tab" id="t4" aria-controls="p4" aria-selected="false"><span class="num">5</span>Eigen &amp; definiteness</button>
+</nav>
+
+<!-- ===== 1 ===== -->
+<section role="tabpanel" id="p0" aria-labelledby="t0">
+  <h2>Solve PS1's systems by inverting the matrix</h2>
+  <p class="lede">Write each system as <span class="m">Mx = r</span>. When <span class="m">M<span class="n">⁻¹</span></span> exists, <span class="m">x = M<span class="n">⁻¹</span>r</span> — one formula, no elimination. When it does not, find out what goes wrong.</p>
+
+  <div class="picker" id="pickSys"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="panelcard" id="sysBoard"></div>
+    </div>
+    <div class="guide" id="sysGuide"></div>
+  </div>
+
+  <h3>The 2×2 inverse, once</h3>
+  <p>For <span class="m">M = [[a, b], [c, d]]</span> with <span class="m">D = ad − bc ≠ 0</span>,</p>
+  <p style="text-align:center;font-family:var(--mono);font-size:14px">M<sup>−1</sup> = (1/D) · [[ d, −b ], [ −c, a ]]</p>
+  <p>Swap the diagonal, negate the off-diagonal, divide by the determinant. Everything about solvability sits in that division: if <span class="m">D = 0</span> there is nothing to divide by, and the matrix has no inverse.</p>
+
+  <div class="note">
+    <p><strong>Why "no inverse" and "no unique solution" are the same statement.</strong> <span class="m">D = 0</span> means the two rows of <span class="m">M</span> are proportional, so the two equations describe parallel lines. Either they coincide (infinitely many solutions) or they do not (none). In both cases no single matrix can undo <span class="m">M</span>, because <span class="m">M</span> has squashed the plane onto a line and that cannot be reversed.</p>
+  </div>
+</section>
+
+<!-- ===== 2 ===== -->
+<section role="tabpanel" id="p1" aria-labelledby="t1" hidden>
+  <h2>Null space and left null space</h2>
+  <p class="lede">For <span class="m">A = [[2, 3, 5], [−4, 2, 3]]</span>, a 2×3 matrix: it eats vectors in <span class="m">ℝ<span class="n">³</span></span> and returns vectors in <span class="m">ℝ<span class="n">²</span></span>.</p>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="panelcard">
+        <p class="cardlbl">Try a vector in the null space</p>
+        <div class="vecrow">
+          <label for="v1">v₁</label><input type="text" id="v1" value="-1/16">
+          <label for="v2">v₂</label><input type="text" id="v2" value="-13/8">
+          <label for="v3">v₃</label><input type="text" id="v3" value="1">
+          <button class="go" id="nullgo">Compute Av</button>
+        </div>
+        <div class="matout" id="nullout"></div>
+        <p class="cardlbl" style="margin-top:18px">Try a vector in the left null space</p>
+        <div class="vecrow">
+          <label for="w1">w₁</label><input type="text" id="w1" value="1">
+          <label for="w2">w₂</label><input type="text" id="w2" value="1">
+          <button class="go" id="leftgo">Compute wA</button>
+        </div>
+        <div class="matout" id="leftout"></div>
+      </div>
+    </div>
+    <div class="guide">
+      <details class="step"><summary><span class="tag">Part a</span>Verify <span class="m">v</span>, and find the rest</summary>
+        <div class="body">
+          <p><span class="m">Av</span> computes to the zero vector, so <span class="m">v</span> is in the null space. Press the button to watch both rows land on zero.</p>
+          <p><strong>Are there others?</strong> Yes — infinitely many, and all of them are multiples of <span class="m">v</span>. Row-reduce <span class="m">A</span>: the two rows are not proportional, so the rank is 2, and the rank–nullity theorem gives <span class="m">nullity = 3 − 2 = 1</span>. A one-dimensional null space is a line through the origin, so <span class="m">{t·v : t ∈ ℝ}</span> is all of it.</p>
+          <p>Try <span class="m">v = (−1/8, −13/4, 2)</span> in the boxes: still zero.</p>
+        </div>
+      </details>
+      <details class="step"><summary><span class="tag">Part b</span>Only <span class="m">0</span> on the left</summary>
+        <div class="body">
+          <p>The left null space is <span class="m">{w ∈ ℝ<span class="n">²</span> : wA = 0}</span>. Writing it out, <span class="m">wA = 0</span> means three equations:</p>
+          <p style="font-family:var(--mono);font-size:13px">2w₁ − 4w₂ = 0 &nbsp;|&nbsp; 3w₁ + 2w₂ = 0 &nbsp;|&nbsp; 5w₁ + 3w₂ = 0</p>
+          <p>The first gives <span class="m">w₁ = 2w₂</span>. Substituting into the second: <span class="m">6w₂ + 2w₂ = 8w₂ = 0</span>, so <span class="m">w₂ = 0</span> and then <span class="m">w₁ = 0</span>. Only the zero vector survives — the space is trivial.</p>
+        </div>
+      </details>
+      <details class="step"><summary><span class="tag">Part c</span>What that tells you</summary>
+        <div class="body">
+          <p><strong>Rank 2.</strong> The left null space of <span class="m">A</span> is the null space of <span class="m">A<span class="n">ᵀ</span></span>, and it is trivial, so <span class="m">A<span class="n">ᵀ</span></span> has nullity 0 and rank 2. Rank is the same for a matrix and its transpose.</p>
+          <p><strong>Column space = all of <span class="m">ℝ<span class="n">²</span></span>.</strong> It is a subspace of <span class="m">ℝ<span class="n">²</span></span> of dimension 2, so it is everything. In other words <span class="m">Ax = b</span> has a solution for every <span class="m">b ∈ ℝ<span class="n">²</span></span> — and never a unique one, since you can always add any multiple of <span class="m">v</span>.</p>
+          <p><strong>Row space.</strong> A 2-dimensional plane inside <span class="m">ℝ<span class="n">³</span></span>, spanned by <span class="m">(2,3,5)</span> and <span class="m">(−4,2,3)</span>. It is exactly the set of vectors perpendicular to <span class="m">v</span>: row space and null space are orthogonal complements, and <span class="m">2 + 1 = 3</span> dimensions in total.</p>
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ===== 3 ===== -->
+<section role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+  <h2>The twenty products</h2>
+  <p class="lede">Pick a left matrix and a right matrix. The entry you hover or tap is traced back to the row and column that produced it.</p>
+
+  <div class="dualpick">
+    <div><span class="pl">Left</span><div class="picker" id="pickL"></div></div>
+    <div><span class="pl">Right</span><div class="picker" id="pickR"></div></div>
+  </div>
+
+  <div class="prodrow" id="prodrow"></div>
+  <div class="dotline" id="dotline">Hover an entry of the product to see the dot product behind it.</div>
+
+  <div class="toolrow" style="margin-top:14px">
+    <button id="swapbtn">Swap the order</button>
+    <button id="transbtn">Show (QP)<sup>T</sup> = P<sup>T</sup>Q<sup>T</sup></button>
+  </div>
+  <div id="transout"></div>
+
+  <h3>Does <span class="m">PQ = QP</span>?</h3>
+  <p>No, not in general — and the lab makes that concrete. Put <span class="m">A</span> on the left and <span class="m">B</span> on the right, note the answer, then press <strong>Swap the order</strong>. <span class="m">AB</span> scales the <em>columns</em> of <span class="m">A</span> by 1, 2, 3; <span class="m">BA</span> scales its <em>rows</em>. Different operations, different matrices.</p>
+  <p>Some pairs do commute. Two diagonal matrices always do, and so does any matrix with itself or with the identity. In this collection, try <span class="m">B</span> against <span class="m">B</span>.</p>
+
+  <h3>Why <span class="m">P<span class="n">ᵀ</span>Q<span class="n">ᵀ</span> = (QP)<span class="n">ᵀ</span></span></h3>
+  <p>Entry <span class="m">(i, j)</span> of <span class="m">(QP)<span class="n">ᵀ</span></span> is entry <span class="m">(j, i)</span> of <span class="m">QP</span>, which is row <span class="m">j</span> of <span class="m">Q</span> dotted with column <span class="m">i</span> of <span class="m">P</span>. Entry <span class="m">(i, j)</span> of <span class="m">P<span class="n">ᵀ</span>Q<span class="n">ᵀ</span></span> is row <span class="m">i</span> of <span class="m">P<span class="n">ᵀ</span></span> — that is, column <span class="m">i</span> of <span class="m">P</span> — dotted with column <span class="m">j</span> of <span class="m">Q<span class="n">ᵀ</span></span>, which is row <span class="m">j</span> of <span class="m">Q</span>. Same two vectors, same dot product. The order reverses because transposing turns rows into columns, and the matrix that was reached first by rows must now be reached last by columns.</p>
+</section>
+
+<!-- ===== 4 ===== -->
+<section role="tabpanel" id="p3" aria-labelledby="t3" hidden>
+  <h2>Determinants and inverses</h2>
+  <p class="lede">The determinant decides whether an inverse exists. Gauss–Jordan then builds it, one row operation at a time, in exact fractions.</p>
+
+  <div class="picker" id="pickD"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="panelcard" id="detBoard"></div>
+    </div>
+    <div class="guide" id="detGuide"></div>
+  </div>
+
+  <h3>All five determinants</h3>
+  <div class="tw"><table class="rec" id="dettable"></table></div>
+
+  <div class="note">
+    <p><strong>Read <span class="m">C</span> before you compute it.</strong> Its three rows are identical. Any matrix with two equal rows has determinant zero, because swapping those rows must flip the sign while leaving the matrix unchanged — and only zero equals its own negative. No elimination needed.</p>
+  </div>
+</section>
+
+<!-- ===== 5 ===== -->
+<section role="tabpanel" id="p4" aria-labelledby="t4" hidden>
+  <h2>Eigenvalues, eigenvectors, definiteness</h2>
+  <p class="lede">An eigenvector is a direction the matrix does not turn; the eigenvalue is how much it stretches that direction. Definiteness asks the different question of whether <span class="m">x<span class="n">ᵀ</span>Mx</span> keeps one sign.</p>
+
+  <div class="picker" id="pickE"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="panelcard" id="eigBoard"></div>
+    </div>
+    <div class="guide" id="eigGuide"></div>
+  </div>
+
+  <h3>The summary</h3>
+  <div class="tw"><table class="rec" id="eigtable"></table></div>
+
+  <div class="note">
+    <p><strong>Two cautions the question hides.</strong> First, <span class="m">A</span>'s characteristic polynomial is <span class="m">λ<span class="n">³</span> − 6λ<span class="n">²</span> − 9λ − 6 = 0</span>, which has one real root near <span class="m">7.34</span> and a complex pair. There is no hand calculation that produces it, so use the numerical value and say so.</p>
+    <p>Second, positive and negative definiteness are properties of a <em>symmetric</em> matrix. <span class="m">A</span> and <span class="m">C</span> are not symmetric, so test them through the symmetric part <span class="m">(M + M<span class="n">ᵀ</span>)/2</span>, which gives the same quadratic form <span class="m">x<span class="n">ᵀ</span>Mx</span>. The lab does this and shows you both.</p>
+  </div>
+</section>
+
+<footer>Built for BS1515 Problem Set 2. Products, determinants and inverses are exact rational arithmetic; eigenvalues are solved numerically from the characteristic polynomial.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== exact rational arithmetic ===== */
+function gcd(a,b){ a=Math.abs(a); b=Math.abs(b); while(b){ var t=b; b=a%b; a=t; } return a||1; }
+function F(n,d){
+  d = (d===undefined) ? 1 : d;
+  if(d===0) throw new Error("zero denominator");
+  if(d<0){ n=-n; d=-d; }
+  var g = gcd(n,d);
+  return {n:n/g, d:d/g};
+}
+function add(p,q){ return F(p.n*q.d + q.n*p.d, p.d*q.d); }
+function sub(p,q){ return F(p.n*q.d - q.n*p.d, p.d*q.d); }
+function mul(p,q){ return F(p.n*q.n, p.d*q.d); }
+function div(p,q){ if(q.n===0) throw new Error("div0"); return F(p.n*q.d, p.d*q.n); }
+function neg(p){ return F(-p.n, p.d); }
+function isZero(p){ return p.n===0; }
+function num(p){ return p.n/p.d; }
+function fstr(p){
+  var sign = p.n<0 ? "−" : "";
+  if(p.d===1) return sign + Math.abs(p.n);
+  return sign + Math.abs(p.n) + "/" + p.d;
+}
+function parseF(s){
+  if(s===null || s===undefined) return null;
+  s = String(s).trim().replace(/−/g,"-").replace(/\s+/g,"");
+  if(!s) return null;
+  if(s.indexOf("/")>-1){
+    var a = s.split("/");
+    var n = parseInt(a[0],10), d = parseInt(a[1],10);
+    if(!isFinite(n)||!isFinite(d)||d===0) return null;
+    return F(n,d);
+  }
+  if(/^-?\d+$/.test(s)) return F(parseInt(s,10),1);
+  var f = parseFloat(s);
+  if(!isFinite(f)) return null;
+  return F(Math.round(f*1000000), 1000000);
+}
+
+/* ===== matrices of fractions ===== */
+function Mf(rows){ return rows.map(function(r){ return r.map(function(v){ return (typeof v==="number")?F(v,1):v; }); }); }
+function matmul(P,Q){
+  var n=P.length, k=Q.length, m=Q[0].length, i,j,t,s,out=[];
+  for(i=0;i<n;i++){ out.push([]); for(j=0;j<m;j++){ s=F(0,1); for(t=0;t<k;t++) s=add(s, mul(P[i][t], Q[t][j])); out[i].push(s); } }
+  return out;
+}
+function transpose(P){
+  var out=[],i,j;
+  for(j=0;j<P[0].length;j++){ out.push([]); for(i=0;i<P.length;i++) out[j].push(P[i][j]); }
+  return out;
+}
+function det(P){
+  var n=P.length;
+  if(n===1) return P[0][0];
+  if(n===2) return sub(mul(P[0][0],P[1][1]), mul(P[0][1],P[1][0]));
+  var s=F(0,1), j, sign;
+  for(j=0;j<n;j++){
+    if(isZero(P[0][j])) continue;
+    sign = (j%2===0)?F(1,1):F(-1,1);
+    s = add(s, mul(mul(sign, P[0][j]), det(minor(P,0,j))));
+  }
+  return s;
+}
+function minor(P,r,c){
+  var out=[],i,j;
+  for(i=0;i<P.length;i++){ if(i===r) continue; var row=[]; for(j=0;j<P[0].length;j++){ if(j===c) continue; row.push(P[i][j]); } out.push(row); }
+  return out;
+}
+function eye(n){ var i,j,out=[]; for(i=0;i<n;i++){ out.push([]); for(j=0;j<n;j++) out[i].push(F(i===j?1:0,1)); } return out; }
+function clone(P){ return P.map(function(r){ return r.map(function(v){ return F(v.n,v.d); }); }); }
+
+/* Gauss-Jordan on [M | I], recording the operations */
+function gaussJordan(M){
+  var n=M.length, L=clone(M), R=eye(n), steps=[], i,j,k,p,f;
+  function snap(desc){ steps.push({desc:desc, L:clone(L), R:clone(R)}); }
+  snap("Start from [ M | I ].");
+  for(i=0;i<n;i++){
+    if(isZero(L[i][i])){
+      p=-1;
+      for(k=i+1;k<n;k++) if(!isZero(L[k][i])){ p=k; break; }
+      if(p<0) return {ok:false, steps:steps, failAt:i};
+      var tL=L[i]; L[i]=L[p]; L[p]=tL;
+      var tR=R[i]; R[i]=R[p]; R[p]=tR;
+      snap("Swap rows " + (i+1) + " and " + (p+1) + " to get a non-zero pivot.");
+    }
+    if(!(L[i][i].n===1 && L[i][i].d===1)){
+      f = L[i][i];
+      for(j=0;j<n;j++){ L[i][j]=div(L[i][j],f); R[i][j]=div(R[i][j],f); }
+      snap("Divide row " + (i+1) + " by " + fstr(f) + " to make the pivot 1.");
+    }
+    for(k=0;k<n;k++){
+      if(k===i || isZero(L[k][i])) continue;
+      f = L[k][i];
+      for(j=0;j<n;j++){ L[k][j]=sub(L[k][j], mul(f,L[i][j])); R[k][j]=sub(R[k][j], mul(f,R[i][j])); }
+      snap("Row " + (k+1) + " − (" + fstr(f) + ")·row " + (i+1) + " to clear column " + (i+1) + ".");
+    }
+  }
+  return {ok:true, steps:steps, inv:R};
+}
+
+/* ===== floating helpers for eigen ===== */
+function toNum(P){ return P.map(function(r){ return r.map(num); }); }
+function cubicRoots(b,c,d){
+  // lambda^3 + b lambda^2 + c lambda + d = 0
+  function f(x){ return ((x+b)*x+c)*x+d; }
+  function fp(x){ return (3*x+2*b)*x+c; }
+  var lo=-1, hi=1, i;
+  for(i=0;i<200 && f(lo)*f(hi)>0; i++){ lo*=1.6; hi*=1.6; if(Math.abs(lo)>1e9) break; }
+  var r1;
+  if(f(lo)*f(hi)<=0){
+    for(i=0;i<200;i++){ var mid=(lo+hi)/2; if(f(lo)*f(mid)<=0) hi=mid; else lo=mid; }
+    r1=(lo+hi)/2;
+  } else { r1 = -b/3; }
+  for(i=0;i<60;i++){ var g=fp(r1); if(Math.abs(g)<1e-14) break; var step=f(r1)/g; r1-=step; if(Math.abs(step)<1e-14) break; }
+  var B=b+r1, Cc=c+r1*B, disc=B*B-4*Cc;
+  if(disc >= -1e-10){
+    var s=Math.sqrt(Math.max(disc,0));
+    return [{re:r1,im:0},{re:(-B+s)/2,im:0},{re:(-B-s)/2,im:0}];
+  }
+  var s2=Math.sqrt(-disc);
+  return [{re:r1,im:0},{re:-B/2,im:s2/2},{re:-B/2,im:-s2/2}];
+}
+function eigenOf(Pf){
+  var P=toNum(Pf), n=P.length;
+  var tr=0,i,j; for(i=0;i<n;i++) tr+=P[i][i];
+  var m2=0;
+  for(i=0;i<n;i++) for(j=i+1;j<n;j++) m2 += P[i][i]*P[j][j] - P[i][j]*P[j][i];
+  var dt=num(det(Pf));
+  return cubicRoots(-tr, m2, -dt);
+}
+/* null space of (P - lambda I), numeric, returns basis vectors */
+function nullBasis(P, lam){
+  var n=P.length, M=[], i, j, k;
+  for(i=0;i<n;i++){ M.push([]); for(j=0;j<n;j++) M[i].push(P[i][j] - (i===j?lam:0)); }
+  var tol=1e-8, row=0, pivots=[];
+  for(var col=0; col<n && row<n; col++){
+    var best=row, bv=Math.abs(M[row][col]);
+    for(k=row+1;k<n;k++) if(Math.abs(M[k][col])>bv){ bv=Math.abs(M[k][col]); best=k; }
+    if(bv<tol) continue;
+    var t=M[row]; M[row]=M[best]; M[best]=t;
+    var p=M[row][col];
+    for(j=0;j<n;j++) M[row][j]/=p;
+    for(k=0;k<n;k++){ if(k===row) continue; var f=M[k][col]; if(Math.abs(f)<1e-14) continue; for(j=0;j<n;j++) M[k][j]-=f*M[row][j]; }
+    pivots.push(col); row++;
+  }
+  var free=[]; for(j=0;j<n;j++) if(pivots.indexOf(j)<0) free.push(j);
+  var basis=[];
+  free.forEach(function(fc){
+    var v=new Array(n).fill(0); v[fc]=1;
+    pivots.forEach(function(pc,ri){ v[pc] = -M[ri][fc]; });
+    var mx=0; v.forEach(function(x){ if(Math.abs(x)>mx) mx=Math.abs(x); });
+    if(mx>tol) v=v.map(function(x){ return x/mx; });
+    basis.push(v);
+  });
+  return basis;
+}
+
+/* ===== the five matrices ===== */
+var MATS = [
+ {k:"A", M:Mf([[1,2,3],[4,5,6],[0,1,0]]),
+   note:"Not symmetric. Its characteristic polynomial has no rational root."},
+ {k:"B", M:Mf([[1,0,0],[0,2,0],[0,0,3]]),
+   note:"Diagonal: its entries are its eigenvalues and the standard basis vectors are its eigenvectors."},
+ {k:"C", M:Mf([[1,2,0],[1,2,0],[1,2,0]]),
+   note:"Three identical rows, so rank 1: it collapses all of ℝ³ onto one line."},
+ {k:"D", M:Mf([[1,-1,0],[-1,3,-1],[0,-1,1]]),
+   note:"Symmetric and tridiagonal — the shape a second-difference operator takes."},
+ {k:"E", M:Mf([[-2,1,0],[1,-1,0],[0,0,-3]]),
+   note:"Symmetric and block diagonal: a 2×2 block and a lone −3."}
+];
+function byKey(k){ for(var i=0;i<MATS.length;i++) if(MATS[i].k===k) return MATS[i]; return null; }
+
+/* ===== rendering ===== */
+function matHTML(P, id){
+  var h = "<span class='mat' style='grid-template-columns:repeat("+P[0].length+",auto)'"+(id?(" id='"+id+"'"):"")+">";
+  for(var i=0;i<P.length;i++) for(var j=0;j<P[0].length;j++)
+    h += "<i data-r='"+i+"' data-c='"+j+"'>"+fstr(P[i][j])+"</i>";
+  return h + "</span>";
+}
+function named(k,P){ return "<span class='matname'>"+k+"</span>" + matHTML(P); }
+
+/* ===== tab 1: systems by inversion ===== */
+var SYS = [
+ {name:"System 1", M:Mf([[2,3],[3,4]]), r:Mf([[5],[7]])},
+ {name:"System 2", M:Mf([[6,8],[3,4]]), r:Mf([[5],[7]])},
+ {name:"System 3", M:Mf([[2,-3],[3,4]]), r:Mf([[5],[7]])},
+ {name:"System 4", M:Mf([[2,8],[3,4]]), r:Mf([[0],[0]])}
+];
+var sysI = 0;
+function drawSys(){
+  var S=SYS[sysI], D=det(S.M);
+  var board=document.getElementById("sysBoard");
+  var h = "<p class='cardlbl'>"+S.name+" as Mx = r</p>";
+  h += "<div class='matline'>"+named("M",S.M)+"<span class='matname' style='font-style:normal'>x =</span>"+matHTML(S.r)+"</div>";
+  h += "<div class='matout'><b>D = ad − bc = "+fstr(D)+"</b><br>";
+  if(isZero(D)){
+    h += "<span class='no'>Zero, so M has no inverse.</span><br>Row 1 is "+fstr(div(S.M[0][0],S.M[1][0]))+" × row 2 on the left, but the right-hand sides do not match that ratio.";
+  } else {
+    var inv = gaussJordan(S.M).inv;
+    var x = matmul(inv, S.r);
+    h += "<span class='yes'>Non-zero, so the inverse exists.</span></div>";
+    h += "<div class='matline' style='margin-top:14px'><span class='matname'>M<sup>−1</sup> =</span>"+matHTML(inv)+"</div>";
+    h += "<div class='matline'><span class='matname'>x = M<sup>−1</sup>r =</span>"+matHTML(x)+"</div>";
+    h += "<div class='matout'>x = <b>"+fstr(x[0][0])+"</b>, y = <b>"+fstr(x[1][0])+"</b>";
+  }
+  h += "</div>";
+  board.innerHTML = h;
+
+  var g = document.getElementById("sysGuide");
+  var gh = "<h3 style='margin-top:0'>"+S.name+"</h3>";
+  gh += "<details class='step'><summary><span class='tag'>Step 1</span>Write it as a matrix equation</summary><div class='body'><p>Collect the coefficients into <span class='m'>M</span> and the constants into <span class='m'>r</span>. The unknowns become one column vector <span class='m'>x</span>.</p></div></details>";
+  gh += "<details class='step'><summary><span class='tag'>Step 2</span>Can you invert it?</summary><div class='body'><p><span class='m'>D = "+fstr(D)+"</span>. "+(isZero(D)
+    ? "Zero. The inverse formula divides by <span class='m'>D</span>, so it does not exist, and the system has either no solution or infinitely many."
+    : "Non-zero, so <span class='m'>M<span class=\"n\">⁻¹</span></span> exists and the solution is unique.")+"</p></div></details>";
+  if(!isZero(D)){
+    var inv2 = gaussJordan(S.M).inv;
+    gh += "<details class='step'><summary><span class='tag'>Step 3</span>Build the inverse</summary><div class='body'><p>Swap the diagonal entries, negate the off-diagonal ones, divide everything by <span class='m'>D = "+fstr(D)+"</span>.</p><div class='matline'>"+named("M<sup>−1</sup>",inv2)+"</div></div></details>";
+    var x2 = matmul(inv2,S.r);
+    gh += "<details class='step'><summary><span class='tag'>Answer</span>Multiply through</summary><div class='body'><p><span class='m'>x = M<span class='n'>⁻¹</span>r = ("+fstr(x2[0][0])+", "+fstr(x2[1][0])+")</span>. Substitute back into both original equations to confirm.</p></div></details>";
+  } else {
+    gh += "<details class='step'><summary><span class='tag'>Answer</span>What happens instead</summary><div class='body'><p>Multiplying the second equation by 2 gives <span class='m'>6x + 8y = 14</span>, but the first says <span class='m'>6x + 8y = 5</span>. The same quantity cannot equal both, so there is no solution.</p><p>Change that 5 to 14 and the two equations become one line: infinitely many solutions, and still no inverse. A zero determinant rules out a <em>unique</em> answer, not an answer.</p></div></details>";
+  }
+  g.innerHTML = gh;
+}
+
+/* ===== tab 2: null space ===== */
+var A23 = Mf([[2,3,5],[-4,2,3]]);
+function nullCheck(){
+  var v1=parseF(document.getElementById("v1").value),
+      v2=parseF(document.getElementById("v2").value),
+      v3=parseF(document.getElementById("v3").value);
+  var out=document.getElementById("nullout");
+  if(!v1||!v2||!v3){ out.innerHTML="<span class='no'>Enter three numbers. Fractions like -13/8 are fine.</span>"; return; }
+  var v=[[v1],[v2],[v3]], Av=matmul(A23,v);
+  var zero = isZero(Av[0][0]) && isZero(Av[1][0]);
+  out.innerHTML = "row 1: 2("+fstr(v1)+") + 3("+fstr(v2)+") + 5("+fstr(v3)+") = <b>"+fstr(Av[0][0])+"</b><br>" +
+    "row 2: −4("+fstr(v1)+") + 2("+fstr(v2)+") + 3("+fstr(v3)+") = <b>"+fstr(Av[1][0])+"</b><br>" +
+    (zero ? "<span class='yes'>Av = 0 — this vector is in the null space.</span>"
+          : "<span class='no'>Av ≠ 0 — not in the null space.</span>");
+}
+function leftCheck(){
+  var w1=parseF(document.getElementById("w1").value), w2=parseF(document.getElementById("w2").value);
+  var out=document.getElementById("leftout");
+  if(!w1||!w2){ out.innerHTML="<span class='no'>Enter two numbers.</span>"; return; }
+  var wA=matmul([[w1,w2]], A23);
+  var zero = isZero(wA[0][0]) && isZero(wA[0][1]) && isZero(wA[0][2]);
+  out.innerHTML = "wA = ( <b>"+fstr(wA[0][0])+"</b>, <b>"+fstr(wA[0][1])+"</b>, <b>"+fstr(wA[0][2])+"</b> )<br>" +
+    (zero ? (isZero(w1)&&isZero(w2) ? "<span class='yes'>Zero — but you entered the zero vector, which is in every null space.</span>"
+                                    : "<span class='yes'>Zero — and this would contradict the result. Check your arithmetic.</span>")
+          : "<span class='no'>Not zero.</span> Try to make all three entries vanish at once: you will find only w = 0 works.");
+}
+
+/* ===== tab 3: products ===== */
+var L="A", R="B";
+function drawProd(){
+  var P=byKey(L).M, Q=byKey(R).M, PQ=matmul(P,Q);
+  document.getElementById("prodrow").innerHTML =
+    named(L,P) + "<span class='eq'>×</span>" + named(R,Q) + "<span class='eq'>=</span>" +
+    "<span class='matname'>"+L+R+"</span>" + matHTML(PQ,"prodM");
+  var cells = document.querySelectorAll("#prodM i");
+  Array.prototype.forEach.call(cells, function(cell){
+    function show(){
+      var r=+cell.getAttribute("data-r"), c=+cell.getAttribute("data-c"), t, parts=[];
+      for(t=0;t<Q.length;t++) parts.push("("+fstr(P[r][t])+")("+fstr(Q[t][c])+")");
+      document.getElementById("dotline").innerHTML =
+        "entry ("+(r+1)+", "+(c+1)+") = row "+(r+1)+" of "+L+" · column "+(c+1)+" of "+R+"<br>" +
+        parts.join(" + ") + " = <b>" + fstr(PQ[r][c]) + "</b>";
+      highlight(r,c);
+    }
+    cell.addEventListener("mouseenter", show);
+    cell.addEventListener("click", show);
+  });
+  function highlight(r,c){
+    var row = document.getElementById("prodrow");
+    var mats = row.querySelectorAll(".mat");
+    Array.prototype.forEach.call(row.querySelectorAll(".mat i"), function(x){ x.classList.remove("hot","lit"); });
+    Array.prototype.forEach.call(mats[0].querySelectorAll("i"), function(x){ if(+x.getAttribute("data-r")===r) x.classList.add("lit"); });
+    Array.prototype.forEach.call(mats[1].querySelectorAll("i"), function(x){ if(+x.getAttribute("data-c")===c) x.classList.add("lit"); });
+    Array.prototype.forEach.call(mats[2].querySelectorAll("i"), function(x){
+      if(+x.getAttribute("data-r")===r && +x.getAttribute("data-c")===c) x.classList.add("hot"); });
+  }
+  document.getElementById("transout").innerHTML="";
+}
+function showTranspose(){
+  var P=byKey(L).M, Q=byKey(R).M;
+  var lhs=matmul(transpose(P), transpose(Q));
+  var rhs=transpose(matmul(Q,P));
+  var same = JSON.stringify(lhs)===JSON.stringify(rhs);
+  document.getElementById("transout").innerHTML =
+    "<div class='prodrow' style='margin-top:12px'>" +
+      named(L+"<sup>T</sup>"+R+"<sup>T</sup>", lhs) + "<span class='eq'>vs</span>" +
+      named("("+R+L+")<sup>T</sup>", rhs) + "</div>" +
+    "<div class='dotline'>" + (same ? "<b>Identical</b>, as the identity promises." : "These differ — which would be a bug.") + "</div>";
+}
+
+/* ===== tab 4: determinant and inverse ===== */
+var dKey="A";
+function drawDet(){
+  var m=byKey(dKey), P=m.M, D=det(P);
+  var board=document.getElementById("detBoard");
+  var h="<p class='cardlbl'>Matrix "+dKey+"</p><div class='matline'>"+named(dKey,P)+"</div>";
+  h += "<div class='matout'><b>det "+dKey+" = "+fstr(D)+"</b><br>"+m.note+"</div>";
+  var gj = gaussJordan(P);
+  if(gj.ok){
+    h += "<div class='matline' style='margin-top:14px'>"+named(dKey+"<sup>−1</sup>", gj.inv)+"</div>";
+    var chk = matmul(P, gj.inv);
+    h += "<div class='matout'>Check: "+dKey+"·"+dKey+"<sup>−1</sup> = "+(JSON.stringify(chk)===JSON.stringify(eye(3))?"<span class='yes'>I</span>":"not I")+"</div>";
+  } else {
+    h += "<div class='matout'><span class='no'>No inverse.</span> Elimination stalls in column "+(gj.failAt+1)+": every remaining row has a zero there, so no pivot can be made.</div>";
+  }
+  board.innerHTML=h;
+
+  var g=document.getElementById("detGuide");
+  var gh="<h3 style='margin-top:0'>Gauss–Jordan on "+dKey+"</h3>";
+  gh += "<p style='font-size:13.5px;color:var(--ink2)'>Start from <span class='m'>[ "+dKey+" | I ]</span> and drive the left block to <span class='m'>I</span>. Whatever the right block becomes is the inverse.</p>";
+  gh += "<details class='step'><summary><span class='tag'>Steps</span>Every row operation</summary><div class='body'><div class='steps'>";
+  gj.steps.forEach(function(s){
+    gh += "<span class='op'>"+s.desc+"</span><span class='aug'>"+matHTML(s.L)+"<span class='bar'></span>"+matHTML(s.R)+"</span>";
+  });
+  if(!gj.ok) gh += "<span class='op'>Column "+(gj.failAt+1)+" has no available pivot. Stop: "+dKey+" is singular.</span>";
+  gh += "</div></div></details>";
+  g.innerHTML=gh;
+}
+function fillDetTable(){
+  var h="<tr><th>Matrix</th><th>det</th><th>Invertible?</th><th>Fastest route</th></tr>";
+  var why={
+    A:"Cofactor expansion along the bottom row — it has two zeros.",
+    B:"Diagonal: multiply the diagonal entries.",
+    C:"Two equal rows force the determinant to zero.",
+    D:"Expand along the top row; the zero kills one term.",
+    E:"Block diagonal: det of the 2×2 block times −3."
+  };
+  MATS.forEach(function(m){
+    var D=det(m.M);
+    h += "<tr><td>"+m.k+"</td><td>"+fstr(D)+"</td><td>"+(isZero(D)?"no":"yes")+"</td><td style='font-family:var(--body);font-style:normal'>"+why[m.k]+"</td></tr>";
+  });
+  document.getElementById("dettable").innerHTML=h;
+}
+
+/* ===== tab 5: eigen and definiteness ===== */
+var eKey="A";
+function tidy(x){ return Math.abs(x)<5e-7 ? 0 : x; }
+function fmtC(z){
+  var re = tidy(z.re), im = tidy(z.im);
+  if(im===0) return (re<0?"−":"") + Math.abs(re).toFixed(4);
+  return (re<0?"−":"") + Math.abs(re).toFixed(4) + (im>0?" + ":" − ") + Math.abs(im).toFixed(4) + "i";
+}
+function symPart(P){
+  var T=transpose(P), n=P.length, out=[], i, j;
+  for(i=0;i<n;i++){ out.push([]); for(j=0;j<n;j++) out[i].push(div(add(P[i][j],T[i][j]), F(2,1))); }
+  return out;
+}
+function classify(eigs){
+  var tol=1e-7, pos=0, negc=0, zer=0;
+  eigs.forEach(function(z){
+    if(Math.abs(z.im)>tol) return;
+    if(z.re>tol) pos++; else if(z.re<-tol) negc++; else zer++;
+  });
+  if(pos>0 && negc>0) return {t:"indefinite", cls:"ind"};
+  if(negc===0 && zer===0) return {t:"positive definite", cls:"pd"};
+  if(pos===0 && zer===0) return {t:"negative definite", cls:"nd"};
+  if(negc===0) return {t:"positive semidefinite", cls:"ind"};
+  return {t:"negative semidefinite", cls:"ind"};
+}
+function drawEig(){
+  var m=byKey(eKey), P=m.M, Pn=toNum(P);
+  var eigs=eigenOf(P);
+  var tr=0,i; for(i=0;i<3;i++) tr+=Pn[i][i];
+  var m2=0,j; for(i=0;i<3;i++) for(j=i+1;j<3;j++) m2 += Pn[i][i]*Pn[j][j]-Pn[i][j]*Pn[j][i];
+  var dt=num(det(P));
+  var S=symPart(P), symmetric = JSON.stringify(P)===JSON.stringify(transpose(P));
+  var sEig=eigenOf(S), cl=classify(sEig);
+
+  var h="<p class='cardlbl'>Matrix "+eKey+"</p><div class='matline'>"+named(eKey,P)+"</div>";
+  h += "<div class='matout'>characteristic polynomial<br><b>λ³ "+(tr>=0?"− ":"+ ")+Math.abs(tr)+"λ² "+(m2>=0?"+ ":"− ")+Math.abs(m2)+"λ "+(dt>=0?"− ":"+ ")+Math.abs(dt)+" = 0</b><br>"+
+       "built from trace = "+tr+", sum of 2×2 principal minors = "+m2+", det = "+dt+"</div>";
+  h += "<div class='matout' style='margin-top:10px'>eigenvalues<br>";
+  eigs.forEach(function(z,k){ h += "λ"+(k+1)+" = <b>"+fmtC(z)+"</b><br>"; });
+  h += "</div>";
+
+  var evh="", seen=[];
+  eigs.forEach(function(z,k){
+    if(Math.abs(z.im)>1e-9){ evh += "λ = "+fmtC(z)+" is complex — no real eigenvector.<br>"; return; }
+    var dup=false, q;
+    for(q=0;q<seen.length;q++) if(Math.abs(seen[q]-z.re)<1e-6) dup=true;
+    if(dup) return;
+    seen.push(z.re);
+    var B=nullBasis(Pn, z.re);
+    if(!B.length){ evh += "λ = "+fmtC(z)+": numerical trouble.<br>"; return; }
+    B.forEach(function(v,bi){
+      evh += "λ = "+fmtC(z)+(B.length>1?(" (direction "+(bi+1)+" of "+B.length+")"):"")+" → ( " +
+        v.map(function(x){ return (tidy(x)<0?"−":"") + Math.abs(tidy(x)).toFixed(3); }).join(", ") + " )<br>";
+    });
+  });
+  h += "<div class='matout' style='margin-top:10px'>eigenvectors (scaled so the largest entry is 1)<br>"+evh+"</div>";
+
+  h += "<div class='flags'><span class='flag'>"+(symmetric?"symmetric":"not symmetric")+"</span><span class='flag "+cl.cls+"'>"+cl.t+"</span></div>";
+  if(!symmetric){
+    h += "<div class='matline' style='margin-top:14px'><span class='matname'>(" + eKey + " + " + eKey + "<sup>T</sup>)/2 =</span>"+matHTML(S)+"</div>" +
+         "<div class='matout'>The quadratic form xᵀ"+eKey+"x only sees this symmetric part, so definiteness is read off its eigenvalues: " +
+         sEig.map(fmtC).join(", ") + "</div>";
+  }
+  document.getElementById("eigBoard").innerHTML=h;
+
+  var notes = {
+    A:"<p>The cubic <span class='m'>λ<span class='n'>³</span> − 6λ<span class='n'>²</span> − 9λ − 6 = 0</span> has no rational root — by the rational root theorem the only candidates are ±1, ±2, ±3, ±6, and none works. One real root near <span class='m'>7.337</span>, then a complex conjugate pair. Report the numerical value and move on.</p><p>The symmetric part has eigenvalues of both signs, so the quadratic form <span class='m'>x<span class='n'>ᵀ</span>Ax</span> is indefinite: <span class='m'>(1,0,0)</span> gives <span class='m'>+1</span>, <span class='m'>(1,−1,0)</span> gives <span class='m'>1 + 5 − 6 = 0</span>, and <span class='m'>(0,0,1)</span> gives <span class='m'>0</span> while <span class='m'>(1,−1,1)</span> goes negative.</p>",
+    B:"<p>For a diagonal matrix the characteristic polynomial factors on sight: <span class='m'>(1−λ)(2−λ)(3−λ) = 0</span>. The eigenvectors are the standard basis vectors, because <span class='m'>B</span> stretches each axis without rotating anything.</p><p>All eigenvalues positive, so <span class='m'>B</span> is positive definite — and <span class='m'>x<span class='n'>ᵀ</span>Bx = x₁<span class='n'>²</span> + 2x₂<span class='n'>²</span> + 3x₃<span class='n'>²</span></span> says the same thing without any eigenvalue theory.</p>",
+    C:"<p>Rank 1, so the null space is two-dimensional and <span class='m'>λ = 0</span> is a double eigenvalue. The trace is <span class='m'>1 + 2 + 0 = 3</span> and eigenvalues sum to the trace, so the third is <span class='m'>3</span>. Its eigenvector is <span class='m'>(1,1,1)</span>: every row of <span class='m'>C</span> is the same, so <span class='m'>Cx</span> always points along <span class='m'>(1,1,1)</span>.</p><p><span class='m'>C</span> is not symmetric, so read definiteness off the quadratic form: <span class='m'>x<span class='n'>ᵀ</span>Cx = (x₁ + x₂ + x₃)(x₁ + 2x₂)</span>. At <span class='m'>(1,0,0)</span> that is <span class='m'>+1</span>; at <span class='m'>(1,−1,1)</span> it is <span class='m'>−1</span>. Indefinite.</p>",
+    D:"<p>Symmetric, so all eigenvalues are real. Expanding gives <span class='m'>(1−λ)(λ<span class='n'>²</span> − 4λ + 1) = 0</span>, so <span class='m'>λ = 1</span> and <span class='m'>λ = 2 ± √3</span> — exactly <span class='m'>3.732</span> and <span class='m'>0.268</span>. All three are positive.</p><p>Confirm with leading principal minors: <span class='m'>1 &gt; 0</span>, then <span class='m'>det[[1,−1],[−1,3]] = 2 &gt; 0</span>, then <span class='m'>det D = 1 &gt; 0</span>. Positive definite by Sylvester's criterion, no eigenvalues required.</p>",
+    E:"<p>Block diagonal, so the spectrum is the union of the blocks'. The lone entry gives <span class='m'>λ = −3</span>; the <span class='m'>2×2</span> block has trace <span class='m'>−3</span> and determinant <span class='m'>1</span>, so <span class='m'>λ = (−3 ± √5)/2</span>, about <span class='m'>−0.382</span> and <span class='m'>−2.618</span>.</p><p>All negative, so <span class='m'>E</span> is negative definite. Equivalently the leading principal minors alternate: <span class='m'>−2 &lt; 0</span>, <span class='m'>1 &gt; 0</span>, <span class='m'>−3 &lt; 0</span>.</p>"
+  };
+  document.getElementById("eigGuide").innerHTML =
+    "<h3 style='margin-top:0'>Reading matrix "+eKey+"</h3>" +
+    "<details class='step' open><summary><span class='tag'>Answer</span>What to write down</summary><div class='body'>"+notes[eKey]+"</div></details>" +
+    "<details class='step'><summary><span class='tag'>Method</span>How to get there by hand</summary><div class='body'>" +
+    "<p>For a 3×3 matrix the characteristic polynomial is always <span class='m'>λ<span class='n'>³</span> − (tr M)λ<span class='n'>²</span> + (sum of 2×2 principal minors)λ − det M</span>. Those three numbers are faster to compute than expanding <span class='m'>det(M − λI)</span> symbolically.</p>" +
+    "<p>For each root <span class='m'>λ</span>, solve <span class='m'>(M − λI)v = 0</span> by elimination. The system is singular by construction, so you will always have at least one free variable — set it to 1 and read off the rest.</p></div></details>";
+}
+function fillEigTable(){
+  var h="<tr><th>Matrix</th><th>det</th><th>Eigenvalues</th><th>Symmetric</th><th>Definiteness of xᵀMx</th></tr>";
+  MATS.forEach(function(m){
+    var eigs=eigenOf(m.M), S=symPart(m.M), cl=classify(eigenOf(S));
+    var sym = JSON.stringify(m.M)===JSON.stringify(transpose(m.M));
+    h += "<tr><td>"+m.k+"</td><td>"+fstr(det(m.M))+"</td><td style='font-family:var(--mono);font-style:normal;font-size:12px'>"+
+         eigs.map(fmtC).join("<br>")+"</td><td style='font-family:var(--body);font-style:normal'>"+(sym?"yes":"no")+
+         "</td><td style='font-family:var(--body);font-style:normal'>"+cl.t+"</td></tr>";
+  });
+  document.getElementById("eigtable").innerHTML=h;
+}
+
+/* ===== wiring ===== */
+function pickerInto(el, keys, get, set){
+  el.innerHTML="";
+  keys.forEach(function(k){
+    var b=document.createElement("button"); b.type="button"; b.textContent=k;
+    b.setAttribute("aria-pressed", get()===k ? "true":"false");
+    b.addEventListener("click", function(){ set(k); });
+    el.appendChild(b);
+  });
+}
+function init(){
+  var keys=MATS.map(function(m){ return m.k; });
+
+  pickerInto(document.getElementById("pickSys"), SYS.map(function(s,i){ return s.name; }),
+    function(){ return SYS[sysI].name; }, function(n){ sysI = SYS.findIndex(function(s){return s.name===n;}); refreshSys(); });
+  function refreshSys(){
+    pickerInto(document.getElementById("pickSys"), SYS.map(function(s){ return s.name; }),
+      function(){ return SYS[sysI].name; }, function(n){ sysI = SYS.findIndex(function(s){return s.name===n;}); refreshSys(); });
+    drawSys();
+  }
+  refreshSys();
+
+  document.getElementById("nullgo").addEventListener("click", nullCheck);
+  document.getElementById("leftgo").addEventListener("click", leftCheck);
+  nullCheck();
+
+  function refreshProd(){
+    pickerInto(document.getElementById("pickL"), keys, function(){ return L; }, function(k){ L=k; refreshProd(); });
+    pickerInto(document.getElementById("pickR"), keys, function(){ return R; }, function(k){ R=k; refreshProd(); });
+    drawProd();
+  }
+  refreshProd();
+  document.getElementById("swapbtn").addEventListener("click", function(){ var t=L; L=R; R=t; refreshProd(); });
+  document.getElementById("transbtn").addEventListener("click", showTranspose);
+
+  function refreshDet(){
+    pickerInto(document.getElementById("pickD"), keys, function(){ return dKey; }, function(k){ dKey=k; refreshDet(); });
+    drawDet();
+  }
+  refreshDet();
+  fillDetTable();
+
+  function refreshEig(){
+    pickerInto(document.getElementById("pickE"), keys, function(){ return eKey; }, function(k){ eKey=k; refreshEig(); });
+    drawEig();
+  }
+  refreshEig();
+  fillEigTable();
+
+  var tabBtns=document.querySelectorAll("nav.tabs button");
+  Array.prototype.forEach.call(tabBtns, function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(tabBtns, function(o){
+        var on=(o===b);
+        o.setAttribute("aria-selected", on?"true":"false");
+        document.getElementById(o.getAttribute("aria-controls")).hidden=!on;
+      });
+    });
+  });
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
+})();
+</script>

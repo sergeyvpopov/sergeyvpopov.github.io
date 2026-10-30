@@ -1,0 +1,1446 @@
+<title>BS1515 Utility Lab</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Literata:ital,opsz,wght@0,7..72,400;0,7..72,600;0,7..72,700;1,7..72,400&family=Archivo:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+
+<style>
+/* Layout: single reading column; sticky tab rail on top; one live plot per section. */
+:root{
+  --paper:#FBF8F6; --surface:#FFFFFF; --sunk:#F3EDE9;
+  --ink:#1C1715; --ink2:#6A5C57; --rule:#E6DCD6;
+  --accent:#C21F16; --accent-soft:rgba(194,31,22,.11); --accent-line:rgba(194,31,22,.55);
+  --good:#1C6F52; --good-soft:rgba(28,111,82,.12);
+  --warn:#8E5A10; --warn-soft:rgba(142,90,16,.13);
+  --display:"Literata",Georgia,"Times New Roman",serif;
+  --body:"Archivo","Helvetica Neue",Arial,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+    --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+    --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+    --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+    --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#16110F; --surface:#1F1917; --sunk:#241D1A;
+  --ink:#F2ECE9; --ink2:#A7978F; --rule:#352B27;
+  --accent:#FF7063; --accent-soft:rgba(255,112,99,.15); --accent-line:rgba(255,112,99,.6);
+  --good:#56C89C; --good-soft:rgba(86,200,156,.15);
+  --warn:#E2A94E; --warn-soft:rgba(226,169,78,.15);
+  color-scheme: dark;
+}
+
+*{box-sizing:border-box}
+body{background:var(--paper);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55;margin:0}
+.wrap{max-width:860px;margin:0 auto;padding-inline:20px;padding-block:0 64px}
+
+/* Masthead */
+header.mast{padding-block:30px 18px;border-bottom:2px solid var(--ink)}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--accent);margin:0 0 8px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(28px,6vw,42px);line-height:1.08;margin:0;letter-spacing:-.015em;text-wrap:balance}
+.mast p{color:var(--ink2);margin:10px 0 0;max-width:62ch;font-size:14.5px}
+
+/* Tabs */
+nav.tabs{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--paper);
+  display:flex;gap:2px;overflow-x:auto;border-bottom:1px solid var(--rule);margin-bottom:26px;
+  scrollbar-width:none}
+nav.tabs::-webkit-scrollbar{display:none}
+nav.tabs button{flex:0 0 auto;appearance:none;background:none;border:0;border-bottom:2px solid transparent;
+  font-family:var(--body);font-size:13.5px;font-weight:500;color:var(--ink2);
+  padding:13px 14px;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:var(--ink)}
+nav.tabs button[aria-selected="true"]{color:var(--accent);border-bottom-color:var(--accent)}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-3px;border-radius:3px}
+nav.tabs .num{font-family:var(--mono);font-size:11px;opacity:.65;margin-right:6px}
+
+h2{font-family:var(--display);font-weight:600;font-size:23px;margin:0 0 6px;letter-spacing:-.01em;text-wrap:balance}
+h3{font-family:var(--display);font-weight:600;font-size:17px;margin:26px 0 8px}
+.lede{color:var(--ink2);margin:0 0 22px;max-width:64ch}
+p{max-width:66ch}
+
+/* Maths inline */
+.m{font-family:var(--display);font-style:italic;font-size:1.03em;white-space:nowrap}
+.m .op,.m .n{font-style:normal}
+code{font-family:var(--mono);font-size:.92em;background:var(--sunk);padding:1px 5px;border-radius:3px}
+
+/* Set picker */
+.picker{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px}
+.picker button{appearance:none;cursor:pointer;background:var(--surface);color:var(--ink2);
+  border:1px solid var(--rule);border-radius:999px;padding:6px 13px;font-family:var(--body);font-size:13px}
+.picker button:hover{border-color:var(--accent-line);color:var(--ink)}
+.picker button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:500}
+.picker button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+/* Lab */
+.lab{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:24px;align-items:start}
+@media (max-width:720px){.lab{grid-template-columns:1fr}}
+.stage{min-width:0}
+.canvas-box{position:relative;width:100%;aspect-ratio:1/1;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+.toolrow{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px}
+.toolrow button{appearance:none;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  color:var(--ink2);border-radius:3px;padding:6px 10px;font-family:var(--body);font-size:12.5px}
+.toolrow button[aria-pressed="true"]{background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.toolrow button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.slider{display:flex;align-items:center;gap:10px;margin-top:12px;font-family:var(--mono);font-size:12px;color:var(--ink2)}
+.slider input[type=range]{flex:1;min-width:0;accent-color:var(--accent)}
+.readout{margin-top:10px;min-height:68px;font-family:var(--mono);font-size:12.5px;line-height:1.65;
+  background:var(--sunk);border-radius:4px;padding:10px 12px;color:var(--ink2)}
+.readout b{color:var(--ink);font-weight:500}
+.readout .yes{color:var(--good)}
+.readout .no{color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:12px;margin-top:10px;font-size:11.5px;color:var(--ink2)}
+.legend span{display:flex;align-items:center;gap:6px}
+.swatch{width:16px;height:3px;border-radius:2px;flex:0 0 auto}
+
+/* Hint ladder */
+details.step{border-top:1px solid var(--rule);padding:0}
+details.step:last-of-type{border-bottom:1px solid var(--rule)}
+details.step>summary{list-style:none;cursor:pointer;padding:11px 2px;display:flex;align-items:baseline;gap:10px;
+  font-size:13.5px;color:var(--ink2)}
+details.step>summary::-webkit-details-marker{display:none}
+details.step>summary::after{content:"+";margin-left:auto;font-family:var(--mono);color:var(--accent);font-size:15px}
+details.step[open]>summary::after{content:"\2212"}
+details.step>summary:hover{color:var(--ink)}
+details.step>summary:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+details.step .tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;
+  color:var(--accent);flex:0 0 auto}
+details.step .body{padding:0 2px 16px;font-size:14px;color:var(--ink)}
+details.step .body p{margin:0 0 9px}
+details.step .body p:last-child{margin-bottom:0}
+
+/* Quiz */
+.quiz{background:var(--surface);border:1px solid var(--rule);border-radius:4px;padding:16px 16px 14px;margin:16px 0}
+.quiz .q{font-size:14px;margin:0 0 10px;max-width:none}
+.quiz .q+.q{margin-top:18px}
+.opts{display:flex;flex-wrap:wrap;gap:6px}
+.opts button{appearance:none;cursor:pointer;background:var(--paper);border:1px solid var(--rule);color:var(--ink);
+  border-radius:3px;padding:6px 14px;font-family:var(--body);font-size:13px}
+.opts button:hover{border-color:var(--accent-line)}
+.opts button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.opts button.right{background:var(--good-soft);border-color:var(--good);color:var(--good);font-weight:500}
+.opts button.wrong{background:var(--accent-soft);border-color:var(--accent);color:var(--accent);text-decoration:line-through}
+.fb{margin-top:9px;font-size:13px;color:var(--ink2);border-left:2px solid var(--rule);padding-left:11px}
+.fb.on{border-left-color:var(--accent)}
+
+/* Callout */
+.note{border-left:3px solid var(--warn);background:var(--warn-soft);padding:13px 15px;border-radius:0 4px 4px 0;margin:22px 0;font-size:13.5px}
+.note strong{font-weight:600;color:var(--warn)}
+.note p{max-width:none;margin:0}
+.note p+p{margin-top:8px}
+
+/* Systems */
+.syscards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-bottom:20px}
+.syscard{appearance:none;text-align:left;cursor:pointer;background:var(--surface);border:1px solid var(--rule);
+  border-radius:4px;padding:13px 14px;font-family:var(--mono);font-size:13px;color:var(--ink);line-height:1.75}
+.syscard:hover{border-color:var(--accent-line)}
+.syscard[aria-pressed="true"]{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.syscard:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.syscard .lbl{font-family:var(--body);font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--accent);display:block;margin-bottom:5px}
+.checkrow{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-top:14px}
+.checkrow label{font-size:13px;color:var(--ink2)}
+.checkrow input[type=text]{width:84px;font-family:var(--mono);font-size:13px;padding:6px 8px;
+  background:var(--surface);color:var(--ink);border:1px solid var(--rule);border-radius:3px}
+.checkrow input[type=text]:focus-visible{outline:2px solid var(--accent);outline-offset:0}
+.checkrow .go{appearance:none;cursor:pointer;background:var(--ink);color:var(--paper);border:0;border-radius:3px;
+  padding:7px 15px;font-family:var(--body);font-size:13px;font-weight:500}
+.checkrow .go:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.verdict{font-size:13px;margin-top:9px;min-height:20px}
+.verdict.ok{color:var(--good)}
+.verdict.bad{color:var(--accent)}
+
+table.rec{width:100%;border-collapse:collapse;font-size:13px;margin:14px 0}
+table.rec th,table.rec td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+table.rec th{font-family:var(--mono);font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink2);font-weight:400}
+table.rec td:first-child{font-family:var(--display);font-style:italic;white-space:nowrap}
+.tw{overflow-x:auto}
+footer{margin-top:44px;padding-top:16px;border-top:1px solid var(--rule);color:var(--ink2);font-size:12.5px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+<style>
+.canvas-box{position:relative;width:100%;aspect-ratio:4/3;max-width:100%;
+  background:var(--surface);border:1px solid var(--rule);border-radius:4px;overflow:hidden}
+.canvas-box.sq{aspect-ratio:1/1}
+.canvas-box canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.intstate{font-family:var(--display);font-size:16.5px;margin:4px 0 14px;line-height:1.5}
+.intstate sup,.intstate sub{font-size:.68em}
+.fline{font-family:var(--mono);font-size:12.5px;background:var(--sunk);border-radius:4px;padding:10px 12px;
+  margin:10px 0;color:var(--ink);line-height:1.7;overflow-x:auto}
+.picker button{font-family:var(--mono);font-size:12px}
+table.kv{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:11.5px;margin:2px 0}
+table.kv td{padding:3px 8px 3px 0;border-bottom:1px solid var(--rule);vertical-align:baseline}
+table.kv td:first-child{color:var(--ink2);white-space:nowrap;width:1%}
+table.kv td.v{color:var(--ink);text-align:right}
+table.kv tr:last-child td{border-bottom:none}
+.readout{min-height:120px}
+table.rec td:first-child{white-space:normal}
+</style>
+
+<div class="wrap">
+
+<header class="mast">
+  <p class="eyebrow">BS1515 · Problem Set 5</p>
+  <h1>Seven utility functions, three questions each</h1>
+  <p>The same seven functions run through the whole sheet: differentiate them, decide where they are concave, then maximise them on a budget line. Doing it that way round is deliberate — the concavity answer is what tells you whether the first-order condition you write in part three has found a maximum, a minimum, or nothing at all. Everything here is drawn for <span class="m">N = 2</span> so it fits on a page, with the general-<span class="m">N</span> formulas alongside.</p>
+</header>
+
+<nav class="tabs" role="tablist" id="tabs">
+  <button role="tab" id="t0" aria-controls="p0" aria-selected="true"><span class="num">1</span>Derivatives</button>
+  <button role="tab" id="t1" aria-controls="p1" aria-selected="false"><span class="num">2</span>Concavity</button>
+  <button role="tab" id="t2" aria-controls="p2" aria-selected="false"><span class="num">3</span>Constrained optimum</button>
+  <button role="tab" id="t3" aria-controls="p3" aria-selected="false"><span class="num">4</span>All seven at once</button>
+</nav>
+
+<!-- ===== 1 ===== -->
+<section role="tabpanel" id="p0" aria-labelledby="t0">
+  <h2>First and second derivatives</h2>
+  <p class="lede">Pick a function and a point. The plot draws its indifference curves and the gradient <span class="m">∇u</span> at your point — always perpendicular to the curve through it, because the gradient points in the direction of steepest increase. The readout compares the formulas you should be deriving against a numerical Hessian computed from the function itself.</p>
+
+  <div class="picker" id="pickD"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box sq"><canvas id="cvD"></canvas></div>
+      <div class="slider">
+        <label for="dx1">x₁ =</label>
+        <input type="range" id="dx1" min="0.2" max="11.5" step="0.1" value="3">
+        <span id="dx1val">3.00</span>
+      </div>
+      <div class="slider">
+        <label for="dx2">x₂ =</label>
+        <input type="range" id="dx2" min="0.2" max="11.5" step="0.1" value="4">
+        <span id="dx2val">4.00</span>
+      </div>
+      <div id="dParams"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--rule)"></i>indifference curves</span>
+        <span><i class="swatch" style="background:var(--accent)"></i>curve through your point</span>
+        <span><i class="swatch" style="background:var(--good)"></i>∇u</span>
+      </div>
+      <div class="readout" id="dOut"></div>
+    </div>
+    <div class="guide" id="dGuide"></div>
+  </div>
+
+  <div class="note">
+    <p><strong>Two functions are not differentiable, and that is the point of including them.</strong> For <span class="m">u<span class="n">₃</span></span> and <span class="m">u<span class="n">₄</span></span> the correct answer has three parts: the derivative formula on each region where one argument strictly wins, a statement that the derivative does not exist on the set where two arguments tie, and the one-sided derivatives there. An answer that reports a single gradient everywhere has missed the question. Slide the point onto a kink — the readout will tell you when you are on one.</p>
+  </div>
+</section>
+
+<!-- ===== 2 ===== -->
+<section role="tabpanel" id="p1" aria-labelledby="t1" hidden>
+  <h2>Convexity and concavity</h2>
+  <p class="lede">Two different questions live here, and the problem is really asking both. <strong>Concavity</strong> is about the Hessian: is it negative semi-definite? <strong>Quasiconcavity</strong> is about the level sets: is the shaded upper contour set <span class="m">{x : u(x) ≥ u(x⁰)}</span> convex? The second is weaker, survives any increasing relabelling of utility, and is what the consumer problem actually needs.</p>
+
+  <div class="picker" id="pickC"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box sq"><canvas id="cvC"></canvas></div>
+      <div class="slider">
+        <label for="cx1">x₁ =</label>
+        <input type="range" id="cx1" min="0.2" max="11.5" step="0.1" value="3">
+        <span id="cx1val">3.00</span>
+      </div>
+      <div class="slider">
+        <label for="cx2">x₂ =</label>
+        <input type="range" id="cx2" min="0.2" max="11.5" step="0.1" value="4">
+        <span id="cx2val">4.00</span>
+      </div>
+      <div id="cParams"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--accent-soft);border:1px solid var(--accent)"></i>upper contour set</span>
+        <span><i class="swatch" style="background:var(--accent)"></i>u = u(x⁰)</span>
+        <span><i class="swatch" style="height:3px;background:repeating-linear-gradient(90deg,var(--good) 0 5px,transparent 5px 10px)"></i>test chord</span>
+      </div>
+      <div class="readout" id="cOut"></div>
+    </div>
+    <div class="guide" id="cGuide"></div>
+  </div>
+
+  <h3>Reading the chord</h3>
+  <p>The dashed chord joins two points on the indifference curve through your point. If the chord lies <em>inside</em> the shaded region, the upper contour set passed that test; if it cuts outside, the set is not convex and <span class="m">u</span> is not quasiconcave. One chord cannot prove convexity — but one bad chord disproves it, which is all a counterexample needs. Try it on <span class="m">u<span class="n">₄</span></span>, and on <span class="m">u<span class="n">₅</span></span> with <span class="m">ρ &gt; 1</span>.</p>
+
+  <div class="note">
+    <p><strong>Where a definiteness verdict reads "semi".</strong> Four of the seven have a singular Hessian, each for its own reason: <span class="m">u<span class="n">₁</span></span>, <span class="m">u<span class="n">₃</span></span> and <span class="m">u<span class="n">₄</span></span> are piecewise affine, so the Hessian is the zero matrix; <span class="m">u<span class="n">₅</span></span> is homogeneous of degree one, which forces <span class="m">Hx = 0</span>; <span class="m">u<span class="n">₆</span></span> is linear in <span class="m">x<span class="n">₂</span></span>, so that direction has no curvature. Only <span class="m">u<span class="n">₂</span></span> with <span class="m">Σa<span class="n">ᵢ</span> &lt; 1</span> and <span class="m">u<span class="n">₇</span></span> are strictly concave. "Weakly" in the question is doing real work.</p>
+  </div>
+</section>
+
+<!-- ===== 3 ===== -->
+<section role="tabpanel" id="p2" aria-labelledby="t2" hidden>
+  <h2>Maximise subject to a budget</h2>
+  <p class="lede">The plot shows the budget line <span class="m">p<span class="n">₁</span>x<span class="n">₁</span> + p<span class="n">₂</span>x<span class="n">₂</span> = m</span>, the indifference curve through the optimum, and the optimum itself. Three of the seven functions have no interior solution at all, and one of them hands you a stationary point that is a <em>minimum</em>. Which happens depends entirely on the concavity verdict from the previous tab.</p>
+
+  <div class="picker" id="pickO"></div>
+
+  <div class="lab">
+    <div class="stage">
+      <div class="canvas-box sq"><canvas id="cvO"></canvas></div>
+      <div class="slider">
+        <label for="op1">p₁ =</label>
+        <input type="range" id="op1" min="0.4" max="4" step="0.05" value="1.5">
+        <span id="op1val">1.50</span>
+      </div>
+      <div class="slider">
+        <label for="op2">p₂ =</label>
+        <input type="range" id="op2" min="0.4" max="4" step="0.05" value="1">
+        <span id="op2val">1.00</span>
+      </div>
+      <div class="slider">
+        <label for="om">m =</label>
+        <input type="range" id="om" min="2" max="24" step="0.5" value="12">
+        <span id="omval">12.00</span>
+      </div>
+      <div id="oParams"></div>
+      <div class="legend">
+        <span><i class="swatch" style="background:var(--ink2)"></i>budget line</span>
+        <span><i class="swatch" style="background:var(--accent)"></i>indifference curve at the optimum</span>
+        <span><i class="swatch" style="background:var(--good)"></i>x*</span>
+      </div>
+      <div class="readout" id="oOut"></div>
+    </div>
+    <div class="guide" id="oGuide"></div>
+  </div>
+
+  <h3>Why the extremum is a maximum — four different arguments</h3>
+  <div class="tw"><table class="rec">
+    <tr><th>Argument</th><th>When it applies</th><th>What you write</th></tr>
+    <tr><td>Concave objective</td><td><span class="m">u<span class="n">₂</span></span> with <span class="m">Σa ≤ 1</span>, <span class="m">u<span class="n">₃</span></span>, <span class="m">u<span class="n">₅</span></span> with <span class="m">ρ &lt; 1</span>, <span class="m">u<span class="n">₆</span></span> with <span class="m">v″ ≤ 0</span>, <span class="m">u<span class="n">₇</span></span></td><td>Concave objective on a convex set ⇒ any stationary point is a global maximum. One line, no second-order condition at the point.</td></tr>
+    <tr><td>Quasiconcave + monotone</td><td><span class="m">u<span class="n">₂</span></span> with <span class="m">Σa &gt; 1</span></td><td>The function is not concave, but <span class="m">ln u</span> is; maximise that instead. Same maximiser, because <span class="m">ln</span> is increasing.</td></tr>
+    <tr><td>Linear on the segment</td><td><span class="m">u<span class="n">₁</span></span></td><td>Restricted to the budget line the objective is affine, so compare the two endpoints. No stationary point exists.</td></tr>
+    <tr><td>Convex objective</td><td><span class="m">u<span class="n">₄</span></span>, <span class="m">u<span class="n">₅</span></span> with <span class="m">ρ &gt; 1</span>, <span class="m">u<span class="n">₆</span></span> with <span class="m">v″ &gt; 0</span></td><td>A convex function on a convex compact set is maximised at an extreme point, so check the <span class="m">N</span> axis intercepts. Any interior stationary point is the <em>minimum</em>.</td></tr>
+  </table></div>
+
+  <div class="note">
+    <p><strong>A gap in the question worth flagging in your answer.</strong> The constraint as written is <span class="m">Σp<span class="n">ᵢ</span>x<span class="n">ᵢ</span> = m</span> with no sign restriction on <span class="m">x<span class="n">ᵢ</span></span>. For <span class="m">u<span class="n">₁</span></span> and <span class="m">u<span class="n">₄</span></span> the problem then has <em>no</em> maximum: send one quantity to <span class="m">+∞</span> and another to <span class="m">−∞</span> along the budget line and utility grows without bound. The intended problem carries <span class="m">x<span class="n">ᵢ</span> ≥ 0</span>, which is exactly what turns those two into corner solutions. And for <span class="m">u<span class="n">₇</span></span> the equality — rather than <span class="m">≤</span> — is what allows a negative multiplier and the odd conclusion that extra income can hurt.</p>
+  </div>
+</section>
+
+<!-- ===== 4 ===== -->
+<section role="tabpanel" id="p3" aria-labelledby="t3" hidden>
+  <h2>The whole sheet on one page</h2>
+  <p class="lede">Once you have worked through the seven functions separately, this is what you should be able to reconstruct from scratch. The patterns across the rows are the real content of the problem set: the shape of the level sets predicts the shape of the answer.</p>
+
+  <div class="tw"><table class="rec">
+    <tr><th></th><th>∂u/∂x<sub>i</sub></th><th>Concavity</th><th>Optimum</th></tr>
+    <tr><td>u₁ = Σa<sub>i</sub>x<sub>i</sub></td><td>a<sub>i</sub>, constant</td><td>affine: concave <em>and</em> convex, never strictly</td><td>corner — all income on the largest a<sub>i</sub>/p<sub>i</sub></td></tr>
+    <tr><td>u₂ = Πx<sub>i</sub><sup>a<sub>i</sub></sup></td><td>a<sub>i</sub>u/x<sub>i</sub></td><td>concave ⟺ Σa<sub>i</sub> ≤ 1; quasiconcave always</td><td>interior — budget shares a<sub>i</sub>/Σa</td></tr>
+    <tr><td>u₃ = min{a<sub>i</sub>x<sub>i</sub>+b<sub>i</sub>}</td><td>a<sub>k</sub> on the argmin, 0 elsewhere; undefined at ties</td><td>concave always (min of affine)</td><td>at a kink — level all the arguments</td></tr>
+    <tr><td>u₄ = max{a<sub>i</sub>x<sub>i</sub>+b<sub>i</sub>}</td><td>a<sub>k</sub> on the argmax, 0 elsewhere; undefined at ties</td><td>convex always; never concave</td><td>corner — specialise in one good</td></tr>
+    <tr><td>u₅ = (Σa<sub>i</sub>x<sub>i</sub><sup>ρ</sup>)<sup>1/ρ</sup></td><td>a<sub>i</sub>x<sub>i</sub><sup>ρ−1</sup>u<sup>1−ρ</sup></td><td>concave ⟺ ρ ≤ 1; Hessian singular for every ρ</td><td>interior if ρ &lt; 1, with σ = 1/(1−ρ); corner if ρ &gt; 1</td></tr>
+    <tr><td>u₆ = v(x₁) + x₂</td><td>v′(x₁) and 1</td><td>concave ⟺ v″ ≤ 0; never strictly</td><td>v′(x₁*) = p₁/p₂ — no income effect on good 1</td></tr>
+    <tr><td>u₇ = 3 − Σa<sub>i</sub>(x<sub>i</sub>−b<sub>i</sub>)²</td><td>−2a<sub>i</sub>(x<sub>i</sub>−b<sub>i</sub>)</td><td>strictly concave always</td><td>interior — back off from bliss; λ &lt; 0 if m is large</td></tr>
+  </table></div>
+
+  <h3>Three habits this sheet is trying to build</h3>
+  <p><strong>Check differentiability before differentiating.</strong> Two of the seven functions are not differentiable everywhere, and the sheet says so. The right response is to find the bad set, give the derivative off it, and give one-sided derivatives on it.</p>
+  <p><strong>Decide the curvature before interpreting the FOC.</strong> The first-order condition is the same calculation whether the answer is a maximum or a minimum. <span class="m">u<span class="n">₅</span></span> makes this concrete: one parameter crossing 1 turns the identical tangency from the best point on the budget line into the worst.</p>
+  <p><strong>Expect corners, and know what produces them.</strong> Non-convex preferences (<span class="m">u<span class="n">₄</span></span>, <span class="m">u<span class="n">₅</span></span> with <span class="m">ρ &gt; 1</span>) push you to the edges; perfect substitutability (<span class="m">u<span class="n">₁</span></span>) makes the edges tie with everything else only in the knife-edge case; and binding non-negativity (<span class="m">u<span class="n">₃</span></span> with a large <span class="m">b<span class="n">ᵢ</span></span>, <span class="m">u<span class="n">₆</span></span> with small <span class="m">m</span>) produces them even when preferences are perfectly well behaved.</p>
+</section>
+
+<footer>Built for BS1515 Problem Set 5. Every gradient, Hessian, eigenvalue and demand on this page is recomputed from the formulas as you move the sliders, and each analytic Hessian is checked against a numerical one from the function itself.</footer>
+</div>
+
+<script>
+(function(){
+"use strict";
+
+/* ===== PS5 plotter: contours, region shading, gradient arrows ===== */
+function Plot(cv){
+  this.cv=cv; this.ctx=cv.getContext("2d");
+  this.pad={l:40,r:18,t:18,b:40};          /* equal insets: keeps 1 unit of x = 1 unit of y */
+  var self=this; this.resize();
+  if(window.ResizeObserver) new ResizeObserver(function(){ self.resize(); if(self.last) self.render(self.last); }).observe(cv.parentNode);
+  else window.addEventListener("resize", function(){ self.resize(); if(self.last) self.render(self.last); });
+}
+Plot.prototype.css=function(n){ return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); };
+Plot.prototype.resize=function(){
+  var r=this.cv.parentNode.getBoundingClientRect();
+  this.w=Math.max(220,Math.round(r.width)); this.h=Math.max(220,Math.round(r.height));
+  this.dpr=Math.min(window.devicePixelRatio||1,2);
+  this.cv.width=Math.round(this.w*this.dpr); this.cv.height=Math.round(this.h*this.dpr);
+};
+Plot.prototype.px=function(x){ return this.pad.l + (x-this.X[0])/(this.X[1]-this.X[0])*(this.w-this.pad.l-this.pad.r); };
+Plot.prototype.py=function(y){ return this.h-this.pad.b - (y-this.Y[0])/(this.Y[1]-this.Y[0])*(this.h-this.pad.t-this.pad.b); };
+Plot.prototype.ticks=function(lo,hi){
+  var span=hi-lo, step=Math.pow(10,Math.floor(Math.log(span/4)/Math.LN10));
+  if(span/step>8) step*=2; if(span/step>8) step*=2.5;
+  var out=[], t=Math.ceil(lo/step)*step;
+  for(; t<=hi+1e-9 && out.length<12; t+=step) out.push(Math.abs(t)<step/1000?0:t);
+  return out;
+};
+Plot.prototype.render=function(spec){
+  this.last=spec;
+  var c=this.ctx, i;
+  this.X=spec.X; this.Y=spec.Y;
+  var L=this.pad.l, R=this.w-this.pad.r, T=this.pad.t, B=this.h-this.pad.b;
+  c.setTransform(this.dpr,0,0,this.dpr,0,0);
+  c.clearRect(0,0,this.w,this.h);
+  c.fillStyle=this.css("--surface"); c.fillRect(0,0,this.w,this.h);
+
+  var rule=this.css("--rule"), ink2=this.css("--ink2");
+  var xs=this.ticks(this.X[0],this.X[1]), ys=this.ticks(this.Y[0],this.Y[1]);
+  c.font="11px "+(this.css("--mono")||"monospace"); c.fillStyle=ink2;
+  c.strokeStyle=rule; c.lineWidth=1;
+  for(i=0;i<xs.length;i++){ var p=Math.round(this.px(xs[i]))+0.5;
+    c.beginPath(); c.moveTo(p,T); c.lineTo(p,B); c.stroke();
+    c.textAlign="center"; c.textBaseline="top"; c.fillText(trimNum(xs[i]), p, B+6); }
+  for(i=0;i<ys.length;i++){ var q=Math.round(this.py(ys[i]))+0.5;
+    c.beginPath(); c.moveTo(L,q); c.lineTo(R,q); c.stroke();
+    c.textAlign="right"; c.textBaseline="middle"; c.fillText(trimNum(ys[i]), L-7, q); }
+
+  c.save(); c.beginPath(); c.rect(L,T,R-L,B-T); c.clip();
+
+  /* region shading: columns where f(x,y) >= level */
+  (spec.regions||[]).forEach(function(rg){
+    var step=2, ny=130, k, j;
+    c.fillStyle=rg.fill;
+    for(k=Math.floor(L);k<R;k+=step){
+      var x=this.X[0]+(k-L)/(R-L)*(this.X[1]-this.X[0]);
+      var runStart=null;
+      for(j=0;j<=ny;j++){
+        var y=this.Y[0]+(this.Y[1]-this.Y[0])*j/ny;
+        var v=rg.f(x,y), inside=(isFinite(v)&&v>=rg.level);
+        if(inside && runStart===null) runStart=y;
+        if((!inside||j===ny) && runStart!==null){
+          var yEnd=inside?y:(this.Y[0]+(this.Y[1]-this.Y[0])*(j-1)/ny);
+          var y1=this.py(yEnd), y2=this.py(runStart);
+          c.fillRect(k, Math.min(y1,y2), step+1, Math.abs(y2-y1)+1);
+          runStart=null;
+        }
+      }
+    }
+  }, this);
+
+  /* axes over the shading */
+  c.strokeStyle=ink2; c.lineWidth=1.2;
+  if(this.Y[0]<=0&&this.Y[1]>=0){ var z=Math.round(this.py(0))+0.5; c.beginPath(); c.moveTo(L,z); c.lineTo(R,z); c.stroke(); }
+  if(this.X[0]<=0&&this.X[1]>=0){ var z2=Math.round(this.px(0))+0.5; c.beginPath(); c.moveTo(z2,T); c.lineTo(z2,B); c.stroke(); }
+
+  /* many short segments in one path (contours) */
+  (spec.polys||[]).forEach(function(pl){
+    if(!pl.list.length) return;
+    c.strokeStyle=pl.color; c.lineWidth=pl.w||1.4; c.setLineDash(pl.dash||[]);
+    c.beginPath();
+    pl.list.forEach(function(s){
+      c.moveTo(this.px(s[0]),this.py(s[1])); c.lineTo(this.px(s[2]),this.py(s[3]));
+    }, this);
+    c.stroke(); c.setLineDash([]);
+  }, this);
+
+  (spec.segs||[]).forEach(function(s){
+    c.strokeStyle=s.color; c.lineWidth=s.w||2; c.setLineDash(s.dash||[]);
+    c.beginPath(); c.moveTo(this.px(s.x1),this.py(s.y1)); c.lineTo(this.px(s.x2),this.py(s.y2)); c.stroke(); c.setLineDash([]);
+  }, this);
+
+  /* arrows, length fixed in pixels so the direction is readable at any scale */
+  (spec.arrows||[]).forEach(function(a){
+    var x0=this.px(a.x), y0=this.py(a.y);
+    var dxp=a.dx/(this.X[1]-this.X[0])*(R-L), dyp=-a.dy/(this.Y[1]-this.Y[0])*(B-T);
+    var n=Math.sqrt(dxp*dxp+dyp*dyp); if(!(n>1e-9)) return;
+    var len=a.len||56; dxp=dxp/n*len; dyp=dyp/n*len;
+    var x1=x0+dxp, y1=y0+dyp;
+    c.strokeStyle=a.color; c.lineWidth=a.w||2.2; c.setLineDash([]);
+    c.beginPath(); c.moveTo(x0,y0); c.lineTo(x1,y1); c.stroke();
+    var ang=Math.atan2(dyp,dxp), hs=8;
+    c.fillStyle=a.color; c.beginPath();
+    c.moveTo(x1,y1);
+    c.lineTo(x1-hs*Math.cos(ang-0.42), y1-hs*Math.sin(ang-0.42));
+    c.lineTo(x1-hs*Math.cos(ang+0.42), y1-hs*Math.sin(ang+0.42));
+    c.closePath(); c.fill();
+  }, this);
+
+  (spec.points||[]).forEach(function(pt){
+    c.fillStyle=pt.color; c.beginPath(); c.arc(this.px(pt.x),this.py(pt.y),pt.r||4.5,0,Math.PI*2); c.fill();
+    if(pt.ring){ c.strokeStyle=this.css("--surface"); c.lineWidth=1.8; c.stroke(); }
+    if(pt.hollow){ c.fillStyle=this.css("--surface"); c.beginPath();
+      c.arc(this.px(pt.x),this.py(pt.y),(pt.r||4.5)-2,0,Math.PI*2); c.fill(); }
+  }, this);
+  c.restore();
+};
+function trimNum(v){
+  if(Math.abs(v)>=10000||((Math.abs(v)<0.01)&&v!==0)) return v.toExponential(0);
+  var s=(Math.round(v*1000)/1000).toString();
+  return s.replace("-","−");
+}
+
+/* ----- marching squares: one value grid, several levels ----- */
+function ContourGrid(f, X, Y, n){
+  this.X=X; this.Y=Y; this.n=n=n||84;
+  this.g=new Float64Array((n+1)*(n+1));
+  this.lo=Infinity; this.hi=-Infinity;
+  for(var j=0;j<=n;j++){
+    var y=Y[0]+(Y[1]-Y[0])*j/n;
+    for(var i=0;i<=n;i++){
+      var x=X[0]+(X[1]-X[0])*i/n;
+      var v=f(x,y);
+      if(!isFinite(v)) v=NaN;
+      this.g[j*(n+1)+i]=v;
+      if(isFinite(v)){ if(v<this.lo)this.lo=v; if(v>this.hi)this.hi=v; }
+    }
+  }
+}
+ContourGrid.prototype.at=function(i,j){ return this.g[j*(this.n+1)+i]; };
+ContourGrid.prototype.xOf=function(i){ return this.X[0]+(this.X[1]-this.X[0])*i/this.n; };
+ContourGrid.prototype.yOf=function(j){ return this.Y[0]+(this.Y[1]-this.Y[0])*j/this.n; };
+ContourGrid.prototype.level=function(L){
+  /* Nudge the level off any exact grid value. Without this, a contour that runs
+     exactly along a grid line (a kink of a min/max, say) is dropped entirely,
+     because the strict sign test never sees a change. */
+  L = L - 1e-9*(1+Math.abs(L));
+  var out=[], n=this.n, i, j;
+  for(j=0;j<n;j++){
+    for(i=0;i<n;i++){
+      var v00=this.at(i,j), v10=this.at(i+1,j), v11=this.at(i+1,j+1), v01=this.at(i,j+1);
+      if(!(isFinite(v00)&&isFinite(v10)&&isFinite(v11)&&isFinite(v01))) continue;
+      var x0=this.xOf(i), x1=this.xOf(i+1), y0=this.yOf(j), y1=this.yOf(j+1);
+      var pts=[];
+      if((v00-L)*(v10-L)<0) pts.push([x0+(x1-x0)*(L-v00)/(v10-v00), y0]);
+      if((v10-L)*(v11-L)<0) pts.push([x1, y0+(y1-y0)*(L-v10)/(v11-v10)]);
+      if((v11-L)*(v01-L)<0) pts.push([x1+(x0-x1)*(L-v11)/(v01-v11), y1]);
+      if((v01-L)*(v00-L)<0) pts.push([x0, y1+(y0-y1)*(L-v01)/(v00-v01)]);
+      if(pts.length>=2) out.push([pts[0][0],pts[0][1],pts[1][0],pts[1][1]]);
+      if(pts.length===4) out.push([pts[2][0],pts[2][1],pts[3][0],pts[3][1]]);
+    }
+  }
+  return out;
+};
+/* a spread of levels that avoids the extremes */
+ContourGrid.prototype.range=function(){ return (isFinite(this.hi)&&isFinite(this.lo))?(this.hi-this.lo):1; };
+ContourGrid.prototype.levels=function(k){
+  if(!isFinite(this.lo)||!isFinite(this.hi)||this.hi-this.lo<1e-12) return [];
+  var out=[];
+  for(var i=1;i<=k;i++) out.push(this.lo+(this.hi-this.lo)*i/(k+1));
+  return out;
+};
+
+/* ===== PS5 maths core: seven utility functions, N = 2 =====
+   Pure maths, no DOM. Everything reads the shared parameter store P. */
+
+var P={a1:0.5, a2:0.3, b1:2, b2:3, rho:0.5, gam:0.5, p1:1.5, p2:1, m:12, x1:3, x2:4};
+
+function fmt(v,d){ d=(d==null)?3:d; if(!isFinite(v)) return "—";
+  var s=(Math.round(v*Math.pow(10,d))/Math.pow(10,d)).toFixed(d); return s.replace("-","−"); }
+
+/* numerical Hessian, used only as a self-check device shown to the student */
+function numHess(f,x,y){
+  var h=1e-4;
+  var fxx=(f(x+h,y)-2*f(x,y)+f(x-h,y))/(h*h);
+  var fyy=(f(x,y+h)-2*f(x,y)+f(x,y-h))/(h*h);
+  var fxy=(f(x+h,y+h)-f(x+h,y-h)-f(x-h,y+h)+f(x-h,y-h))/(4*h*h);
+  return [[fxx,fxy],[fxy,fyy]];
+}
+/* definiteness of a symmetric 2x2 from trace and determinant */
+function definiteness(H){
+  var a=H[0][0], b=H[0][1], d=H[1][1];
+  var det=a*d-b*b, tr=a+d, e=1e-9;
+  if(det>e && tr<-e) return "negative definite";
+  if(det>e && tr>e) return "positive definite";
+  if(det<-e) return "indefinite";
+  /* det ~ 0 */
+  if(Math.abs(a)<e && Math.abs(b)<e && Math.abs(d)<e) return "zero";
+  if(a<=e && d<=e) return "negative semi-definite";
+  if(a>=-e && d>=-e) return "positive semi-definite";
+  return "indefinite";
+}
+function eig2(H){
+  var a=H[0][0], b=H[0][1], d=H[1][1];
+  var tr=a+d, det=a*d-b*b, s=Math.sqrt(Math.max(0,tr*tr/4-det));
+  return [tr/2-s, tr/2+s];
+}
+
+var U=[
+/* ---------------------------------------------------------------- u1 */
+{
+  key:"u1", chip:"u₁ linear", name:"Perfect substitutes",
+  tex:"u₁ = a₁x₁ + a₂x₂ + … + aₙxₙ",
+  uses:["a1","a2"],
+  u:function(x,y){ return P.a1*x + P.a2*y; },
+  grad:function(){ return [P.a1, P.a2]; },
+  hess:function(){ return [[0,0],[0,0]]; },
+  smooth:true,
+  optim:function(){
+    var r1=P.a1/P.p1, r2=P.a2/P.p2;
+    if(Math.abs(r1-r2)<1e-12) return {x:P.m/(2*P.p1), y:P.m/(2*P.p2), kind:"tie",
+      note:"a₁/p₁ = a₂/p₂: every point on the budget line is optimal."};
+    if(r1>r2) return {x:P.m/P.p1, y:0, kind:"corner", note:"all income on good 1"};
+    return {x:0, y:P.m/P.p2, kind:"corner", note:"all income on good 2"};
+  }
+},
+/* ---------------------------------------------------------------- u2 */
+{
+  key:"u2", chip:"u₂ Cobb–Douglas", name:"Cobb–Douglas",
+  tex:"u₂ = x₁^a₁ · x₂^a₂ · … · xₙ^aₙ",
+  uses:["a1","a2"],
+  u:function(x,y){ if(x<=0||y<=0) return 0; return Math.pow(x,P.a1)*Math.pow(y,P.a2); },
+  grad:function(x,y){ var u=this.u(x,y); return [P.a1*u/x, P.a2*u/y]; },
+  hess:function(x,y){ var u=this.u(x,y), a=P.a1, b=P.a2;
+    return [[a*(a-1)*u/(x*x), a*b*u/(x*y)],[a*b*u/(x*y), b*(b-1)*u/(y*y)]]; },
+  smooth:true,
+  optim:function(){ var A=P.a1+P.a2;
+    return {x:(P.a1/A)*P.m/P.p1, y:(P.a2/A)*P.m/P.p2, kind:"interior",
+      note:"constant budget shares aᵢ/Σa"}; }
+},
+/* ---------------------------------------------------------------- u3 */
+{
+  key:"u3", chip:"u₃ min{·}", name:"Perfect complements (a min)",
+  tex:"u₃ = min{ a₁x₁+b₁, …, aₙxₙ+bₙ }",
+  uses:["a1","a2","b1","b2"],
+  u:function(x,y){ return Math.min(P.a1*x+P.b1, P.a2*y+P.b2); },
+  grad:function(x,y){ var a=P.a1*x+P.b1, b=P.a2*y+P.b2;
+    if(Math.abs(a-b)<1e-7) return null;           /* kink */
+    return a<b ? [P.a1, 0] : [0, P.a2]; },
+  hess:function(x,y){ var a=P.a1*x+P.b1, b=P.a2*y+P.b2;
+    if(Math.abs(a-b)<1e-7) return null;
+    return [[0,0],[0,0]]; },
+  smooth:false,
+  optim:function(){
+    var S=P.p1/P.a1 + P.p2/P.a2;
+    var t=(P.m + P.p1*P.b1/P.a1 + P.p2*P.b2/P.a2)/S;
+    var x=(t-P.b1)/P.a1, y=(t-P.b2)/P.a2;
+    if(x<0||y<0){
+      /* one requirement is already met at zero: spend everything on the other */
+      if(x<0) return {x:0, y:P.m/P.p2, kind:"corner",
+        note:"b₁ alone already exceeds what good 2 can reach — levelling would need x₁ < 0"};
+      return {x:P.m/P.p1, y:0, kind:"corner",
+        note:"b₂ alone already exceeds what good 1 can reach — levelling would need x₂ < 0"};
+    }
+    return {x:x, y:y, kind:"kink", note:"the two arguments are levelled at t = "+fmt(t,3)};
+  }
+},
+/* ---------------------------------------------------------------- u4 */
+{
+  key:"u4", chip:"u₄ max{·}", name:"A max (so: convex)",
+  tex:"u₄ = max{ a₁x₁+b₁, …, aₙxₙ+bₙ }",
+  uses:["a1","a2","b1","b2"],
+  u:function(x,y){ return Math.max(P.a1*x+P.b1, P.a2*y+P.b2); },
+  grad:function(x,y){ var a=P.a1*x+P.b1, b=P.a2*y+P.b2;
+    if(Math.abs(a-b)<1e-7) return null;
+    return a>b ? [P.a1, 0] : [0, P.a2]; },
+  hess:function(x,y){ var a=P.a1*x+P.b1, b=P.a2*y+P.b2;
+    if(Math.abs(a-b)<1e-7) return null;
+    return [[0,0],[0,0]]; },
+  smooth:false,
+  optim:function(){
+    var v1=P.a1*(P.m/P.p1)+P.b1, v2=P.a2*(P.m/P.p2)+P.b2;
+    if(v1>=v2) return {x:P.m/P.p1, y:0, kind:"corner",
+      note:"good 1 reaches the higher value: a₁m/p₁+b₁ = "+fmt(v1,3)+" vs "+fmt(v2,3)};
+    return {x:0, y:P.m/P.p2, kind:"corner",
+      note:"good 2 reaches the higher value: a₂m/p₂+b₂ = "+fmt(v2,3)+" vs "+fmt(v1,3)};
+  }
+},
+/* ---------------------------------------------------------------- u5 */
+{
+  key:"u5", chip:"u₅ CES", name:"CES",
+  tex:"u₅ = ( a₁x₁^ρ + … + aₙxₙ^ρ )^(1/ρ)",
+  uses:["a1","a2","rho"],
+  S:function(x,y){ return P.a1*Math.pow(x,P.rho) + P.a2*Math.pow(y,P.rho); },
+  u:function(x,y){
+    if(x<0||y<0) return NaN;
+    /* for rho < 0 a zero quantity sends x^rho to +inf, so S to +inf and u to 0;
+       for rho > 0 the axes are ordinary points and u = (a_j)^(1/rho)*x_j there. */
+    if(P.rho<0 && (x<=0||y<=0)) return 0;
+    var S=this.S(x,y);
+    if(!(S>0)) return 0;
+    return Math.pow(S,1/P.rho); },
+  grad:function(x,y){ var u=this.u(x,y), r=P.rho;
+    return [P.a1*Math.pow(x,r-1)*Math.pow(u,1-r), P.a2*Math.pow(y,r-1)*Math.pow(u,1-r)]; },
+  hess:function(x,y){ var u=this.u(x,y), r=P.rho, a=P.a1, b=P.a2;
+    var ur1=Math.pow(u,1-r), ur2=Math.pow(u,1-2*r);
+    var hxx=(r-1)*a*Math.pow(x,r-2)*ur1 + (1-r)*a*a*Math.pow(x,2*r-2)*ur2;
+    var hyy=(r-1)*b*Math.pow(y,r-2)*ur1 + (1-r)*b*b*Math.pow(y,2*r-2)*ur2;
+    var hxy=(1-r)*a*b*Math.pow(x,r-1)*Math.pow(y,r-1)*ur2;
+    return [[hxx,hxy],[hxy,hyy]]; },
+  smooth:true,
+  optim:function(){
+    var s=1/(1-P.rho);
+    var w1=Math.pow(P.a1/P.p1, s), w2=Math.pow(P.a2/P.p2, s);
+    var den=P.p1*w1 + P.p2*w2;
+    var x=P.m*w1/den, y=P.m*w2/den;
+    if(P.rho>1) return {x:x, y:y, kind:"saddle",
+      note:"ρ > 1: u is convex, so this tangency is the WORST point on the budget line"};
+    return {x:x, y:y, kind:"interior", note:"σ = 1/(1−ρ) = "+fmt(s,3)};
+  },
+  corner:function(){   /* for rho > 1 the real maximum is a corner */
+    var v1=this.u(P.m/P.p1, 0), v2=this.u(0, P.m/P.p2);
+    return v1>=v2 ? {x:P.m/P.p1, y:0} : {x:0, y:P.m/P.p2};
+  }
+},
+/* ---------------------------------------------------------------- u6 */
+{
+  key:"u6", chip:"u₆ quasilinear", name:"Quasilinear",
+  tex:"u₆ = v(x₁) + x₂,   here v(x) = x^γ",
+  uses:["gam"],
+  v:function(x){ return Math.pow(x, P.gam); },
+  u:function(x,y){ if(x<0) return NaN; return this.v(x) + y; },
+  grad:function(x,y){ return [P.gam*Math.pow(x,P.gam-1), 1]; },
+  hess:function(x,y){ return [[P.gam*(P.gam-1)*Math.pow(x,P.gam-2), 0],[0,0]]; },
+  smooth:true,
+  optim:function(){
+    var g=P.gam, ratio=P.p1/P.p2;
+    if(Math.abs(g-1)<1e-9){
+      return P.p1<P.p2 ? {x:P.m/P.p1, y:0, kind:"corner", note:"γ = 1: linear, so a corner"}
+                       : {x:0, y:P.m/P.p2, kind:"corner", note:"γ = 1: linear, so a corner"};
+    }
+    if(g>1){
+      /* v convex: utility convex in x1, maximum at a corner */
+      var v1=this.u(P.m/P.p1, 0), v2=this.u(0, P.m/P.p2);
+      return v1>=v2 ? {x:P.m/P.p1, y:0, kind:"corner", note:"γ > 1: v is convex, so the optimum is a corner"}
+                    : {x:0, y:P.m/P.p2, kind:"corner", note:"γ > 1: v is convex, so the optimum is a corner"};
+    }
+    var xs=Math.pow(ratio/g, 1/(g-1));
+    var ys=(P.m - P.p1*xs)/P.p2;
+    if(ys<0) return {x:P.m/P.p1, y:0, kind:"corner",
+      note:"income too small to afford x₁* = "+fmt(xs,3)+", so x₂ hits zero"};
+    return {x:xs, y:ys, kind:"interior",
+      note:"x₁* = (p₁/γp₂)^(1/(γ−1)) = "+fmt(xs,4)+" — independent of m"};
+  }
+},
+/* ---------------------------------------------------------------- u7 */
+{
+  key:"u7", chip:"u₇ bliss point", name:"Quadratic with a bliss point",
+  tex:"u₇ = 3 − a₁(x₁−b₁)² − … − aₙ(xₙ−bₙ)²",
+  uses:["a1","a2","b1","b2"],
+  u:function(x,y){ return 3 - P.a1*(x-P.b1)*(x-P.b1) - P.a2*(y-P.b2)*(y-P.b2); },
+  grad:function(x,y){ return [-2*P.a1*(x-P.b1), -2*P.a2*(y-P.b2)]; },
+  hess:function(){ return [[-2*P.a1,0],[0,-2*P.a2]]; },
+  smooth:true,
+  optim:function(){
+    var K=P.p1*P.p1/P.a1 + P.p2*P.p2/P.a2;
+    var lam=2*(P.p1*P.b1 + P.p2*P.b2 - P.m)/K;
+    var x=P.b1 - lam*P.p1/(2*P.a1), y=P.b2 - lam*P.p2/(2*P.a2);
+    return {x:x, y:y, kind:"interior", lam:lam,
+      note:"λ = "+fmt(lam,4)+(lam<-1e-9?" — negative: income forces you past the bliss point":
+            (Math.abs(lam)<1e-9?" — exactly at the bliss point":""))};
+  }
+}
+];
+
+
+/* ===== PS5: per-function rows and teaching text, attached to U by key ===== */
+(function(){
+function by(k){ for(var i=0;i<U.length;i++) if(U[i].key===k) return U[i]; }
+function H2(H){
+  if(H===null) return "not defined at a kink";
+  return "[ "+fmt(H[0][0],4)+"  "+fmt(H[0][1],4)+" ; "+fmt(H[1][0],4)+"  "+fmt(H[1][1],4)+" ]";
+}
+var T={
+/* ---------------------------------------------------------------- u1 */
+u1:{
+  dRows:function(x,y){ return [
+    ["∂u/∂xᵢ","aᵢ  — constant"],
+    ["∇u at this point","("+fmt(P.a1,3)+", "+fmt(P.a2,3)+")"],
+    ["∂²u/∂xᵢ∂xⱼ","0 for every i, j"],
+    ["Hessian",H2(this.hess())]
+  ]; },
+  cRows:function(){ return [
+    ["Hessian","the zero matrix"],
+    ["definiteness","semi-definite both ways"],
+    ["verdict","concave AND convex (affine) — for all aᵢ"],
+    ["strictly?","never"]
+  ]; },
+  oRows:function(o){ return [
+    ["MRS condition","a₁/a₂ = p₁/p₂ — only by coincidence"],
+    ["a₁/p₁","= "+fmt(P.a1/P.p1,4)],
+    ["a₂/p₂","= "+fmt(P.a2/P.p2,4)],
+    ["solution",o.kind==="tie"?"the whole budget line":"corner: "+o.note],
+    ["x*","("+fmt(o.x,4)+", "+fmt(o.y,4)+")"],
+    ["u*","= m·max(aᵢ/pᵢ) = "+fmt(P.m*Math.max(P.a1/P.p1,P.a2/P.p2),4)]
+  ]; },
+  dHints:[
+    ["Derivatives","Nothing to do — which is the point",
+     "<div class='fline'>∂u/∂xᵢ = aᵢ,   ∂²u/∂xᵢ∂xⱼ = 0 for all i, j</div>"+
+     "<p>The gradient <span class='m'>∇u = (a₁, …, aₙ)</span> is the same at every point, and the Hessian is the zero matrix. Marginal utility of each good is constant: the hundredth unit is worth exactly as much as the first.</p>"+
+     "<p>That is what “perfect substitutes” means. The indifference curves are parallel straight lines with slope <span class='m'>−a₁/a₂</span>, and the gradient arrow is perpendicular to all of them — move the point and watch the arrow never change.</p>"],
+    ["A typo to fix","The second term on the sheet",
+     "<p>The problem sheet writes <span class='m'>a₁x₁ + a₂ + x₂ + …</span>. The <span class='m'>a₂ + x₂</span> should read <span class='m'>a₂x₂</span> — otherwise the function is not the linear one the rest of the question is about, and the derivative with respect to <span class='m'>x₂</span> would be 1 rather than <span class='m'>a₂</span>. Read it as <span class='m'>u₁ = Σ aᵢxᵢ</span>.</p>"+
+     "<p>Also note the sheet switches between <span class='m'>N</span> and <span class='m'>n</span> for the number of goods; they mean the same thing throughout.</p>"]
+  ],
+  cHints:[
+    ["Concavity","Both at once, and strictly neither",
+     "<p>An affine function satisfies the concavity and convexity definitions with <em>equality</em>:</p>"+
+     "<div class='fline'>u(λx + (1−λ)y) = λu(x) + (1−λ)u(y)   for every λ</div>"+
+     "<p>So it is weakly concave <em>and</em> weakly convex, and strictly neither. The Hessian being the zero matrix says the same thing: zero is both negative semi-definite and positive semi-definite.</p>"+
+     "<p>This holds for any <span class='m'>aᵢ &gt; 0</span> — there is no condition to find. Say that explicitly rather than leaving it blank.</p>"]
+  ],
+  oHints:[
+    ["The FOC fails","Why the Lagrangian gives you nothing",
+     "<div class='fline'>ℒ = Σaᵢxᵢ + λ(m − Σpᵢxᵢ)<br>∂ℒ/∂xᵢ = aᵢ − λpᵢ = 0  ⇒  λ = aᵢ/pᵢ  for every i</div>"+
+     "<p>That demands <span class='m'>a₁/p₁ = a₂/p₂ = …</span>, which the parameters will not satisfy except by accident. So there is no interior stationary point, and the Lagrangian method has nothing to report. That is not a failure of your algebra; it is the correct conclusion.</p>"],
+    ["The answer","Spend everything on the best deal",
+     "<p>Think in “utility per pound”: a pound spent on good <span class='m'>i</span> buys <span class='m'>1/pᵢ</span> units and so <span class='m'>aᵢ/pᵢ</span> utility. Put every pound where that ratio is highest:</p>"+
+     "<div class='fline'>j = argmaxᵢ (aᵢ/pᵢ),   xⱼ = m/pⱼ,   xᵢ = 0 otherwise,   u* = m·maxᵢ(aᵢ/pᵢ)</div>"+
+     "<p>If two ratios tie, every split between those two goods is optimal — the budget line lies along an indifference curve. Set <span class='m'>a₁/p₁ = a₂/p₂</span> with the sliders and watch the budget line and the indifference curve coincide.</p>"],
+    ["Why a maximum","Linear on a segment ⇒ look at the endpoints",
+     "<p>Restrict <span class='m'>u</span> to the budget line. Substituting <span class='m'>x₂ = (m − p₁x₁)/p₂</span> gives</p>"+
+     "<div class='fline'>u(x₁) = a₂m/p₂ + (a₁ − a₂p₁/p₂)·x₁</div>"+
+     "<p>a straight line in <span class='m'>x₁</span>. A straight line on a closed interval attains its maximum at an endpoint, so just compare the two endpoints <span class='m'>(m/p₁, 0)</span> and <span class='m'>(0, m/p₂)</span>. No second derivative is needed — the second derivative is zero and would tell you nothing.</p>"],
+    ["A gap in the question","It needs xᵢ ≥ 0",
+     "<p>The sheet states only <span class='m'>Σpᵢxᵢ = m</span>. Without non-negativity, <span class='m'>u₁</span> has <em>no</em> maximum: take <span class='m'>x₁ → +∞</span> and let <span class='m'>x₂ → −∞</span> to keep the budget satisfied, and if <span class='m'>a₁/p₁ &gt; a₂/p₂</span> utility grows without bound.</p>"+
+     "<p>So the intended problem is <span class='m'>max u</span> subject to <span class='m'>Σpᵢxᵢ = m</span> <strong>and</strong> <span class='m'>xᵢ ≥ 0</span>. The same caveat applies to <span class='m'>u₄</span>. Worth writing down when you answer — it is exactly the condition that turns an unbounded problem into a corner solution.</p>"]
+  ]
+},
+/* ---------------------------------------------------------------- u2 */
+u2:{
+  dRows:function(x,y){ var g=this.grad(x,y), H=this.hess(x,y); return [
+    ["u at this point","= "+fmt(this.u(x,y),4)],
+    ["∂u/∂xᵢ","aᵢ·u/xᵢ"],
+    ["∇u","("+fmt(g[0],4)+", "+fmt(g[1],4)+")"],
+    ["∂²u/∂xᵢ²","aᵢ(aᵢ−1)u/xᵢ²"],
+    ["∂²u/∂xᵢ∂xⱼ","aᵢaⱼu/(xᵢxⱼ)"],
+    ["Hessian",H2(H)]
+  ]; },
+  cRows:function(x,y){ var H=this.hess(x,y), det=H[0][0]*H[1][1]-H[0][1]*H[0][1];
+    var A=P.a1+P.a2;
+    return [
+    ["Hessian",H2(H)],
+    ["det H","= "+fmt(det,6)+"   (sign of 1 − Σaᵢ)"],
+    ["1 − Σaᵢ","= "+fmt(1-A,3)],
+    ["eigenvalues",eig2(H).map(function(e){return fmt(e,4);}).join(",  ")],
+    ["definiteness",definiteness(H)],
+    ["concave ⇔","Σaᵢ ≤ 1"],
+    ["quasiconcave","always, for all aᵢ &gt; 0"]
+  ]; },
+  oRows:function(o){ var A=P.a1+P.a2; return [
+    ["MRS","(a₁x₂)/(a₂x₁) = p₁/p₂"],
+    ["demand","xᵢ = (aᵢ/Σa)·m/pᵢ"],
+    ["budget share 1","= a₁/Σa = "+fmt(P.a1/A,4)],
+    ["budget share 2","= a₂/Σa = "+fmt(P.a2/A,4)],
+    ["x*","("+fmt(o.x,4)+", "+fmt(o.y,4)+")"],
+    ["u*","= "+fmt(this.u(o.x,o.y),5)]
+  ]; },
+  dHints:[
+    ["Derivatives","Treat the other goods as constants",
+     "<p>Differentiating with respect to <span class='m'>xᵢ</span>, every other factor <span class='m'>xⱼ^aⱼ</span> is a constant:</p>"+
+     "<div class='fline'>∂u/∂xᵢ = aᵢxᵢ^(aᵢ−1)·∏ⱼ≠ᵢ xⱼ^aⱼ = aᵢ·u/xᵢ</div>"+
+     "<p>That last form is the one to remember. Dividing by <span class='m'>u</span> and multiplying by <span class='m'>xᵢ</span> gives <span class='m'>∂ln u/∂ln xᵢ = aᵢ</span>: each exponent <em>is</em> an elasticity. A 1% rise in <span class='m'>xᵢ</span> raises utility by <span class='m'>aᵢ</span>%, wherever you are.</p>"],
+    ["Second derivatives","Own and cross",
+     "<p>Differentiate <span class='m'>aᵢu/xᵢ</span> again, remembering that <span class='m'>u</span> itself depends on <span class='m'>xᵢ</span>:</p>"+
+     "<div class='fline'>∂²u/∂xᵢ² = aᵢ[(∂u/∂xᵢ)/xᵢ − u/xᵢ²] = aᵢ[aᵢu/xᵢ² − u/xᵢ²] = aᵢ(aᵢ−1)u/xᵢ²</div>"+
+     "<p>And the cross term, where <span class='m'>xᵢ</span> is a constant:</p>"+
+     "<div class='fline'>∂²u/∂xᵢ∂xⱼ = aᵢaⱼu/(xᵢxⱼ)   (i ≠ j)</div>"+
+     "<p>Signs: the cross terms are <strong>positive</strong> — more of good <span class='m'>j</span> raises the marginal utility of good <span class='m'>i</span>, so the goods are complements in this sense. The own terms are negative exactly when <span class='m'>aᵢ &lt; 1</span>.</p>"]
+  ],
+  cHints:[
+    ["The condition","Σaᵢ ≤ 1",
+     "<p>For <span class='m'>N = 2</span> compute the determinant of the Hessian — the factor <span class='m'>u²/(x₁x₂)²</span> is positive and can be set aside:</p>"+
+     "<div class='fline'>det H ∝ a₁(a₁−1)·a₂(a₂−1) − (a₁a₂)² = a₁a₂[(a₁−1)(a₂−1) − a₁a₂] = a₁a₂(1 − a₁ − a₂)</div>"+
+     "<p>So <span class='m'>det H ≥ 0 ⇔ a₁ + a₂ ≤ 1</span>, and when that holds each <span class='m'>aᵢ ≤ 1</span> too, making the diagonal entries <span class='m'>≤ 0</span>. Negative semi-definite, hence concave on <span class='m'>x &gt; 0</span>.</p>"+
+     "<p>With <span class='m'>Σaᵢ &gt; 1</span> the determinant turns negative, the Hessian is <em>indefinite</em>, and <span class='m'>u</span> is neither concave nor convex. Slide <span class='m'>a₁, a₂</span> past the line <span class='m'>a₁+a₂ = 1</span> and watch the verdict flip.</p>"],
+    ["But the shape never changes","Quasiconcavity survives",
+     "<p>Here is the fact that makes the consumer problem work anyway. Take logs:</p>"+
+     "<div class='fline'>ln u = Σ aᵢ ln xᵢ</div>"+
+     "<p>which is a sum of concave functions, hence concave, for <em>every</em> <span class='m'>aᵢ &gt; 0</span>. Since <span class='m'>ln</span> is strictly increasing, <span class='m'>u</span> and <span class='m'>ln u</span> have the <strong>same upper contour sets</strong>, and those sets are convex because <span class='m'>ln u</span> is concave. So <span class='m'>u</span> is quasiconcave always — the indifference curves bow toward the origin no matter how large the exponents get.</p>"+
+     "<p>Concavity is a statement about the <em>function</em>; quasiconcavity is a statement about its <em>level sets</em>. Doubling all the exponents destroys the first and leaves the second untouched, because it is just a relabelling of the same indifference curves. Push <span class='m'>a₁, a₂</span> up and watch the shaded upper contour set stay convex even after the Hessian goes indefinite.</p>"],
+    ["Also worth noting","Homogeneity",
+     "<p><span class='m'>u(tx) = t^(Σaᵢ)u(x)</span>, so <span class='m'>u</span> is homogeneous of degree <span class='m'>Σaᵢ</span>. The three cases — <span class='m'>Σaᵢ &lt; 1</span>, <span class='m'>= 1</span>, <span class='m'>&gt; 1</span> — are decreasing, constant and increasing returns to scale, and they are the same three cases as the concavity classification. That is not a coincidence: a function homogeneous of degree greater than one grows faster than linearly along every ray, and no concave function can do that.</p>"]
+  ],
+  oHints:[
+    ["Set up","Lagrangian and FOC",
+     "<div class='fline'>ℒ = ∏xᵢ^aᵢ + λ(m − Σpᵢxᵢ)<br>∂ℒ/∂xᵢ = aᵢu/xᵢ − λpᵢ = 0</div>"+
+     "<p>Divide the <span class='m'>i</span>-th by the <span class='m'>j</span>-th to kill both <span class='m'>u</span> and <span class='m'>λ</span> at once — this is the standard trick and it is worth doing before anything else:</p>"+
+     "<div class='fline'>(aᵢ/xᵢ)/(aⱼ/xⱼ) = pᵢ/pⱼ   ⇒   pᵢxᵢ/aᵢ = pⱼxⱼ/aⱼ</div>"+
+     "<p>So the quantity <span class='m'>pᵢxᵢ/aᵢ</span> is the same for every good. Call it <span class='m'>k</span>.</p>"],
+    ["Solve","Use the budget constraint once, at the end",
+     "<p>From <span class='m'>pᵢxᵢ = aᵢk</span>, summing over <span class='m'>i</span>:</p>"+
+     "<div class='fline'>m = Σpᵢxᵢ = kΣaᵢ  ⇒  k = m/Σaᵢ</div>"+
+     "<div class='fline'>xᵢ* = (aᵢ/Σaⱼ)·(m/pᵢ)</div>"+
+     "<p>Read it as a <strong>budget share</strong>: good <span class='m'>i</span> always absorbs the fraction <span class='m'>aᵢ/Σaⱼ</span> of income, whatever prices and income are. Move the <span class='m'>m</span> slider and watch both quantities scale in exact proportion; move <span class='m'>p₁</span> and watch <span class='m'>x₂</span> stay put — no cross-price effects at all.</p>"],
+    ["Why a maximum","Two routes, one of which always works",
+     "<p><strong>If <span class='m'>Σaᵢ ≤ 1</span>:</strong> <span class='m'>u</span> is concave and the constraint is linear, so the feasible set is convex and any stationary point of the Lagrangian is a global maximum. Done.</p>"+
+     "<p><strong>If <span class='m'>Σaᵢ &gt; 1</span>:</strong> that argument is unavailable — but you do not need it. Maximise <span class='m'>ln u = Σaᵢ ln xᵢ</span> instead, which is strictly concave on <span class='m'>x &gt; 0</span> for all positive <span class='m'>aᵢ</span> and has the same maximiser because <span class='m'>ln</span> is increasing. The tangency is still the global max.</p>"+
+     "<p><strong>And a boundary check either way:</strong> if any <span class='m'>xᵢ = 0</span> then <span class='m'>u = 0</span>, while the interior point gives <span class='m'>u &gt; 0</span>. So no corner can win, and the interior stationary point is the answer. This is the opposite of what happened with <span class='m'>u₁</span>.</p>"]
+  ]
+},
+/* ---------------------------------------------------------------- u3 */
+u3:{
+  dRows:function(x,y){ var A=P.a1*x+P.b1, B=P.a2*y+P.b2, g=this.grad(x,y); return [
+    ["a₁x₁+b₁","= "+fmt(A,4)],
+    ["a₂x₂+b₂","= "+fmt(B,4)],
+    ["u = min","= "+fmt(Math.min(A,B),4)],
+    ["binding argument", Math.abs(A-B)<1e-7?"both — at the kink":(A<B?"good 1":"good 2")],
+    ["∇u", g===null?"undefined (kink)":"("+fmt(g[0],3)+", "+fmt(g[1],3)+")"],
+    ["Hessian", g===null?"undefined (kink)":"the zero matrix"]
+  ]; },
+  cRows:function(x,y){ return [
+    ["pieces","each aᵢxᵢ+bᵢ is affine, hence concave"],
+    ["min of concave","is concave"],
+    ["verdict","concave for all aᵢ, bᵢ — no condition needed"],
+    ["Hessian","zero where defined; undefined on the kink"],
+    ["strictly concave?","no — flat on every piece"],
+    ["upper contour sets","convex (the shaded corner regions)"]
+  ]; },
+  oRows:function(o){ var S=P.p1/P.a1+P.p2/P.a2;
+    var t=(P.m + P.p1*P.b1/P.a1 + P.p2*P.b2/P.a2)/S;
+    return [
+    ["rule","never buy what you cannot use"],
+    ["levelling condition","a₁x₁+b₁ = a₂x₂+b₂ = t"],
+    ["t*","= (m + Σpᵢbᵢ/aᵢ)/(Σpᵢ/aᵢ) = "+fmt(t,4)],
+    ["xᵢ*","= (t* − bᵢ)/aᵢ"],
+    ["x*","("+fmt(o.x,4)+", "+fmt(o.y,4)+")"],
+    ["u*","= t* = "+fmt(this.u(o.x,o.y),4)],
+    ["type",o.kind==="kink"?"at the kink of the indifference curve":"corner — "+o.note]
+  ]; },
+  dHints:[
+    ["Where it breaks","The non-differentiable set",
+     "<p><span class='m'>u₃</span> fails to be differentiable exactly where two or more of the affine arguments tie — for <span class='m'>N = 2</span>, on the line <span class='m'>a₁x₁ + b₁ = a₂x₂ + b₂</span>. That line is the ridge of kinks running through the corners of the indifference curves; you can see it in the plot as the locus where the L-shapes turn.</p>"+
+     "<p>Everywhere else one argument is strictly smallest, and in a small ball around such a point <span class='m'>u</span> <em>equals</em> that one affine function. So the derivatives are the affine function's own:</p>"+
+     "<div class='fline'>if k = argminᵢ(aᵢxᵢ+bᵢ):   ∂u/∂xₖ = aₖ,   ∂u/∂xᵢ = 0 for i ≠ k,   all second derivatives = 0</div>"+
+     "<p>Economically: extra units of a good you already have too much of are worth nothing at the margin.</p>"],
+    ["At the kink","One-sided derivatives disagree",
+     "<p>Sit exactly on the tie and nudge <span class='m'>x₁</span>. Decreasing it makes good 1 the unique minimum, so the left derivative is <span class='m'>a₁</span>. Increasing it makes good 2 the minimum, so the right derivative is <span class='m'>0</span>. Two different one-sided derivatives means no derivative:</p>"+
+     "<div class='fline'>∂⁺u/∂x₁ = 0 ≠ a₁ = ∂⁻u/∂x₁</div>"+
+     "<p>The honest answer to “calculate the derivatives” is therefore: give the formula on each region, and state that on the tie set the derivative does not exist. Do not quietly pick one of the two values.</p>"+
+     "<p>(If you meet convex analysis later, the object that replaces the gradient here is the <em>superdifferential</em> — the whole set of slopes between the one-sided ones. You do not need it for this sheet.)</p>"]
+  ],
+  cHints:[
+    ["Concave, always","A two-line proof worth knowing",
+     "<p>Take any <span class='m'>x, y</span> and <span class='m'>λ ∈ [0,1]</span>. For each <span class='m'>i</span>, the <span class='m'>i</span>-th argument is affine, so it satisfies</p>"+
+     "<div class='fline'>aᵢ(λxᵢ+(1−λ)yᵢ)+bᵢ = λ(aᵢxᵢ+bᵢ) + (1−λ)(aᵢyᵢ+bᵢ) ≥ λu(x) + (1−λ)u(y)</div>"+
+     "<p>because <span class='m'>aᵢxᵢ+bᵢ ≥ minⱼ(aⱼxⱼ+bⱼ) = u(x)</span> and likewise for <span class='m'>y</span>. The right-hand side is a lower bound for <em>every</em> <span class='m'>i</span>, so it is a lower bound for the minimum:</p>"+
+     "<div class='fline'>u(λx+(1−λ)y) ≥ λu(x) + (1−λ)u(y)</div>"+
+     "<p>which is concavity. Notice the proof never differentiates anything — which is just as well, since <span class='m'>u</span> is not differentiable. The general statement is: <strong>a pointwise minimum of concave functions is concave</strong>, however many of them there are and whether or not they are smooth.</p>"],
+    ["Not strictly","And the Hessian is no help",
+     "<p>Along any piece <span class='m'>u</span> is affine, so the concavity inequality holds with equality there: concave, never strictly. The Hessian is the zero matrix wherever it exists, which is negative semi-definite — consistent with concavity but far too weak to establish it, since it says nothing about the kink. The direct definition above is the right tool.</p>"]
+  ],
+  oHints:[
+    ["The idea","Waste nothing",
+     "<p>Suppose at your chosen bundle good 1's argument is strictly the smallest. Then <span class='m'>∂u/∂x₂ = 0</span>: the last pound spent on good 2 bought nothing. Take it back and spend it on good 1 instead, and <span class='m'>u</span> rises. So any bundle with a strict minimum can be improved, and at the optimum <strong>all the arguments must be equal</strong>:</p>"+
+     "<div class='fline'>a₁x₁+b₁ = a₂x₂+b₂ = … = aₙxₙ+bₙ = t</div>"+
+     "<p>This is the whole trick. There is no calculus in it, and no Lagrangian — the optimum sits exactly at the kink, where the FOC does not exist.</p>"],
+    ["Solve","One unknown, t",
+     "<p>Invert the levelling condition: <span class='m'>xᵢ = (t − bᵢ)/aᵢ</span>. Substitute into the budget:</p>"+
+     "<div class='fline'>Σ pᵢ(t − bᵢ)/aᵢ = m   ⇒   t·Σ(pᵢ/aᵢ) = m + Σ pᵢbᵢ/aᵢ</div>"+
+     "<div class='fline'>t* = (m + Σ pᵢbᵢ/aᵢ) / Σ(pᵢ/aᵢ),   xᵢ* = (t* − bᵢ)/aᵢ,   u* = t*</div>"+
+     "<p>With all <span class='m'>bᵢ = 0</span> this collapses to the familiar <span class='m'>xᵢ = (m/aᵢ)/Σ(pⱼ/aⱼ)</span>. The <span class='m'>bᵢ</span> act as endowments you already have: they raise <span class='m'>t*</span> and reduce what you need to buy.</p>"],
+    ["The catch","When levelling asks for a negative quantity",
+     "<p>If some <span class='m'>bᵢ &gt; t*</span>, the formula returns <span class='m'>xᵢ* &lt; 0</span>. Good <span class='m'>i</span>'s argument already exceeds the level everyone else can reach, so you buy none of it and level the rest. Set <span class='m'>b₁</span> large with the slider and watch the solution jump to the axis, with the readout saying so.</p>"],
+    ["Why a maximum","Concavity does it, with no derivatives",
+     "<p><span class='m'>u</span> is concave (previous tab) and the budget set is convex, so any point that cannot be locally improved is a global maximum. The levelling argument shows directly that every other feasible point <em>can</em> be improved, so the levelled bundle is it.</p>"+
+     "<p>If you want the sharper version: <span class='m'>u</span> restricted to the budget line is increasing before the kink and decreasing after it, because before the kink spending more on good 1 raises the binding minimum and after it does not. A function that rises then falls peaks where it turns — and here that is a corner, not a stationary point. This is the clearest case on the sheet of a maximum that <em>no</em> first-order condition could have found.</p>"]
+  ]
+},
+/* ---------------------------------------------------------------- u4 */
+u4:{
+  dRows:function(x,y){ var A=P.a1*x+P.b1, B=P.a2*y+P.b2, g=this.grad(x,y); return [
+    ["a₁x₁+b₁","= "+fmt(A,4)],
+    ["a₂x₂+b₂","= "+fmt(B,4)],
+    ["u = max","= "+fmt(Math.max(A,B),4)],
+    ["binding argument", Math.abs(A-B)<1e-7?"both — at the kink":(A>B?"good 1":"good 2")],
+    ["∇u", g===null?"undefined (kink)":"("+fmt(g[0],3)+", "+fmt(g[1],3)+")"],
+    ["Hessian", g===null?"undefined (kink)":"the zero matrix"]
+  ]; },
+  cRows:function(x,y){ return [
+    ["pieces","each aᵢxᵢ+bᵢ is affine"],
+    ["max of affine","is convex"],
+    ["verdict","convex for all aᵢ, bᵢ — never concave (for N ≥ 2)"],
+    ["so the condition asked for","does not exist — say so"],
+    ["upper contour sets","NOT convex (an L-shaped complement)"],
+    ["quasiconcave?","no"]
+  ]; },
+  oRows:function(o){ var v1=P.a1*(P.m/P.p1)+P.b1, v2=P.a2*(P.m/P.p2)+P.b2; return [
+    ["rule","put everything into one good"],
+    ["all-in on good 1","a₁m/p₁+b₁ = "+fmt(v1,4)],
+    ["all-in on good 2","a₂m/p₂+b₂ = "+fmt(v2,4)],
+    ["x*","("+fmt(o.x,4)+", "+fmt(o.y,4)+")"],
+    ["u*","= max = "+fmt(Math.max(v1,v2),4)],
+    ["type","corner — a vertex of the budget set"]
+  ]; },
+  dHints:[
+    ["Same structure as u₃","With min replaced by max",
+     "<p>Away from ties, <span class='m'>u</span> coincides locally with whichever affine function is <em>largest</em>:</p>"+
+     "<div class='fline'>if k = argmaxᵢ(aᵢxᵢ+bᵢ):   ∂u/∂xₖ = aₖ,   ∂u/∂xᵢ = 0 for i ≠ k,   all second derivatives = 0</div>"+
+     "<p>And on the tie set <span class='m'>a₁x₁+b₁ = a₂x₂+b₂</span> it is not differentiable, for the same one-sided-derivative reason. The difference from <span class='m'>u₃</span> is not in the calculus; it is in everything the calculus is for, as the next two tabs show.</p>"]
+  ],
+  cHints:[
+    ["Convex, always","The mirror image of the u₃ proof",
+     "<p>Run the <span class='m'>u₃</span> argument with the inequalities reversed: each affine argument satisfies <span class='m'>aᵢ(λxᵢ+(1−λ)yᵢ)+bᵢ ≤ λu(x)+(1−λ)u(y)</span>, and since that bound holds for every <span class='m'>i</span> it holds for the largest:</p>"+
+     "<div class='fline'>u(λx+(1−λ)y) ≤ λu(x) + (1−λ)u(y)</div>"+
+     "<p><strong>A pointwise maximum of convex functions is convex.</strong> So <span class='m'>u₄</span> is convex for all parameter values — and <em>not</em> concave unless <span class='m'>N = 1</span> or all the affine pieces coincide.</p>"+
+     "<p>This is what the problem means by “not always possible”. The right answer is to show no parameter restriction can make it concave, not to leave the part blank.</p>"],
+    ["What goes wrong economically","Non-convex indifference curves",
+     "<p>Look at the shaded upper contour set: it is the region <em>outside</em> an L, which is not convex. Take a bundle heavy in good 1 and one heavy in good 2, both giving utility <span class='m'>L</span>; the average of the two gives <em>less</em> than <span class='m'>L</span>. A consumer like this dislikes mixtures and will always specialise.</p>"+
+     "<p>That failure of convexity is exactly why the tangency method breaks down for this function and why the answer in the next tab is a corner.</p>"]
+  ],
+  oHints:[
+    ["The answer","Specialise completely",
+     "<p>Since only the largest argument counts, spending on any other good is pure waste. So compare the <span class='m'>N</span> all-in bundles and take the best:</p>"+
+     "<div class='fline'>u* = maxᵢ [ aᵢ(m/pᵢ) + bᵢ ],   xⱼ = m/pⱼ for the winning j, xᵢ = 0 otherwise</div>"+
+     "<p>Note what enters the comparison: not <span class='m'>aᵢ/pᵢ</span> alone, as with <span class='m'>u₁</span>, but <span class='m'>aᵢm/pᵢ + bᵢ</span> — the intercepts matter, and so the winner can change with income. Slide <span class='m'>m</span> and watch the optimum jump from one axis to the other.</p>"],
+    ["Why a maximum","Convexity sends you to the corners",
+     "<p>This is the one case on the sheet where convexity is the useful property. A convex function on a convex compact set attains its maximum at an <strong>extreme point</strong> of that set. The budget set <span class='m'>{x ≥ 0 : Σpᵢxᵢ = m}</span> is a simplex whose extreme points are precisely the <span class='m'>N</span> axis intercepts <span class='m'>m/pᵢ</span>. So checking those <span class='m'>N</span> bundles is not a shortcut — it is the complete argument.</p>"+
+     "<p>The Lagrangian, by contrast, tells you nothing: <span class='m'>aₖ = λpₖ</span> and <span class='m'>0 = λpᵢ</span> for the other goods, which forces <span class='m'>λ = 0</span> and then <span class='m'>aₖ = 0</span>, contradicting <span class='m'>aᵢ &gt; 0</span>. No interior stationary point exists.</p>"+
+     "<p>And as with <span class='m'>u₁</span>, this needs <span class='m'>xᵢ ≥ 0</span>. Without it, send <span class='m'>x₁ → +∞</span> with <span class='m'>x₂ → −∞</span> along the budget line and the max of the two arguments grows without bound.</p>"]
+  ]
+},
+/* ---------------------------------------------------------------- u5 */
+u5:{
+  dRows:function(x,y){ var g=this.grad(x,y), H=this.hess(x,y); return [
+    ["S = Σaᵢxᵢ^ρ","= "+fmt(this.S(x,y),4)],
+    ["u = S^(1/ρ)","= "+fmt(this.u(x,y),4)],
+    ["∂u/∂xᵢ","aᵢxᵢ^(ρ−1)·u^(1−ρ)"],
+    ["∇u","("+fmt(g[0],4)+", "+fmt(g[1],4)+")"],
+    ["Hessian",H2(H)],
+    ["det H","= "+fmt(H[0][0]*H[1][1]-H[0][1]*H[0][1],8)+"  (always 0)"]
+  ]; },
+  cRows:function(x,y){ var H=this.hess(x,y); return [
+    ["Hessian",H2(H)],
+    ["det H","0 — singular at every point"],
+    ["eigenvalues",eig2(H).map(function(e){return fmt(e,4);}).join(",  ")],
+    ["definiteness",definiteness(H)],
+    ["ρ − 1","= "+fmt(P.rho-1,3)],
+    ["verdict", P.rho<1?"concave (ρ &lt; 1)":(P.rho>1?"convex (ρ &gt; 1)":"linear (ρ = 1)")],
+    ["concave ⇔","ρ ≤ 1"]
+  ]; },
+  oRows:function(o){ var s=1/(1-P.rho); return [
+    ["σ = 1/(1−ρ)","= "+fmt(s,4)],
+    ["demand","xᵢ = m(aᵢ/pᵢ)^σ / Σⱼ pⱼ(aⱼ/pⱼ)^σ"],
+    ["tangency x","("+fmt(o.x,4)+", "+fmt(o.y,4)+")"],
+    ["u there","= "+fmt(this.u(o.x,o.y),5)],
+    ["kind", o.kind==="saddle"?"a MINIMUM on the budget line":"interior maximum"],
+    ["true max", o.kind==="saddle"?(function(c){ return "("+fmt(c.x,3)+", "+fmt(c.y,3)+"), u = "+fmt(U[4].u(c.x,c.y),4); })(this.corner()):"the tangency"]
+  ]; },
+  dHints:[
+    ["Derivatives","Chain rule on a power of a sum",
+     "<p>Write <span class='m'>S = Σaⱼxⱼ^ρ</span>, so <span class='m'>u = S^(1/ρ)</span>. Then</p>"+
+     "<div class='fline'>∂u/∂xᵢ = (1/ρ)S^(1/ρ−1)·aᵢρxᵢ^(ρ−1) = aᵢxᵢ^(ρ−1)·S^(1/ρ−1)</div>"+
+     "<p>The two factors of <span class='m'>ρ</span> cancel — a small mercy. Now notice <span class='m'>S^(1/ρ−1) = (S^(1/ρ))^(1−ρ) = u^(1−ρ)</span>, which gives the compact form</p>"+
+     "<div class='fline'>∂u/∂xᵢ = aᵢxᵢ^(ρ−1)u^(1−ρ) = aᵢ(u/xᵢ)^(1−ρ)</div>"+
+     "<p>At <span class='m'>ρ = 1</span> it reduces to <span class='m'>aᵢ</span> (the linear case <span class='m'>u₁</span>), and as <span class='m'>ρ → 0</span> the function tends to Cobb–Douglas — so <span class='m'>u₅</span> contains two of the other functions on the sheet as special cases.</p>"],
+    ["Second derivatives","Product rule, keeping u^(1−ρ) in view",
+     "<p>Differentiate <span class='m'>aᵢxᵢ^(ρ−1)u^(1−ρ)</span> again. Both factors move, and <span class='m'>∂u/∂xⱼ</span> is what you just computed:</p>"+
+     "<div class='fline'>∂²u/∂xᵢ² = (ρ−1)aᵢxᵢ^(ρ−2)u^(1−ρ) + (1−ρ)aᵢ²xᵢ^(2ρ−2)u^(1−2ρ)<br>∂²u/∂xᵢ∂xⱼ = (1−ρ)aᵢaⱼxᵢ^(ρ−1)xⱼ^(ρ−1)u^(1−2ρ)   (i ≠ j)</div>"+
+     "<p>Every term carries a factor <span class='m'>(1−ρ)</span> or <span class='m'>(ρ−1)</span>, which is why <span class='m'>ρ = 1</span> makes the whole Hessian vanish. The readout compares these formulas against a numerical Hessian — a check worth running on any derivative this long.</p>"],
+    ["A structural fact","The Hessian is singular, always",
+     "<p><span class='m'>u₅</span> is homogeneous of degree 1: <span class='m'>u(tx) = tu(x)</span>. Differentiating that identity in <span class='m'>x</span> shows <span class='m'>∇u</span> is homogeneous of degree 0, and differentiating <em>that</em> in <span class='m'>t</span> at <span class='m'>t = 1</span> gives</p>"+
+     "<div class='fline'>H(x)·x = 0</div>"+
+     "<p>So <span class='m'>x</span> is an eigenvector of the Hessian with eigenvalue zero, and <span class='m'>det H = 0</span> at every point. Watch the determinant row stay at zero whatever you do with the sliders. Consequence: <span class='m'>u₅</span> can never be <em>strictly</em> concave — along any ray it is exactly linear — and the definiteness verdict will always read “semi”.</p>"]
+  ],
+  cHints:[
+    ["The condition","ρ ≤ 1",
+     "<p>Since <span class='m'>det H = 0</span> always, definiteness is settled by the diagonal. Factor the own second derivative:</p>"+
+     "<div class='fline'>∂²u/∂xᵢ² = (1−ρ)·aᵢxᵢ^(ρ−2)u^(1−ρ)·[ aᵢxᵢ^ρ/S − 1 ]</div>"+
+     "<p>The bracket is <span class='m'>≤ 0</span> because <span class='m'>aᵢxᵢ^ρ ≤ S</span> — one term of a sum of positive terms cannot exceed the sum. Everything else in front is positive. So the sign of the diagonal is the sign of <span class='m'>−(1−ρ)</span>:</p>"+
+     "<div class='fline'>ρ &lt; 1:  negative semi-definite  ⇒  concave<br>ρ = 1:  zero matrix          ⇒  linear (both)<br>ρ &gt; 1:  positive semi-definite ⇒  convex</div>"+
+     "<p>Slide <span class='m'>ρ</span> across 1 and watch the eigenvalues swap sides while the determinant stays at zero.</p>"],
+    ["Sanity checks","Three values of ρ you already know",
+     "<p><strong><span class='m'>ρ = 1</span>:</strong> <span class='m'>u = Σaᵢxᵢ</span>, exactly <span class='m'>u₁</span> — affine, both concave and convex. ✓</p>"+
+     "<p><strong><span class='m'>ρ = 2, aᵢ = 1</span>:</strong> <span class='m'>u = √(x₁²+x₂²)</span>, the Euclidean norm. Norms are convex, and the indifference curves are circular arcs bowing <em>away</em> from the origin. ✓ Set those values and look.</p>"+
+     "<p><strong><span class='m'>ρ → −∞</span>:</strong> the sum is dominated by its smallest term and <span class='m'>u → minᵢ(aᵢ^(1/ρ)xᵢ)</span> — the Leontief shape of <span class='m'>u₃</span>. Push <span class='m'>ρ</span> to <span class='m'>−6</span> and the indifference curves are already almost L-shaped. ✓</p>"],
+    ["Quasiconcavity","A wider range than concavity",
+     "<p>For <span class='m'>0 &lt; ρ ≤ 1</span> the function is concave, so certainly quasiconcave. For <span class='m'>ρ &lt; 0</span> it is also concave on <span class='m'>x &gt; 0</span> — the formula above covers all <span class='m'>ρ &lt; 1</span>, negative values included. Only <span class='m'>ρ &gt; 1</span> breaks it, and there quasiconcavity fails too: the level sets bow the wrong way, as the shading shows.</p>"]
+  ],
+  oHints:[
+    ["Set up","The FOC simplifies more than you expect",
+     "<div class='fline'>aᵢxᵢ^(ρ−1)u^(1−ρ) = λpᵢ</div>"+
+     "<p>The factor <span class='m'>u^(1−ρ)</span> is the same in every equation, so fold it into the multiplier and write <span class='m'>aᵢxᵢ^(ρ−1) = μ pᵢ</span>. Then</p>"+
+     "<div class='fline'>xᵢ^(ρ−1) = μ pᵢ/aᵢ  ⇒  xᵢ = (μ pᵢ/aᵢ)^(1/(ρ−1)) ∝ (aᵢ/pᵢ)^σ,   σ = 1/(1−ρ)</div>"+
+     "<p>Note the sign flip: <span class='m'>1/(ρ−1) = −σ</span>, so raising <span class='m'>pᵢ</span> lowers <span class='m'>xᵢ</span> as it must. <span class='m'>σ</span> is the <em>elasticity of substitution</em>; you will meet it under that name next year.</p>"],
+    ["Solve","Normalise with the budget",
+     "<div class='fline'>xᵢ* = m·(aᵢ/pᵢ)^σ / Σⱼ pⱼ(aⱼ/pⱼ)^σ</div>"+
+     "<p>Demand is proportional to <span class='m'>m</span> — the homogeneity of degree 1 again. Two limits are worth checking: as <span class='m'>σ → 1</span> (<span class='m'>ρ → 0</span>) this becomes the Cobb–Douglas budget-share rule, and as <span class='m'>σ → 0</span> (<span class='m'>ρ → −∞</span>) the exponents flatten and it becomes the Leontief levelling rule. The <span class='m'>u₂</span> and <span class='m'>u₃</span> answers are both special cases of this one.</p>"],
+    ["Why a maximum","And when it is not one",
+     "<p><strong><span class='m'>ρ &lt; 1</span>:</strong> <span class='m'>u</span> is concave, the budget set is convex, so the stationary point is a global maximum. Corners cannot win when <span class='m'>ρ &gt; 0</span>, since <span class='m'>xᵢ = 0</span> loses that good's whole contribution; for <span class='m'>ρ &lt; 0</span> a zero quantity sends <span class='m'>u</span> to 0 outright.</p>"+
+     "<p><strong><span class='m'>ρ &gt; 1</span>:</strong> now <span class='m'>u</span> is convex and the same tangency is the <em>minimum</em> on the budget line. The maximum is at a corner, as with <span class='m'>u₄</span>. Push <span class='m'>ρ</span> above 1 and the plot marks both: the tangency point and the corner that actually beats it.</p>"+
+     "<p>So “solve the FOC and check the second-order condition” is not a formality here. The same algebra returns a maximum or a minimum depending on one parameter, and only the second-order condition tells you which.</p>"]
+  ]
+},
+/* ---------------------------------------------------------------- u6 */
+u6:{
+  dRows:function(x,y){ var g=this.grad(x,y), H=this.hess(x,y); return [
+    ["v(x₁) = x₁^γ","= "+fmt(this.v(x),4)],
+    ["∂u/∂x₁","v′(x₁) = γx₁^(γ−1) = "+fmt(g[0],4)],
+    ["∂u/∂x₂","1 — always"],
+    ["∂²u/∂x₁²","v″(x₁) = "+fmt(H[0][0],4)],
+    ["∂²u/∂x₂², ∂²u/∂x₁∂x₂","0"],
+    ["Hessian",H2(H)]
+  ]; },
+  cRows:function(x,y){ var H=this.hess(x,y); return [
+    ["Hessian","diag(v″(x₁), 0)"],
+    ["v″(x₁)","= γ(γ−1)x₁^(γ−2) = "+fmt(H[0][0],5)],
+    ["eigenvalues",eig2(H).map(function(e){return fmt(e,4);}).join(",  ")],
+    ["definiteness",definiteness(H)],
+    ["concave ⇔","v″ ≤ 0, here γ ≤ 1"],
+    ["strictly concave?","never — flat in the x₂ direction"]
+  ]; },
+  oRows:function(o){ return [
+    ["MRS","v′(x₁)/1 = p₁/p₂"],
+    ["so","v′(x₁*) = p₁/p₂ = "+fmt(P.p1/P.p2,4)],
+    ["x₁*","= "+fmt(o.x,4)+(o.kind==="interior"?"  — independent of m":"")],
+    ["x₂*","= (m − p₁x₁*)/p₂ = "+fmt(o.y,4)],
+    ["u*","= "+fmt(this.u(o.x,o.y),5)],
+    ["kind",o.kind+" — "+o.note]
+  ]; },
+  dHints:[
+    ["Derivatives","Good 2 enters linearly, and that changes everything",
+     "<div class='fline'>∂u/∂x₁ = v′(x₁),   ∂u/∂x₂ = 1<br>∂²u/∂x₁² = v″(x₁),   ∂²u/∂x₂² = 0,   ∂²u/∂x₁∂x₂ = 0</div>"+
+     "<p>The marginal utility of good 2 is the constant 1, whatever the bundle. Good 2 is acting as a <em>numéraire</em>: utility is measured in units of it. And because the cross partial is zero, how much good 2 you hold has no effect on how much you value good 1 — the two goods are neither complements nor substitutes in that sense.</p>"+
+     "<p>The lab uses <span class='m'>v(x) = x^γ</span> so you can vary the curvature, giving <span class='m'>v′ = γx^(γ−1)</span> and <span class='m'>v″ = γ(γ−1)x^(γ−2)</span>. The problem only assumes <span class='m'>v</span> increasing and differentiable, so keep your written answer in terms of <span class='m'>v′</span> and <span class='m'>v″</span>.</p>"],
+    ["What “increasing” buys you","And what it does not",
+     "<p><span class='m'>v</span> increasing gives <span class='m'>v′ &gt; 0</span>, so <span class='m'>∇u = (v′, 1) &gt; 0</span> and more of either good is better — utility is strictly monotone. But increasing says <em>nothing</em> about <span class='m'>v″</span>, so it settles nothing about concavity. That is the gap the next tab fills, and it is why the problem says “not always possible”.</p>"]
+  ],
+  cHints:[
+    ["The condition","v″ ≤ 0, and no better than semi-definite",
+     "<p>The Hessian is diagonal, <span class='m'>diag(v″(x₁), 0)</span>, so its eigenvalues are <span class='m'>v″(x₁)</span> and <span class='m'>0</span>. Hence</p>"+
+     "<div class='fline'>u concave ⇔ v″(x₁) ≤ 0 for all x₁ ⇔ v concave</div>"+
+     "<p>With <span class='m'>v(x) = x^γ</span> that means <span class='m'>γ ≤ 1</span>. Slide <span class='m'>γ</span> past 1 and the verdict flips to positive semi-definite — convex in the <span class='m'>x₁</span> direction, flat in the other.</p>"+
+     "<p>Note the zero eigenvalue never goes away: <span class='m'>u</span> is <strong>never strictly concave</strong>, because along any line of constant <span class='m'>x₁</span> it is exactly linear in <span class='m'>x₂</span>. If a question asks for strict concavity, the honest answer is that no choice of <span class='m'>v</span> delivers it.</p>"],
+    ["The level sets","Vertical translates of one curve",
+     "<p><span class='m'>v(x₁) + x₂ = L</span> rearranges to <span class='m'>x₂ = L − v(x₁)</span>. Every indifference curve is therefore the <em>same</em> curve shifted vertically — look at the plot and see the parallel copies. They are convex-shaped (bowing toward the origin) exactly when <span class='m'>v</span> is concave, which is the quasiconcavity of <span class='m'>u</span>.</p>"+
+     "<p>This is the geometric content of “no income effect on good 1”: the slope of the indifference curve at a given <span class='m'>x₁</span> is <span class='m'>−v′(x₁)</span>, the same on every curve. Moving to a higher curve does not change where the slope equals the price ratio.</p>"]
+  ],
+  oHints:[
+    ["Set up","The multiplier is pinned down immediately",
+     "<div class='fline'>∂ℒ/∂x₁ = v′(x₁) − λp₁ = 0<br>∂ℒ/∂x₂ = 1 − λp₂ = 0  ⇒  λ = 1/p₂</div>"+
+     "<p>The second equation alone gives <span class='m'>λ</span>, with no reference to the bundle. Substituting into the first:</p>"+
+     "<div class='fline'>v′(x₁*) = p₁/p₂</div>"+
+     "<p>One equation, one unknown, and <span class='m'>m</span> appears nowhere in it.</p>"],
+    ["The headline result","No income effect on good 1",
+     "<p><span class='m'>x₁*</span> depends only on the price ratio. All the income goes to good 2:</p>"+
+     "<div class='fline'>x₁* = (v′)⁻¹(p₁/p₂),   x₂* = (m − p₁x₁*)/p₂</div>"+
+     "<p>Solving <span class='m'>x₁</span> out requires <span class='m'>v′</span> to be invertible, which concavity (<span class='m'>v″ &lt; 0</span>) guarantees by making it strictly decreasing. With <span class='m'>v = x^γ</span>: <span class='m'>x₁* = (p₁/γp₂)^(1/(γ−1))</span>.</p>"+
+     "<p>Drag the <span class='m'>m</span> slider: the optimum slides straight up, the <span class='m'>x₁</span> coordinate frozen. This is the defining property of quasilinear preferences, and the reason they are used for partial-equilibrium welfare analysis.</p>"],
+    ["The corner","When income runs out",
+     "<p>The formula can demand more on good 1 than you can afford, giving <span class='m'>x₂* &lt; 0</span>. Then the constraint <span class='m'>x₂ ≥ 0</span> binds and the answer is <span class='m'>x₁ = m/p₁, x₂ = 0</span>. Pull <span class='m'>m</span> down and watch the readout switch. Below that income the “no income effect” result stops holding — there is nothing left to absorb the change.</p>"],
+    ["Why a maximum","And the γ &gt; 1 trap",
+     "<p><strong>If <span class='m'>v</span> is concave:</strong> <span class='m'>u</span> is concave, the constraint is linear, so the stationary point is a global maximum. You can also see it directly: substitute the constraint to get <span class='m'>u(x₁) = v(x₁) + (m − p₁x₁)/p₂</span>, a one-variable problem with <span class='m'>u″ = v″ ≤ 0</span> — concave in a single variable, so the FOC is sufficient. This is the “might not involve second derivatives” case the sheet hints at: <em>one</em> sign is all you need.</p>"+
+     "<p><strong>If <span class='m'>v</span> is convex</strong> (<span class='m'>γ &gt; 1</span>): the same substitution gives a convex one-variable objective, so the stationary point is a minimum and the maximum is at an endpoint of the feasible interval. Set <span class='m'>γ = 1.6</span> and the readout reports a corner.</p>"]
+  ]
+},
+/* ---------------------------------------------------------------- u7 */
+u7:{
+  dRows:function(x,y){ var g=this.grad(x,y), H=this.hess(); return [
+    ["u at this point","= "+fmt(this.u(x,y),4)],
+    ["∂u/∂xᵢ","−2aᵢ(xᵢ − bᵢ)"],
+    ["∇u","("+fmt(g[0],4)+", "+fmt(g[1],4)+")"],
+    ["∂²u/∂xᵢ²","−2aᵢ  — constant"],
+    ["∂²u/∂xᵢ∂xⱼ","0 for i ≠ j"],
+    ["Hessian",H2(H)],
+    ["bliss point","x = b = ("+fmt(P.b1,2)+", "+fmt(P.b2,2)+"), u = 3"]
+  ]; },
+  cRows:function(x,y){ var H=this.hess(); return [
+    ["Hessian","diag(−2a₁, −2a₂) — constant"],
+    ["det H","= 4a₁a₂ = "+fmt(4*P.a1*P.a2,4)+" &gt; 0"],
+    ["eigenvalues",eig2(H).map(function(e){return fmt(e,4);}).join(",  ")],
+    ["definiteness",definiteness(H)],
+    ["verdict","strictly concave for all aᵢ &gt; 0"],
+    ["unique among the seven","the only strictly concave one"]
+  ]; },
+  oRows:function(o){ var cost=P.p1*P.b1+P.p2*P.b2; return [
+    ["FOC","−2aᵢ(xᵢ−bᵢ) = λpᵢ"],
+    ["λ","= 2(Σpᵢbᵢ − m)/Σ(pᵢ²/aᵢ) = "+fmt(o.lam,4)],
+    ["cost of bliss","Σpᵢbᵢ = "+fmt(cost,3)+" vs m = "+fmt(P.m,3)],
+    ["xᵢ*","= bᵢ − λpᵢ/(2aᵢ)"],
+    ["x*","("+fmt(o.x,4)+", "+fmt(o.y,4)+")"],
+    ["u*","= "+fmt(this.u(o.x,o.y),5)+" (max possible 3)"]
+  ]; },
+  dHints:[
+    ["Derivatives","A separable sum",
+     "<p>Each term involves only its own variable, so there are no cross effects at all:</p>"+
+     "<div class='fline'>∂u/∂xᵢ = −2aᵢ(xᵢ − bᵢ),   ∂²u/∂xᵢ² = −2aᵢ,   ∂²u/∂xᵢ∂xⱼ = 0</div>"+
+     "<p>The gradient vanishes exactly at <span class='m'>x = b</span>, the <strong>bliss point</strong>, where <span class='m'>u = 3</span>. Move the point around in the plot and watch the gradient arrow point toward <span class='m'>b</span> from wherever you are, shrinking to nothing as you arrive.</p>"+
+     "<p>Note what this means: the marginal utility of good <span class='m'>i</span> is <em>negative</em> once <span class='m'>xᵢ &gt; bᵢ</span>. Unlike every other function on the sheet, more is not always better — these preferences are satiated.</p>"],
+    ["Second derivatives","Constant, and that is unusual",
+     "<p><span class='m'>H = diag(−2a₁, …, −2aₙ)</span> does not depend on <span class='m'>x</span>. Quadratic functions are the only ones with constant Hessians, which is why they are the standard worked example for definiteness — one check settles the whole domain rather than one point of it.</p>"]
+  ],
+  cHints:[
+    ["Strictly concave","For every aᵢ &gt; 0, with no conditions",
+     "<p>The Hessian is diagonal with entries <span class='m'>−2aᵢ &lt; 0</span>, so its eigenvalues are those entries: all strictly negative. Negative definite everywhere, hence <strong>strictly concave on all of <span class='m'>ℝⁿ</span></strong>.</p>"+
+     "<p>For <span class='m'>N = 2</span> you can also use the leading-minor test: <span class='m'>−2a₁ &lt; 0</span> and <span class='m'>det H = 4a₁a₂ &gt; 0</span> — alternating signs starting negative, which is exactly negative definiteness. Both routes are fine; the eigenvalue one generalises to any <span class='m'>N</span> without extra work because the matrix is diagonal.</p>"+
+     "<p>The condition <span class='m'>aᵢ &gt; 0</span> is given in the problem, so there is nothing left to find. It is the one function of the seven where the answer to “find conditions for concavity” is “they already hold” — and the only one that is strictly concave. The <span class='m'>bᵢ</span> do not appear anywhere: they move the peak, not the curvature.</p>"],
+    ["The level sets","Ellipses around the bliss point",
+     "<p><span class='m'>3 − a₁(x₁−b₁)² − a₂(x₂−b₂)² = L</span> is an ellipse centred at <span class='m'>b</span> with semi-axes <span class='m'>√((3−L)/aᵢ)</span>. Bounded closed curves, not the unbounded ones every other function on the sheet produces — and the visible signature of satiation. The shaded upper contour set is the inside of an ellipse: convex, as strict concavity requires.</p>"]
+  ],
+  oHints:[
+    ["Set up","The FOC is linear, so just solve it",
+     "<div class='fline'>−2aᵢ(xᵢ − bᵢ) = λpᵢ   ⇒   xᵢ = bᵢ − λpᵢ/(2aᵢ)</div>"+
+     "<p>Every demand is written in terms of the single unknown <span class='m'>λ</span>, which is the usual payoff from a quadratic objective. Substitute into the budget:</p>"+
+     "<div class='fline'>Σpᵢbᵢ − (λ/2)Σ(pᵢ²/aᵢ) = m   ⇒   λ = 2(Σpᵢbᵢ − m)/Σ(pᵢ²/aᵢ)</div>"+
+     "<div class='fline'>xᵢ* = bᵢ − pᵢ(Σpⱼbⱼ − m)/(aᵢ·Σ(pⱼ²/aⱼ))</div>"+
+     "<p>Read it as: start at the bliss point, then back off along a direction set by the prices by exactly as much as the budget forces.</p>"],
+    ["Three regimes","And the sign of λ tells you which",
+     "<p><strong><span class='m'>m &lt; Σpᵢbᵢ</span>:</strong> bliss is unaffordable, <span class='m'>λ &gt; 0</span>, and you sit below the bliss point on every good. The ordinary case.</p>"+
+     "<p><strong><span class='m'>m = Σpᵢbᵢ</span>:</strong> bliss costs exactly your income, <span class='m'>λ = 0</span>, and <span class='m'>x* = b</span> with <span class='m'>u* = 3</span>. Set the <span class='m'>m</span> slider to the cost shown in the readout and watch the optimum land on the bliss point.</p>"+
+     "<p><strong><span class='m'>m &gt; Σpᵢbᵢ</span>:</strong> <span class='m'>λ</span> turns <em>negative</em> and the optimum sits <em>beyond</em> the bliss point. The equality constraint forces you to spend everything, so extra income makes you worse off. Keep pushing <span class='m'>m</span> up and watch <span class='m'>u*</span> fall.</p>"+
+     "<p>That third case is an artefact of writing the constraint as <span class='m'>Σpᵢxᵢ = m</span> rather than <span class='m'>≤ m</span>. With the inequality, the answer for <span class='m'>m ≥ Σpᵢbᵢ</span> is simply <span class='m'>x* = b, λ = 0</span>: you stop at bliss and leave the rest unspent. Worth a sentence in your answer — it is the clearest illustration on the sheet of why the two forms of the budget constraint are not interchangeable, and a negative multiplier is the signal that you have hit it.</p>"],
+    ["Why a maximum","The easiest case on the sheet",
+     "<p><span class='m'>u</span> is strictly concave (negative definite Hessian) and the constraint set is convex, so the stationary point of the Lagrangian is the <strong>unique global maximum</strong>. No bordered Hessian, no endpoint comparison, no second-order condition to check at the point — the global curvature has already done the work.</p>"+
+     "<p>Contrast this with <span class='m'>u₅</span> at <span class='m'>ρ &gt; 1</span>, where the identical algebra produced a minimum. The difference is entirely in the definiteness of the Hessian, which is exactly why the previous tab comes before this one.</p>"]
+  ]
+}
+};
+Object.keys(T).forEach(function(k){
+  var F=by(k), S=T[k];
+  Object.keys(S).forEach(function(prop){ F[prop]=S[prop]; });
+});
+})();
+
+/* ===== PS5 UI: three tabs over the same seven functions ===== */
+var WIN=[0,12];
+var PCFG={
+  a1:{label:"a₁", min:0.1, max:2, step:0.05, dp:2},
+  a2:{label:"a₂", min:0.1, max:2, step:0.05, dp:2},
+  b1:{label:"b₁", min:0.1, max:8, step:0.1, dp:1},
+  b2:{label:"b₂", min:0.1, max:8, step:0.1, dp:1},
+  rho:{label:"ρ", min:-4, max:3, step:0.1, dp:1, skip:0},
+  gam:{label:"γ", min:0.1, max:2, step:0.05, dp:2, skip:1}
+};
+function kv(rows){
+  var h="<table class='kv'>";
+  rows.forEach(function(r){ h+="<tr><td>"+r[0]+"</td><td class='v'>"+r[1]+"</td></tr>"; });
+  return h+"</table>";
+}
+function steps(list){
+  var h="";
+  (list||[]).forEach(function(t){
+    h+="<details class='step'><summary><span class='tag'>"+t[0]+"</span>"+t[1]+"</summary><div class='body'>"+t[2]+"</div></details>";
+  });
+  return h;
+}
+function picker(el, items, isOn, onPick){
+  el.innerHTML="";
+  items.forEach(function(it,i){
+    var b=document.createElement("button"); b.type="button"; b.innerHTML=it;
+    b.setAttribute("aria-pressed", isOn(i)?"true":"false");
+    b.addEventListener("click", function(){ onPick(i); });
+    el.appendChild(b);
+  });
+}
+function sliders(host, pre, keys, onChange){
+  host.innerHTML="";
+  keys.forEach(function(key){
+    var d=PCFG[key], id=pre+"-"+key;
+    var wrap=document.createElement("div"); wrap.className="slider";
+    wrap.innerHTML="<label for='sl"+id+"'>"+d.label+" =</label>"+
+      "<input type='range' id='sl"+id+"' min='"+d.min+"' max='"+d.max+"' step='"+d.step+"' value='"+P[key]+"'>"+
+      "<span id='sv"+id+"'>"+fmt(P[key],d.dp)+"</span>";
+    host.appendChild(wrap);
+    var inp=wrap.querySelector("input"), out=wrap.querySelector("span");
+    inp.addEventListener("input", function(){
+      var v=parseFloat(inp.value);
+      if(d.skip!=null && Math.abs(v-d.skip)<1e-9) v=d.skip+parseFloat(d.step);
+      P[key]=v;
+      out.textContent=fmt(v,d.dp);
+      onChange();
+    });
+  });
+}
+/* The chord test needs two points on the level curve that are far apart. Take them
+   from the contour segments themselves: the approximate diameter of the drawn curve.
+   That works whatever shape the level set has — a line, an ellipse, or an L. */
+function chordFromSegs(list){
+  if(list.length<2) return null;
+  var pts=[], i;
+  for(i=0;i<list.length;i++){ pts.push([list[i][0],list[i][1]]); pts.push([list[i][2],list[i][3]]); }
+  var cx=0, cy=0;
+  for(i=0;i<pts.length;i++){ cx+=pts[i][0]; cy+=pts[i][1]; }
+  cx/=pts.length; cy/=pts.length;
+  function far(ax,ay){
+    var best=-1, bp=null;
+    for(var k=0;k<pts.length;k++){
+      var d=(pts[k][0]-ax)*(pts[k][0]-ax)+(pts[k][1]-ay)*(pts[k][1]-ay);
+      if(d>best){ best=d; bp=pts[k]; }
+    }
+    return bp;
+  }
+  var p=far(cx,cy); if(!p) return null;
+  var q=far(p[0],p[1]); if(!q) return null;
+  var dx=p[0]-q[0], dy=p[1]-q[1];
+  if(dx*dx+dy*dy < 0.25) return null;
+  return {x1:p[0], y1:p[1], x2:q[0], y2:q[1]};
+}
+
+/* ---------------- tab 1: derivatives ---------------- */
+var dI=0, pD;
+function drawD(){
+  var F=U[dI], x=P.x1, y=P.x2;
+  var uf=function(a,b){ return F.u(a,b); };
+  var G=new ContourGrid(uf, WIN, WIN, 84);
+  var here=F.u(x,y);
+  var rule=pD.css("--rule"), accent=pD.css("--accent"), good=pD.css("--good");
+  var polys=[{color:rule, w:1.3, list:[]}];
+  G.levels(7).forEach(function(L){ polys[0].list=polys[0].list.concat(G.level(L)); });
+  polys.push({color:accent, w:2.4, list:G.level(here)});
+  var g=F.grad(x,y);
+  var spec={X:WIN, Y:WIN, polys:polys, arrows:[], points:[{x:x,y:y,color:good,r:5,ring:true}]};
+  if(g && (Math.abs(g[0])>1e-12||Math.abs(g[1])>1e-12))
+    spec.arrows.push({x:x,y:y,dx:g[0],dy:g[1],color:good});
+  pD.render(spec);
+
+  var H=F.hess(x,y), Hn=numHess(uf,x,y), err=null;
+  if(H){
+    err=0;
+    for(var i=0;i<2;i++) for(var j=0;j<2;j++)
+      err=Math.max(err, Math.abs(H[i][j]-Hn[i][j])/(1+Math.abs(Hn[i][j])));
+  }
+  var out=kv(F.dRows(x,y));
+  out+="<div style='margin-top:8px'>";
+  if(H===null) out+="<span class='no'>You are on the kink: ∇u and H do not exist here.</span> "+
+    "The one-sided derivatives differ — see the guide.";
+  else if(err<5e-3) out+="<span class='yes'>Analytic Hessian matches a numerical one to "+
+    (err<1e-6?"machine precision":fmt(err,6))+".</span>";
+  else out+="<span class='no'>Analytic and numerical Hessians differ by "+fmt(err,5)+".</span>";
+  out+="</div>";
+  document.getElementById("dOut").innerHTML=out;
+
+  document.getElementById("dGuide").innerHTML=
+    "<h3 style='margin-top:0'>"+F.name+"</h3><p class='intstate'>"+F.tex+"</p>"+steps(F.dHints);
+  sliders(document.getElementById("dParams"), "d", F.uses, drawD);
+}
+
+/* ---------------- tab 2: concavity ---------------- */
+var cI=0, pC;
+function drawC(){
+  var F=U[cI], x=P.x1, y=P.x2;
+  var uf=function(a,b){ return F.u(a,b); };
+  var G=new ContourGrid(uf, WIN, WIN, 84);
+  var L0=F.u(x,y);
+  var rule=pC.css("--rule"), accent=pC.css("--accent"), accentSoft=pC.css("--accent-soft"), good=pC.css("--good");
+  var polys=[{color:rule, w:1.2, list:[]}];
+  G.levels(7).forEach(function(L){ polys[0].list=polys[0].list.concat(G.level(L)); });
+  var lvl=G.level(L0);
+  polys.push({color:accent, w:2.4, list:lvl});
+  var spec={X:WIN, Y:WIN,
+    regions:[{f:uf, level:L0, fill:accentSoft}],
+    polys:polys, segs:[], points:[{x:x,y:y,color:good,r:5,ring:true}]};
+  var ch=chordFromSegs(lvl);
+  var chordBad=null;
+  if(ch){
+    spec.segs.push({x1:ch.x1,y1:ch.y1,x2:ch.x2,y2:ch.y2,color:good,w:1.8,dash:[5,4]});
+    spec.points.push({x:ch.x1,y:ch.y1,color:good,r:3.5});
+    spec.points.push({x:ch.x2,y:ch.y2,color:good,r:3.5});
+    /* does the chord stay inside the upper contour set? */
+    /* tolerance set by the contour grid's own resolution, so that interpolation
+       error on the endpoints is never mistaken for a convexity failure */
+    var tol=2e-3*G.range();
+    chordBad=0;
+    for(var t=1;t<40;t++){
+      var lam=t/40, mx=lam*ch.x1+(1-lam)*ch.x2, my=lam*ch.y1+(1-lam)*ch.y2;
+      if(F.u(mx,my) < L0-tol) chordBad++;
+    }
+  }
+  pC.render(spec);
+
+  var out=kv(F.cRows(x,y));
+  out+="<div style='margin-top:8px'>";
+  if(chordBad===null) out+="No chord drawn here — the level curve leaves the window.";
+  else if(chordBad===0) out+="<span class='yes'>The chord stays inside the shaded set</span> — consistent with quasiconcavity.";
+  else out+="<span class='no'>The chord leaves the shaded set at "+chordBad+" of 39 sample points</span> — the upper contour set is not convex, so u is not quasiconcave.";
+  out+="</div>";
+  document.getElementById("cOut").innerHTML=out;
+
+  document.getElementById("cGuide").innerHTML=
+    "<h3 style='margin-top:0'>"+F.name+"</h3><p class='intstate'>"+F.tex+"</p>"+steps(F.cHints);
+  sliders(document.getElementById("cParams"), "c", F.uses, drawC);
+}
+
+/* ---------------- tab 3: constrained optimum ---------------- */
+var oI=0, pO;
+function drawO(){
+  var F=U[oI], o=F.optim();
+  var uf=function(a,b){ return F.u(a,b); };
+  var G=new ContourGrid(uf, WIN, WIN, 84);
+  var ustar=F.u(Math.max(0,o.x), Math.max(0,o.y));
+  var rule=pO.css("--rule"), accent=pO.css("--accent"), good=pO.css("--good"), ink2=pO.css("--ink2");
+  var polys=[{color:rule, w:1.2, list:[]}];
+  G.levels(7).forEach(function(L){ polys[0].list=polys[0].list.concat(G.level(L)); });
+  polys.push({color:accent, w:2.4, list:G.level(ustar)});
+  var spec={X:WIN, Y:WIN, polys:polys,
+    segs:[{x1:0, y1:P.m/P.p2, x2:P.m/P.p1, y2:0, color:ink2, w:2}],
+    points:[{x:Math.max(0,o.x), y:Math.max(0,o.y), color:good, r:5.5, ring:true}]};
+  var alt=null;
+  if(o.kind==="saddle" && F.corner){
+    alt=F.corner();
+    spec.points.push({x:alt.x,y:alt.y,color:good,r:5.5,hollow:true});
+    polys.push({color:accent, w:1.6, dash:[5,4], list:G.level(F.u(alt.x,alt.y))});
+  }
+  if(F.key==="u7") spec.points.push({x:P.b1,y:P.b2,color:accent,r:4.5,hollow:true});
+  pO.render(spec);
+
+  var out=kv(F.oRows(o));
+  var spend=P.p1*Math.max(0,o.x)+P.p2*Math.max(0,o.y);
+  out+="<div style='margin-top:8px'>";
+  out+="budget check: p·x* = "+fmt(spend,4)+" vs m = "+fmt(P.m,4)+
+       (Math.abs(spend-P.m)<1e-6?" <span class='yes'>✓</span>":" <span class='no'>✗</span>")+"<br>";
+  if(o.kind==="interior") out+="<span class='yes'>Interior tangency, and it is the maximum.</span>";
+  else if(o.kind==="kink") out+="<span class='yes'>The optimum sits at a kink</span> — no first-order condition holds there.";
+  else if(o.kind==="corner") out+="<span class='yes'>A corner solution</span> — the FOC has no interior solution.";
+  else if(o.kind==="tie") out+="<span class='yes'>A tie</span> — the budget line lies along an indifference curve.";
+  else if(o.kind==="saddle") out+="<span class='no'>This tangency is the MINIMUM on the budget line.</span> "+
+    "The hollow marker is the corner that actually maximises u.";
+  out+="</div>";
+  document.getElementById("oOut").innerHTML=out;
+
+  document.getElementById("oGuide").innerHTML=
+    "<h3 style='margin-top:0'>"+F.name+"</h3><p class='intstate'>"+F.tex+"</p>"+
+    "<div class='fline'>max u(x₁,x₂)  s.t.  p₁x₁ + p₂x₂ = m,  xᵢ ≥ 0</div>"+steps(F.oHints);
+  sliders(document.getElementById("oParams"), "o", F.uses, drawO);
+}
+
+/* ---------------- wiring ---------------- */
+function bindPoint(id, key, draws){
+  var el=document.getElementById(id), lab=document.getElementById(id+"val");
+  el.value=P[key]; lab.textContent=fmt(P[key],2);
+  el.addEventListener("input", function(){
+    P[key]=parseFloat(el.value); lab.textContent=fmt(P[key],2);
+    draws.forEach(function(f){ f(); });
+  });
+}
+function init(){
+  pD=new Plot(document.getElementById("cvD"));
+  pC=new Plot(document.getElementById("cvC"));
+  pO=new Plot(document.getElementById("cvO"));
+  var chips=U.map(function(F){ return F.chip; });
+
+  function rD(){ picker(document.getElementById("pickD"), chips, function(i){return i===dI;},
+    function(i){ dI=i; rD(); }); drawD(); }
+  function rC(){ picker(document.getElementById("pickC"), chips, function(i){return i===cI;},
+    function(i){ cI=i; rC(); }); drawC(); }
+  function rO(){ picker(document.getElementById("pickO"), chips, function(i){return i===oI;},
+    function(i){ oI=i; rO(); }); drawO(); }
+  rD(); rC(); rO();
+
+  bindPoint("dx1","x1",[drawD]);  bindPoint("dx2","x2",[drawD]);
+  bindPoint("cx1","x1",[drawC]);  bindPoint("cx2","x2",[drawC]);
+  ["p1","p2","m"].forEach(function(k){
+    var id={p1:"op1",p2:"op2",m:"om"}[k];
+    var el=document.getElementById(id), lab=document.getElementById(id+"val");
+    el.addEventListener("input", function(){
+      P[k]=parseFloat(el.value); lab.textContent=fmt(P[k],2); drawO();
+    });
+  });
+
+  var tabBtns=document.querySelectorAll("nav.tabs button");
+  Array.prototype.forEach.call(tabBtns, function(b){
+    b.addEventListener("click", function(){
+      Array.prototype.forEach.call(tabBtns, function(o){
+        var on=(o===b);
+        o.setAttribute("aria-selected", on?"true":"false");
+        document.getElementById(o.getAttribute("aria-controls")).hidden=!on;
+      });
+      requestAnimationFrame(function(){
+        [pD,pC,pO].forEach(function(p){ p.resize(); if(p.last) p.render(p.last); });
+        /* the x1/x2 sliders are duplicated per tab; keep them showing the shared point */
+        ["dx1","cx1"].forEach(function(id){ var e=document.getElementById(id);
+          e.value=P.x1; document.getElementById(id+"val").textContent=fmt(P.x1,2); });
+        ["dx2","cx2"].forEach(function(id){ var e=document.getElementById(id);
+          e.value=P.x2; document.getElementById(id+"val").textContent=fmt(P.x2,2); });
+      });
+    });
+  });
+
+  if(window.matchMedia){
+    var mq=window.matchMedia("(prefers-color-scheme: dark)");
+    var re=function(){ drawD(); drawC(); drawO(); };
+    if(mq.addEventListener) mq.addEventListener("change", re); else if(mq.addListener) mq.addListener(re);
+  }
+}
+if(document.readyState==="loading") document.addEventListener("DOMContentLoaded", init); else init();
+
+})();
+</script>
