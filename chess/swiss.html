@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#123b45">
+<title>Swiss Chess Tournament Manager — Free Offline Tool</title>
+<style>
+:root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#17343d;background:#f5f7f3;font-synthesis:none}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:linear-gradient(165deg,#edf4ed 0,#f8faf7 32%,#f5f7f3 100%)}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+button:disabled{opacity:.46;cursor:not-allowed}
+button:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:3px solid #65b8a2;outline-offset:2px}
+.container{max-width:1180px;margin:auto;padding:0 26px}
+.topbar{background:#123b45;color:#fff;border-bottom:5px solid #edbb58}
+.topline{display:flex;align-items:center;justify-content:space-between;gap:16px;padding-top:18px;padding-bottom:18px;flex-wrap:wrap}
+.brand{display:flex;gap:13px;align-items:center}.brand-icon{display:grid;place-items:center;background:#eebf63;color:#17343d;border-radius:12px;width:45px;height:45px;font-size:33px;line-height:1}
+.brand-name{font-weight:850;letter-spacing:-.5px;font-size:19px}.brand-sub{font-size:12px;color:#c9dcd9;margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.offline{font-size:12px;color:#cae4d9;display:flex;align-items:center;gap:7px;margin-right:8px}.offline:before{content:"";width:8px;height:8px;border-radius:100%;background:#82d0a6}
+.top-actions button{color:#fff;border-color:#60818a;background:#1c4c56}.top-actions button:hover{background:#27616d}
+.hero{padding:29px 0 20px;display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.eyebrow{font-weight:800;text-transform:uppercase;letter-spacing:1.7px;color:#3d8979;font-size:11px}
+h1{font-size:clamp(26px,3.3vw,38px);letter-spacing:-1.5px;line-height:1.12;margin:8px 0 8px}p{line-height:1.5}.hero p{margin:0;color:#5f7379;font-size:14px}
+.hero-right{display:flex;gap:10px;flex-wrap:wrap}
+.btn{border:1px solid #c8d7d4;border-radius:10px;background:white;color:#21454c;padding:10px 14px;font-size:13px;font-weight:750;min-height:40px;display:inline-flex;align-items:center;justify-content:center;gap:7px;text-decoration:none;transition:background .15s,transform .15s}
+.btn:hover:not(:disabled){background:#ecf5f0}
+.btn-primary{background:#176d62;color:#fff;border-color:#176d62;box-shadow:0 3px 0 rgba(14,71,64,.12)}.btn-primary:hover:not(:disabled){background:#105c53}
+.btn-dark{background:#123b45;color:#fff;border-color:#123b45}.btn-dark:hover:not(:disabled){background:#1e515a}
+.btn-danger{color:#a33435;border-color:#e8cbcd}.btn-danger:hover:not(:disabled){background:#fff2f2}
+.btn-small{padding:7px 11px;min-height:33px;font-size:12px;border-radius:8px}
+.btn-tiny{padding:5px 9px;min-height:29px;font-size:12px;border-radius:7px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:0 0 22px}
+.stat{background:#fff;border:1px solid #e0e9e4;border-radius:13px;padding:15px 17px;box-shadow:0 5px 20px rgba(27,65,54,.025)}
+.stat-label{font-size:11px;color:#687f81;font-weight:800;text-transform:uppercase;letter-spacing:.8px}.stat-val{margin-top:8px;font-weight:850;font-size:25px;color:#153c46;letter-spacing:-1px}.stat-hint{font-size:12px;color:#82908b;font-weight:500;letter-spacing:0}
+.main-card{background:#fff;border:1px solid #dfebe6;border-radius:16px;box-shadow:0 9px 34px rgba(35,65,56,.045);margin-bottom:30px;overflow:hidden}
+.tabs{display:flex;gap:4px;border-bottom:1px solid #e4ece8;padding:11px 17px 0;overflow-x:auto}
+.tab{padding:12px 17px;border:0;background:transparent;color:#667c80;font-size:13px;font-weight:800;white-space:nowrap;border-bottom:3px solid transparent}.tab:hover{color:#145d54}.tab.active{color:#126d60;border-bottom-color:#e9b852}
+.bodycontent{padding:24px}
+.grid-2{display:grid;grid-template-columns:minmax(0,1.88fr) minmax(265px,1fr);gap:22px}
+.stack{display:flex;flex-direction:column;gap:17px}.panel{border:1px solid #e0eae5;border-radius:12px;padding:20px;background:#fff}.panel-soft{background:#f6faf7}
+.panel h2,.section-heading h2{margin:0;font-size:18px;letter-spacing:-.4px}.panel h3{margin:0 0 10px;font-size:14px}.muted{color:#72858a}.sm{font-size:13px}.xs{font-size:12px}.section-heading{display:flex;gap:10px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;margin-bottom:18px}.section-heading p{margin:5px 0 0;color:#77888b;font-size:13px}
+.field{display:flex;flex-direction:column;gap:7px}.field label,.field-label{font-size:12px;font-weight:800;color:#49676b}.textinput,.selectinput,textarea{border:1px solid #cbdad5;border-radius:9px;background:#fff;color:#153c46;padding:10px 12px;min-height:41px;width:100%}
+textarea{min-height:116px;resize:vertical}.field-grid{display:grid;grid-template-columns:1fr 130px;gap:12px}.button-row{display:flex;gap:9px;flex-wrap:wrap;align-items:center}.divider{height:1px;background:#e6eeea;margin:19px 0}.hidden{display:none!important}
+.info{padding:12px 14px;background:#f3f8f5;border:1px solid #dae9df;border-radius:10px;font-size:13px;color:#476b63;line-height:1.5}
+.warning{background:#fff9ed;border-color:#f4e1b5;color:#805f24}
+.notice{margin:0 0 16px;padding:12px 16px;border-radius:10px;border:1px solid #cbe9d8;background:#eefaf1;color:#245842;font-weight:650;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:14px}
+.notice.error{border-color:#f1ccd0;background:#fff1f2;color:#8d303a}.notice button{border:0;background:none;color:inherit;cursor:pointer;font-weight:900}
+.round-title{display:flex;align-items:center;justify-content:space-between;gap:9px;flex-wrap:wrap}
+.pill{display:inline-flex;align-items:center;padding:6px 10px;border-radius:100px;font-weight:800;font-size:11px;background:#e8f5ed;color:#2d755b}.pill-amber{background:#fff3d7;color:#9a6424}.pill-neutral{background:#edf1f1;color:#5c7477}
+.round-control{display:flex;gap:9px;align-items:center;flex-wrap:wrap}
+.game{display:grid;grid-template-columns:42px minmax(0,1fr);align-items:start;gap:11px;padding:17px 0;border-top:1px solid #e7eeeb}
+.boardno{font-weight:900;background:#e6efeb;color:#456a65;text-align:center;padding:8px 2px;border-radius:8px;font-size:12px}
+.game-body{min-width:0}.players-line{display:flex;flex-wrap:wrap;gap:7px;align-items:center;margin:0 0 12px}.player-name{font-size:14px;font-weight:800;color:#173c43;overflow-wrap:anywhere}.versus{font-size:12px;color:#a1afac;font-weight:750}
+.color-dot{display:inline-block;width:14px;height:14px;border:2px solid #395257;border-radius:50%;vertical-align:-2px;margin-right:6px;background:#fff}.color-dot.black{background:#213b43}
+.results{display:flex;gap:6px;flex-wrap:wrap}.result{border:1px solid #d8e3df;background:#f8faf9;border-radius:8px;padding:7px 10px;font-size:12px;font-weight:750;color:#4b6769;min-height:34px}.result:hover{background:#e6f3ee;color:#1d5e53}.result.selected{background:#176c60;color:#fff;border-color:#176c60}.result.clear{background:#fff;color:#9c4a46}.result.clear:hover{background:#fff1f1}
+.bye{padding:14px;background:#fffaed;border:1px solid #f0e4bb;border-radius:9px;color:#7e632f;font-size:13px;margin-top:10px}
+.mini-standing{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid #e9eeeb}.mini-standing:last-child{border:0}.ranknum{width:23px;height:23px;border-radius:7px;background:#e7efe9;display:grid;place-items:center;font-weight:850;color:#496c65;font-size:11px}.mini-standing .nm{flex:1;min-width:0;font-size:13px;font-weight:750;overflow-wrap:anywhere}.score{font-weight:900;font-variant-numeric:tabular-nums;color:#164d47}.score small{font-size:10px;color:#778d8c;font-weight:650}
+.progress-track{height:8px;border-radius:10px;background:#e2eae6;overflow:hidden;margin:12px 0}.progress-fill{height:100%;background:#51a98e;border-radius:10px}
+.data-table-wrap{overflow-x:auto;border:1px solid #e5ece8;border-radius:10px}.data-table{border-collapse:collapse;width:100%;font-size:13px}.data-table th{background:#f1f6f3;text-align:left;font-size:11px;letter-spacing:.45px;text-transform:uppercase;color:#617a79;padding:12px 13px;white-space:nowrap}.data-table td{border-top:1px solid #e7efea;padding:11px 13px;vertical-align:middle}.data-table tr:nth-child(even) td{background:#fcfdfc}.data-table .num{text-align:right;font-variant-numeric:tabular-nums}.data-table .bold{font-weight:800}.data-table .inactive{color:#9aa5a4}.table-actions{display:flex;gap:7px;flex-wrap:wrap}
+.status-dot{display:inline-block;width:8px;height:8px;border-radius:100%;background:#43a780;margin-right:5px}.status-dot.off{background:#b8c2bf}
+.footer{padding:0 0 30px;font-size:12px;color:#81908f;line-height:1.6}.footer strong{color:#55716d}.footer-contact{margin-top:10px}.footer-contact a{color:#176d62;text-decoration:underline;text-underline-offset:2px}
+.empty{padding:30px 18px;text-align:center;border:1px dashed #cbded4;border-radius:11px;background:#f8fbf9}.empty-icon{font-size:40px;margin-bottom:9px}.empty h3{font-size:18px;margin:0 0 7px}.empty p{color:#6d8480;font-size:13px;margin:0 auto 18px;max-width:420px}
+.history-round{border:1px solid #e2eae6;border-radius:11px;overflow:hidden;margin:12px 0}.history-head{background:#f4f8f5;padding:13px 15px;display:flex;gap:12px;justify-content:space-between;align-items:center;flex-wrap:wrap}.history-body{padding:4px 15px}.hist-game{display:flex;justify-content:space-between;gap:15px;padding:9px 0;border-bottom:1px solid #edf1ee;font-size:13px}.hist-game:last-child{border:0}.hist-game .hist-name{min-width:0;overflow-wrap:anywhere}.hist-score{font-weight:800;white-space:nowrap}
+.tools{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}.tool{display:flex;flex-direction:column;gap:10px;border:1px solid #e0eae5;border-radius:11px;padding:17px}.tool p{font-size:12px;color:#718583;margin:0;line-height:1.5}.tool h3{margin:0;font-size:14px}.subheading{font-size:13px;font-weight:850;color:#476869;margin:12px 0}
+.editrow{display:flex;gap:6px;max-width:360px;flex-wrap:wrap}.editrow input{flex:1;min-width:160px}
+@media(max-width:760px){.container{padding-left:14px;padding-right:14px}.grid-2{grid-template-columns:1fr}.hero{padding-top:23px}.stats{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.stat{padding:13px}.bodycontent{padding:16px}.tabs{padding-left:8px}.tab{padding:12px}.tools{grid-template-columns:1fr}.field-grid{grid-template-columns:1fr 105px}.game{grid-template-columns:36px minmax(0,1fr);gap:8px}.topline{align-items:flex-start}}
+@media(max-width:420px){.hero-right{width:100%}.hero-right .btn{flex:1}.results .result{font-size:11px;padding:7px}.field-grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media print{body{background:#fff;color:#111}body> :not(#print-area){display:none!important}#print-area{display:block!important;margin:0;padding:0}#print-area h1{font-size:24px;letter-spacing:0;margin-bottom:3px}#print-area p{margin:5px 0 20px;color:#555}#print-area table{border-collapse:collapse;width:100%;font-size:14px}#print-area th,#print-area td{border:1px solid #777;padding:13px 11px;text-align:left}#print-area th{background:#e8e8e8}#print-area .print-footer{margin-top:24px;font-size:11px;color:#666}@page{margin:16mm}}
+#print-area{display:none}
+</style>
+</head>
+<body>
+<!-- Free Swiss-style tournament tool for school and club competitions; not for official rated competitions. -->
+<div id="screen">
+  <header class="topbar"><div class="container topline"><div class="brand"><span class="brand-icon" aria-hidden="true">♞</span><div><div class="brand-name">Swiss Chess Tournament Manager</div><div class="brand-sub">Free • Offline • No accounts needed</div></div></div><div class="top-actions"><span class="offline">Stored in this browser</span><button type="button" class="btn btn-small" data-action="export-json">↓ Backup tournament</button></div></div></header>
+  <div class="container"><div id="app"></div><div class="footer"><strong>About this tool.</strong> This free tool is intended for school and club competitions, not official rated competitions. Swiss-style pairings aim to match similar scores, avoid repeat opponents, balance colours and rotate byes; they do not implement the official FIDE pairing regulations. Data stays on this device unless you export it.<div class="footer-contact">for comments and suggestions, write to <a href="mailto:sergeyvpopov@gmail.com">sergeyvpopov@gmail.com</a></div></div></div>
+</div>
+<div id="print-area" aria-hidden="true"></div>
+<input type="file" id="import-file" accept=".json,application/json" hidden>
+<script>
+(() => {
+'use strict';
+const STORAGE = 'school-chess-swiss-v1';
+const RESULT = {'1-0':[1,0], '½-½':[0.5,0.5], '0-1':[0,1], '0-0':[0,0]};
+const fresh = () => ({version:1,title:'Chess Tournament',totalRounds:5,players:[],rounds:[]});
+let tournament;
+let ui = {tab:'pairings', viewingRound:null, notice:'',error:false,editPlayer:null,swapFirst:null};
+let nonce=0;
+const esc = s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const fmt = n => Number.isInteger(n)?String(n):n.toFixed(1);
+const id = () => 'p_'+Date.now().toString(36)+'_'+Math.random().toString(36).slice(2,9);
+const player = pid => tournament.players.find(p=>p.id===pid);
+const playerName = pid => player(pid)?.name ?? '(missing player)';
+// Missing or blank ratings count as zero in every round. Old backups may contain null or no rating field.
+const ratingOf = p => Number.isInteger(p?.rating) && p.rating>=0 && p.rating<=4000 ? p.rating : 0;
+const ratingText = pid => {const r=ratingOf(player(pid));return ` <span class="xs muted">(${r})</span>`;};
+function readRating(raw){
+  const value=String(raw??'').trim();
+  if(!value)return 0;
+  if(!/^\d+$/.test(value)||Number(value)<0||Number(value)>4000)throw Error('Ratings must be whole numbers from 0 to 4000. A blank rating counts as 0.');
+  return Number(value);
+}
+function parseBulkPlayers(text){
+  const lines=text.split(/\r?\n/).map(s=>s.trim()).filter(Boolean);
+  // Preserve the old comma-separated-names format while allowing one "Name, Rating" per line.
+  return lines.flatMap(line=>{
+    const rated=line.match(/^(.+?)\s*[,;\t]\s*(-?\d+(?:\.\d+)?)\s*$/);
+    if(rated)return [{name:rated[1],rating:readRating(rated[2])}];
+    return line.split(/[,;\t]/).map(name=>({name,rating:null}));
+  });
+}
+const gamesFor = pid => tournament.rounds.flatMap(r=>r.pairings.filter(g=>g.white===pid||g.black===pid));
+const allDecided = r => r && r.pairings.every(g=>g.result!==null);
+const current = () => tournament.rounds[tournament.rounds.length-1]||null;
+const played = () => tournament.rounds.reduce((n,r)=>n+r.pairings.filter(g=>g.result!==null).length,0);
+function toast(msg,error=false){ui.notice=msg;ui.error=error;render();}
+function save(){try{localStorage.setItem(STORAGE,JSON.stringify(tournament));}catch(e){ui.notice='Could not save to browser storage. Export a backup now.';ui.error=true;}}
+function commit(fn){fn();save();render();}
+function validate(obj){
+  if(!obj||obj.version!==1||typeof obj.title!=='string'||obj.title.length>150||!Number.isInteger(obj.totalRounds)||obj.totalRounds<1||obj.totalRounds>15||!Array.isArray(obj.players)||obj.players.length>1000||!Array.isArray(obj.rounds)||obj.rounds.length>15||obj.rounds.length>obj.totalRounds)throw Error('Not a valid chess tournament backup.');
+  const ids=new Set();
+  for(const p of obj.players){if(!p||typeof p.id!=='string'||!/^p_[a-z0-9_]+$/.test(p.id)||ids.has(p.id)||typeof p.name!=='string'||!p.name.trim()||p.name.length>120||typeof p.active!=='boolean'||!(p.rating===undefined||p.rating===null||(Number.isInteger(p.rating)&&p.rating>=0&&p.rating<=4000)))throw Error('The backup has an invalid participant.');ids.add(p.id);}
+  for(let i=0;i<obj.rounds.length;i++){
+    const r=obj.rounds[i];if(!r||r.number!==i+1||!Array.isArray(r.pairings)||r.pairings.length>500||!(r.bye===null||ids.has(r.bye)))throw Error('The backup has an invalid round.');
+    const seen=new Set(r.bye?[r.bye]:[]);
+    for(const g of r.pairings){if(!g||!ids.has(g.white)||!ids.has(g.black)||seen.has(g.white)||seen.has(g.black)||!(g.result===null||Object.hasOwn(RESULT,g.result)))throw Error('The backup has invalid game results or duplicate players.');seen.add(g.white);seen.add(g.black);}
+  }
+  return obj;
+}
+try{const raw=localStorage.getItem(STORAGE);tournament=raw?validate(JSON.parse(raw)):fresh();}catch(e){tournament=fresh();ui.notice='Saved browser data could not be read. You can restore a JSON backup from Tools.';ui.error=true;}
+// Preserve existing browser tournaments while updating the old default event name.
+if(tournament.title==='School Chess Championship'){tournament.title='Chess Tournament';save();}
+function stats(){
+  const table = new Map(tournament.players.map(p=>[p.id,{...p,points:0,wins:0,draws:0,losses:0,byes:0,opp:[],colours:[],buchholz:0,sb:0,played:0}]));
+  for(const r of tournament.rounds){
+    if(r.bye){const a=table.get(r.bye);if(a){a.points+=1;a.byes+=1;}}
+    for(const g of r.pairings){
+      const w=table.get(g.white),b=table.get(g.black);if(!w||!b)continue;
+      w.opp.push({id:b.id,result:g.result,color:'W'});b.opp.push({id:w.id,result:g.result,color:'B'});w.colours.push('W');b.colours.push('B');
+      if(g.result!==null){w.played++;b.played++;const [ws,bs]=RESULT[g.result];w.points+=ws;b.points+=bs;if(ws===1)w.wins++;else if(bs===1)b.wins++;else if(ws===0.5){w.draws++;b.draws++;}else{w.losses++;b.losses++;}if(ws===1)b.losses++;else if(bs===1)w.losses++;}
+    }
+  }
+  for(const a of table.values())for(const o of a.opp){if(o.result===null)continue;const pts=table.get(o.id)?.points??0;a.buchholz+=pts;const score= o.color==='W'?RESULT[o.result][0]:RESULT[o.result][1];a.sb+=pts*score;}
+  return [...table.values()].sort((a,b)=>b.points-a.points||b.buchholz-a.buchholz||b.wins-a.wins||b.sb-a.sb||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+}
+function hasMet(a,b){return tournament.rounds.some(r=>r.pairings.some(g=>(g.white===a&&g.black===b)||(g.white===b&&g.black===a)));}
+function colourPenalty(p,c){const h=p.colours,balance=h.filter(v=>v==='W').length-h.filter(v=>v==='B').length;const after=balance+(c==='W'?1:-1);let cost=Math.abs(after)*70;if(h.at(-1)===c)cost+=140;if(h.length>=2&&h.at(-1)===c&&h.at(-2)===c)cost+=600;if(Math.abs(after)>2)cost+=(Math.abs(after)-2)*900;return cost;}
+function colourChoice(a,b,rng,board){
+  const w1=colourPenalty(a,'W')+colourPenalty(b,'B'),w2=colourPenalty(a,'B')+colourPenalty(b,'W');
+  if(w1<w2)return [a.id,b.id,w1];if(w2<w1)return [b.id,a.id,w2];
+  return rng()<0.5 ? [a.id,b.id,w1] : [b.id,a.id,w2];
+}
+const newRng = seed => () => {seed |= 0;seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^(seed>>>15),1|seed);t=(t+Math.imul(t^(t>>>7),61|t))^t;return ((t^(t>>>14))>>>0)/4294967296;};
+const shuffle=(a,rng)=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+function pairRound(){
+  const number=tournament.rounds.length+1;
+  // Tournament points rank players first; ratings rank players within each score group.
+  const rank=stats().filter(p=>p.active).sort((a,b)=>
+    b.points-a.points || ratingOf(b)-ratingOf(a) || a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+  if(rank.length<2)throw Error('At least two active players are needed.');
+  const rng=newRng((Date.now()+nonce++*15871)|0);
+  const ratingSeeded=number===1&&rank.some(p=>ratingOf(p)>0);
+  let bye=null;
+  if(rank.length%2){
+    // Avoid repeat byes, then give them to a low-scoring, low-rated player.
+    // Ratings of zero are lowest; this also applies to subsequent rounds.
+    const ascending=rank.slice().sort((a,b)=>
+      a.byes-b.byes || a.points-b.points || ratingOf(a)-ratingOf(b) || a.buchholz-b.buchholz || b.name.localeCompare(a.name));
+    bye=ascending[0].id;
+  }
+  const roster=rank.filter(p=>p.id!==bye);
+  let raw=[];
+  if(number===1){
+    if(ratingSeeded){
+      const seeded=roster.slice().sort((a,b)=>ratingOf(b)-ratingOf(a)||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+      // Dutch-style top-half versus bottom-half seeding: #1 v #(N/2+1), #2 v #(N/2+2), etc.
+      const half=seeded.length/2;
+      for(let i=0;i<half;i++)raw.push([seeded[i],seeded[i+half]]);
+    }else{
+      const shuffled=shuffle(roster,rng);
+      for(let i=0;i<shuffled.length;i+=2)raw.push([shuffled[i],shuffled[i+1]]);
+    }
+  }else{
+    // In each score group, use the same top-half versus bottom-half rating
+    // seeding as Round 1. Allow deviations to avoid rematches and improve colour.
+    // The middle seed of an odd-sized group can float to a neighbouring group.
+    const seedInfo=new Map();
+    const groups=new Map();
+    for(const p of roster){
+      if(!groups.has(p.points))groups.set(p.points,[]);
+      groups.get(p.points).push(p);
+    }
+    for(const group of groups.values()){
+      group.sort((a,b)=>ratingOf(b)-ratingOf(a)||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+      const size=group.length, lowerStart=Math.ceil(size/2),half=Math.floor(size/2);
+      group.forEach((p,i)=>seedInfo.set(p.id,{
+        index:i,size,half,
+        desired:i<half?i+lowerStart:i>=lowerStart?i-lowerStart:null,
+        upper:i<half,lower:i>=lowerStart
+      }));
+    }
+    const seedPenalty=(a,b)=>{
+      const x=seedInfo.get(a.id),y=seedInfo.get(b.id);
+      if(a.points!==b.points){
+        // For necessary score-group floaters, use ratings as a tie-breaker.
+        return Math.min(300,Math.abs(ratingOf(a)-ratingOf(b))/12);
+      }
+      if(x.size<2)return 0;
+      const dislocation=(x.desired===null?0:Math.abs(y.index-x.desired))+
+                         (y.desired===null?0:Math.abs(x.index-y.desired));
+      const sameHalf=(x.upper&&y.upper)||(x.lower&&y.lower);
+      return dislocation*65+(sameHalf?2500:0);
+    };
+    const previous=new Set(tournament.rounds.flatMap(r=>r.pairings.map(g=>
+      [g.white,g.black].sort().join('|'))));
+    const baseScore=(a,b)=>{
+      const repeat=previous.has([a.id,b.id].sort().join('|'))?1000000:0;
+      const pointGap=Math.pow(a.points-b.points,2)*6000;
+      const color=Math.min(colourPenalty(a,'W')+colourPenalty(b,'B'),colourPenalty(a,'B')+colourPenalty(b,'W'));
+      return repeat+pointGap+seedPenalty(a,b)+color;
+    };
+    const totalCost=pairs=>pairs.reduce((s,[a,b])=>s+baseScore(a,b),0);
+    let best=null,bestCost=Infinity;
+    // A greedy matching followed by two-board exchanges; multiple starts help avoid rematches.
+    for(let trial=0;trial<Math.min(14,Math.max(7,Math.ceil(roster.length/5)));trial++){
+      let remaining=roster.slice(),pairs=[];
+      while(remaining.length){
+        const first=remaining.shift();
+        const choices=remaining.map((p,i)=>({i,score:baseScore(first,p)+rng()*(trial===0?0.2:10+trial*3)})).sort((a,b)=>a.score-b.score);
+        const chosen=choices[0].i;
+        pairs.push([first,remaining.splice(chosen,1)[0]]);
+      }
+      // Exchange seats between two boards while decreasing the pairing cost.
+      for(let turn=0;turn<Math.min(75,roster.length*2);turn++){
+        let gain=0,which=null;
+        for(let i=0;i<pairs.length;i++)for(let j=i+1;j<pairs.length;j++){
+          const [a,b]=pairs[i],[c,d]=pairs[j];const old=baseScore(a,b)+baseScore(c,d);
+          const c1=baseScore(a,c)+baseScore(b,d);
+          const c2=baseScore(a,d)+baseScore(b,c);
+          const improvement1=old-c1,improvement2=old-c2;
+          if(improvement1>gain+0.01){gain=improvement1;which=[i,j,1];}
+          if(improvement2>gain+0.01){gain=improvement2;which=[i,j,2];}
+        }
+        if(!which)break;
+        const [i,j,variant]=which;const [a,b]=pairs[i],[c,d]=pairs[j];
+        if(variant===1){pairs[i]=[a,c];pairs[j]=[b,d];}else{pairs[i]=[a,d];pairs[j]=[b,c];}
+      }
+      const cost=totalCost(pairs);
+      if(cost<bestCost){bestCost=cost;best=pairs;}
+      if(bestCost<30&&trial>=3)break;
+    }
+    raw=best||[];
+  }
+  if(number!==1)raw.sort(([a,b],[c,d])=> (c.points+d.points)-(a.points+b.points) || Math.min(orderIndex(a.id,rank),orderIndex(b.id,rank))-Math.min(orderIndex(c.id,rank),orderIndex(d.id,rank)));
+  const pairings=raw.map(([a,b],i)=>{const [white,black]=number===1?(i%2===0?[a.id,b.id]:[b.id,a.id]):colourChoice(a,b,rng,i);return {white,black,result:null};});
+  return {number,pairings,bye,seeding:number===1?(ratingSeeded?'rating':'random'):'score-rating',createdAt:new Date().toISOString()};
+}
+function orderIndex(id,rank){const n=rank.findIndex(p=>p.id===id);return n<0?999:n;}
+function download(name,text,type){const blob=new Blob([text],{type}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),2000);}
+const filename=()=>tournament.title.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,45)||'chess-tournament';
+function csvCell(s){let value=String(s??'');if(typeof s==='string'&&/^[\s]*[=+\-@]/.test(value))value="'"+value;return '"'+value.replaceAll('"','""')+'"';}
+function makeCsv(rows){return '\ufeff'+rows.map(row=>row.map(csvCell).join(',')).join('\r\n');}
+function render(){
+  const table=stats(),active=tournament.players.filter(p=>p.active).length,now=current(),complete=now?allDecided(now):false;
+  const app=document.getElementById('app');
+  app.innerHTML=`<section class="hero"><div><div class="eyebrow">Tournament organiser</div><h1>${esc(tournament.title)}</h1><p>Easy Swiss-style chess pairings for informal chess tournaments.</p></div><div class="hero-right"><button type="button" class="btn" data-tab="tools">⚙ Settings &amp; files</button><button type="button" class="btn btn-primary" data-action="print">▤ Print ${ui.tab==='standings'?'standings':'pairings'}</button></div></section>
+  <div class="stats"><div class="stat"><div class="stat-label">Registered players</div><div class="stat-val">${tournament.players.length}<span class="stat-hint"> · ${active} active</span></div></div><div class="stat"><div class="stat-label">Rounds planned</div><div class="stat-val">${tournament.totalRounds}</div></div><div class="stat"><div class="stat-label">Current round</div><div class="stat-val">${now?now.number:'—'} <span class="stat-hint">${now?'/ '+tournament.totalRounds:'not started'}</span></div></div><div class="stat"><div class="stat-label">Games completed</div><div class="stat-val">${played()}</div></div></div>
+  ${ui.notice?`<div class="notice ${ui.error?'error':''}" role="status">${esc(ui.notice)}<button type="button" aria-label="Dismiss message" data-action="dismiss">×</button></div>`:''}
+  <div class="main-card"><nav class="tabs" aria-label="Tournament sections">${[['pairings','♟ Pairings'],['standings','★ Standings'],['players','♙ Players'],['history','↻ Round history'],['tools','⚙ Settings & files']].map(([t,label])=>`<button type="button" class="tab ${ui.tab===t?'active':''}" data-tab="${t}" aria-current="${ui.tab===t?'page':'false'}">${label}</button>`).join('')}</nav><div class="bodycontent">${ui.tab==='pairings'?pairingsHtml(table,now,complete):ui.tab==='standings'?standingsHtml(table):ui.tab==='players'?playersHtml():ui.tab==='history'?historyHtml():toolsHtml()}</div></div>`;
+}
+function pairingsHtml(table,now,complete){
+ const viewing=ui.viewingRound&&tournament.rounds.find(r=>r.number===ui.viewingRound)||now;
+ if(!now)return `<div class="grid-2"><div class="stack"><div class="panel"><div class="section-heading"><div><h2>Ready to start?</h2><p>Add players and choose how many rounds to play.</p></div></div>${tournament.players.length<2?'<div class="empty"><div class="empty-icon">♟</div><h3>No pairings yet</h3><p>Add at least two players. You can enter everyone at once by pasting a list of names.</p><button type="button" class="btn btn-primary" data-tab="players">Add players</button></div>':`<div class="info">${tournament.players.length} players registered. ${tournament.players.length%2?'One player will get a full-point bye this round.':'Everyone can be paired this round.'} ${tournament.players.filter(p=>p.active).some(p=>ratingOf(p)>0)?'Round 1 will be seeded by rating: top half vs bottom half (highest rated on Board 1). Later rounds will use both tournament points and ratings.':'All ratings are 0, so Round 1 will be shuffled randomly. Later rounds will pair by tournament points, using 0 ratings for everyone.'}</div><div class="button-row" style="margin-top:18px"><button type="button" class="btn btn-primary" data-action="new-round" ${tournament.players.filter(p=>p.active).length<2?'disabled':''}>Create Round 1 →</button><button type="button" class="btn" data-tab="players">Edit players</button></div>`}</div></div><aside class="stack">${helpHtml()}</aside></div>`;
+ const isLatest=viewing?.number===now.number;
+ const done=allDecided(viewing),decided=viewing.pairings.filter(g=>g.result!==null).length;
+ return `<div class="grid-2"><section><div class="section-heading"><div><h2>Pairings &amp; results</h2><p>Select a result for each board, then create the next round.</p></div><div class="round-control"><label class="field-label" for="round-select">View</label><select id="round-select" class="selectinput" style="width:auto;min-width:115px">${tournament.rounds.map(r=>`<option value="${r.number}" ${viewing.number===r.number?'selected':''}>Round ${r.number}</option>`).join('')}</select></div></div>
+ <div class="panel"><div class="round-title"><div><h2>Round ${viewing.number}</h2><p class="sm muted" style="margin:6px 0 0">${decided} of ${viewing.pairings.length} results entered${viewing.bye?' · 1 bye':''}${viewing.seeding==='rating'?' · Rating-seeded':viewing.seeding==='score-rating'?' · Score + rating seeded':''}</p></div><span class="pill ${done?'':'pill-amber'}">${done?'✓ Complete':'● In progress'}</span></div>
+ <div class="progress-track"><div class="progress-fill" style="width:${viewing.pairings.length?decided/viewing.pairings.length*100:100}%"></div></div>
+ ${viewing.pairings.map((g,i)=>gameHtml(g,i,viewing.number)).join('')}
+ ${viewing.bye?`<div class="bye"><strong>Full-point bye:</strong> ${esc(playerName(viewing.bye))} receives 1 point automatically and does not play this round.</div>`:''}
+ ${!isLatest&&tournament.rounds.length>viewing.number?'<div class="info warning" style="margin-top:14px">These pairings have already been followed by another round. Correcting a result updates standings, but does not change pairings already created.</div>':''}
+ </div>
+ ${isLatest?`<div class="button-row" style="margin-top:16px">${complete&&now.number<tournament.totalRounds?`<button type="button" class="btn btn-primary" data-action="new-round">Create Round ${now.number+1} →</button>`:''}${complete&&now.number>=tournament.totalRounds?'<span class="pill">🏆 All planned rounds complete</span>':''}${!decided?`<button type="button" class="btn" data-action="regenerate">↻ Re-pair this round</button><button type="button" class="btn btn-danger" data-action="undo-round">Remove this round</button>`:''}</div>`:''}
+ ${isLatest&&complete&&now.number<tournament.totalRounds?'<p class="sm muted">All results are entered. Review them before creating the next round.</p>':''}
+ ${!isLatest?'<div class="button-row" style="margin-top:14px"><button type="button" class="btn" data-action="latest-round">Go to latest round →</button></div>':''}
+ ${isLatest&&!decided?`<details style="margin-top:20px"><summary class="sm" style="cursor:pointer;font-weight:800;color:#4c7970">Manual pairing adjustment (optional)</summary><div class="panel panel-soft" style="margin-top:10px"><p class="sm muted">Choose two players to exchange their places on the boards. Use this before recording any results.</p><div class="field-grid"><div class="field"><label for="swap-a">First player</label><select class="selectinput" id="swap-a"><option value="">Choose player</option>${viewing.pairings.flatMap(g=>[g.white,g.black]).map(pid=>`<option value="${esc(pid)}">${esc(playerName(pid))}</option>`).join('')}</select></div><div class="field"><label for="swap-b">Second player</label><select class="selectinput" id="swap-b"><option value="">Choose player</option>${viewing.pairings.flatMap(g=>[g.white,g.black]).map(pid=>`<option value="${esc(pid)}">${esc(playerName(pid))}</option>`).join('')}</select></div></div><button type="button" style="margin-top:11px" class="btn btn-small" data-action="swap">Swap places</button><p class="xs muted">Manual changes can cause repeat opponents or less balanced colour assignments.</p></div></details>`:''}
+ </section><aside class="stack">${leaderboardHtml(table)}${helpHtml()}</aside></div>`;
+}
+function gameHtml(g,i,round){
+ const buttons=[['1-0','1–0 · White wins'],['½-½','½–½ · Draw'],['0-1','0–1 · Black wins'],['0-0','0–0 · Neither scores']];
+ return `<div class="game"><div class="boardno">${i+1}</div><div class="game-body"><div class="players-line"><span class="player-name"><span class="color-dot" aria-hidden="true"></span>${esc(playerName(g.white))}${ratingText(g.white)}</span><span class="versus">vs</span><span class="player-name"><span class="color-dot black" aria-hidden="true"></span>${esc(playerName(g.black))}${ratingText(g.black)}</span></div><div class="results" role="group" aria-label="Board ${i+1} result">${buttons.map(([key,label])=>`<button type="button" class="result ${g.result===key?'selected':''}" data-action="result" data-round="${round}" data-board="${i}" data-result="${key}" aria-pressed="${g.result===key}">${label}</button>`).join('')}${g.result!==null?`<button type="button" class="result clear" data-action="result" data-round="${round}" data-board="${i}" data-result="clear">Clear</button>`:''}</div></div></div>`;
+}
+function leaderboardHtml(table){
+ return `<div class="panel panel-soft"><div class="section-heading" style="margin-bottom:3px"><div><h2>Top of the table</h2><p>Live tournament scores</p></div></div>${table.length?table.slice(0,7).map((p,i)=>`<div class="mini-standing"><span class="ranknum">${i+1}</span><span class="nm">${esc(p.name)}${!p.active?' <span class="muted xs">(out)</span>':''}</span><span class="score">${fmt(p.points)} <small>pt${p.points===1?'':'s'}</small></span></div>`).join(''):'<p class="sm muted">Players will appear here when added.</p>'}<button type="button" class="btn btn-small" style="width:100%;margin-top:14px" data-tab="standings">View full standings →</button></div>`;
+}
+function helpHtml(){return `<div class="panel"><h3>How the pairings work</h3><p class="sm muted" style="margin-top:0">In Round 1, players are ranked by rating and the top half plays the bottom half (for 100 players: seed 1 vs 51, seed 2 vs 52). If all ratings are 0, Round 1 is shuffled. In every later round, tournament points determine score groups, and ratings seed the top half against the bottom half within each group. The app also tries to avoid rematches, balance colours, and rotate byes. A missing rating counts as 0. Standings are ranked by tournament results, not ratings.</p><div class="divider" style="margin:12px 0"></div><p class="sm" style="margin:0"><strong>Scoring:</strong> win 1 · draw ½ · loss 0 · bye 1</p><p class="sm muted" style="margin:10px 0 0">With an odd number of players, a player with fewest prior byes, lower points and lower rating is chosen first. Occasionally a repeat pairing is unavoidable.</p></div>`;}
+function standingsHtml(table){
+ return `<div class="section-heading"><div><h2>Standings</h2><p>Sorted by points, Buchholz, wins, then Sonneborn–Berger.</p></div><div class="button-row"><button type="button" class="btn btn-small" data-action="csv-standings">↓ Export CSV</button><button type="button" class="btn btn-small" data-action="print-standings">▤ Print</button></div></div>
+ ${!table.length?'<div class="empty"><h3>No players registered</h3><p>Add players to see your standings.</p><button class="btn btn-primary" data-tab="players">Add players</button></div>':`<div class="data-table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Player</th><th class="num">Rating</th><th class="num">Points</th><th class="num">Buchholz</th><th class="num">SB</th><th class="num">W–D–L</th><th class="num">Bye</th><th class="num">W/B</th></tr></thead><tbody>${table.map((p,i)=>`<tr><td class="bold">${i+1}</td><td class="bold ${p.active?'':'inactive'}">${esc(p.name)} ${p.active?'':'<span class="xs muted">(withdrawn)</span>'}</td><td class="num">${ratingOf(p)}</td><td class="num bold">${fmt(p.points)}</td><td class="num">${fmt(p.buchholz)}</td><td class="num">${fmt(p.sb)}</td><td class="num">${p.wins}–${p.draws}–${p.losses}</td><td class="num">${p.byes}</td><td class="num">${p.colours.filter(c=>c==='W').length}/${p.colours.filter(c=>c==='B').length}</td></tr>`).join('')}</tbody></table></div>`}
+ <div class="info" style="margin-top:16px"><strong>What do the columns mean?</strong> Points are the main ranking. <strong>Buchholz</strong> is the sum of your opponents' current points (excluding byes). <strong>SB</strong> (Sonneborn–Berger) awards an opponent's current points for a win and half for a draw. These simplified tie-breaks are updated live; unplayed games do not yet count in tie-breaks.</div>`;
+}
+function playersHtml(){
+ const roundsStarted=tournament.rounds.length>0;
+ return `<div class="grid-2"><section><div class="section-heading"><div><h2>Players &amp; ratings</h2><p>Register players with optional ratings, and withdraw anyone not playing further rounds.</p></div><span class="pill pill-neutral">${tournament.players.filter(p=>p.active).length} active</span></div>
+ <div class="panel panel-soft"><h3>Add one player</h3><form id="player-form" class="button-row"><input class="textinput" name="name" aria-label="Player name" placeholder="e.g. Alex Smith" maxlength="120" required style="flex:1;min-width:150px"><input class="textinput" type="number" name="rating" aria-label="Optional rating" placeholder="Rating (0 if blank)" min="0" max="4000" step="1" style="width:153px"><button type="submit" class="btn btn-primary">+ Add</button></form><div class="divider"></div><h3>Or paste a list with optional ratings</h3><p class="sm muted" style="margin:0 0 9px">One player per line, optionally <strong>Name, Rating</strong>. For names without ratings, you can also paste a comma-separated list.</p><textarea id="bulk-input" placeholder="Alex Smith, 1650
+Sam Patel, 1430
+Jamie Jones
+…"></textarea><div class="button-row" style="margin-top:10px"><button type="button" class="btn btn-small" data-action="bulk-add">+ Add players</button></div><p class="xs muted" style="margin:10px 0 0">Ratings are whole numbers from 0 to 4000. Leave blank for rating 0. Ratings are used to seed every round.</p></div>
+ <div class="panel" style="margin-top:16px"><div class="section-heading" style="margin-bottom:12px"><div><h2>Registered players</h2><p>${tournament.players.length} total · ${tournament.players.filter(p=>ratingOf(p)>0).length} above 0</p></div></div>${!tournament.players.length?'<p class="sm muted">No names added yet.</p>':`<div class="data-table-wrap"><table class="data-table"><thead><tr><th>Player</th><th class="num">Rating</th><th>Status</th><th>Actions</th></tr></thead><tbody>${tournament.players.map(p=>`<tr><td>${ui.editPlayer===p.id?`<form class="editrow" data-edit="${esc(p.id)}" id="edit-${esc(p.id)}"><input name="name" class="textinput" aria-label="Player name" value="${esc(p.name)}" maxlength="120" required><input type="number" name="rating" aria-label="Optional rating" class="textinput" min="0" max="4000" step="1" value="${ratingOf(p)}" placeholder="0" style="max-width:120px"><button type="submit" class="btn btn-tiny btn-primary">Save</button></form>`:`<strong>${esc(p.name)}</strong>`}</td><td class="num">${ui.editPlayer===p.id?'Editing':ratingOf(p)}</td><td><span class="status-dot ${p.active?'':'off'}"></span>${p.active?'Active':'Out'}</td><td><div class="table-actions"><button type="button" class="btn btn-tiny" data-action="edit-player" data-player="${esc(p.id)}">Edit</button><button type="button" class="btn btn-tiny" data-action="toggle-player" data-player="${esc(p.id)}">${p.active?'Withdraw':'Rejoin'}</button>${!gamesFor(p.id).length&&!tournament.rounds.some(r=>r.bye===p.id)?`<button type="button" class="btn btn-tiny btn-danger" data-action="delete-player" data-player="${esc(p.id)}">Remove</button>`:''}</div></td></tr>`).join('')}</tbody></table></div>`}</div>
+ </section><aside class="stack"><div class="panel"><h3>Ratings and seeding</h3><p class="sm muted">Round 1 uses rating seeds: top half vs bottom half. With 100 players, seed 1 faces seed 51, seed 2 faces seed 52, and so on. If every rating is 0, Round 1 is random.</p><p class="sm muted">In later rounds, players are grouped by tournament points and seeded by rating within each score group. The higher-rated half plays the lower-rated half when possible, while the app also avoids repeat opponents and balances colours. Missing ratings count as <strong>0</strong>; equal ratings use player names as a tie-break for pairing order. Ratings do not add points to the standings.</p><p class="sm muted">A withdrawn player keeps existing scores but will not be paired in future rounds. Changes to player names or ratings do not alter an already-created round. You can edit ratings at any time.</p><p class="sm muted">${roundsStarted?'Late entrants begin with 0 points.':'You can remove players before their first game.'}</p></div>${helpHtml()}</aside></div>`;
+}
+function historyHtml(){
+ return `<div class="section-heading"><div><h2>Round history</h2><p>Review previous pairings. To correct a result, open its round.</p></div><button type="button" class="btn btn-small" data-action="csv-games">↓ All games CSV</button></div>${!tournament.rounds.length?'<div class="empty"><h3>No rounds played yet</h3><p>Pair the first round to start your tournament history.</p><button class="btn btn-primary" data-tab="pairings">Go to pairings</button></div>':tournament.rounds.map(r=>`<div class="history-round"><div class="history-head"><strong>Round ${r.number} <span class="pill ${allDecided(r)?'':'pill-amber'}">${allDecided(r)?'Complete':'In progress'}</span></strong><button type="button" class="btn btn-small" data-action="open-round" data-round="${r.number}">View / edit results</button></div><div class="history-body">${r.pairings.map((g,i)=>`<div class="hist-game"><span class="hist-name"><span class="muted">Board ${i+1} ·</span> ${esc(playerName(g.white))} – ${esc(playerName(g.black))}</span><span class="hist-score">${g.result===null?'Not entered':esc(g.result)}</span></div>`).join('')}${r.bye?`<div class="hist-game"><span class="hist-name">${esc(playerName(r.bye))} · Bye</span><span class="hist-score">1 point</span></div>`:''}</div></div>`).join('')}`;
+}
+function toolsHtml(){
+ return `<div class="section-heading"><div><h2>Settings &amp; files</h2><p>Choose your event details and keep an independent backup.</p></div></div>
+ <div class="grid-2"><section><div class="panel"><h3>Tournament settings</h3><form id="settings-form" class="stack" style="gap:12px"><div class="field"><label for="t-title">Tournament name</label><input id="t-title" name="title" class="textinput" maxlength="150" value="${esc(tournament.title)}" required></div><div class="field"><label for="t-rounds">Number of rounds</label><select id="t-rounds" name="totalRounds" class="selectinput">${Array.from({length:15},(_,i)=>i+1).map(n=>`<option value="${n}" ${tournament.totalRounds===n?'selected':''} ${n<tournament.rounds.length?'disabled':''}>${n} ${n===1?'round':'rounds'}</option>`).join('')}</select></div><button type="submit" class="btn btn-primary" style="align-self:flex-start">Save settings</button></form><p class="sm muted" style="margin-bottom:0">Many informal competitions work well with 4–6 rounds. Choose a number that fits your time and player count.</p></div>
+ <div class="panel" style="margin-top:16px"><h3>Reset tournament</h3><p class="sm muted">Permanently clears the current tournament from this browser. Export a JSON backup before resetting if you may need it later.</p><button type="button" class="btn btn-danger" data-action="reset">Start a new tournament…</button></div></section>
+ <aside><div class="panel"><h3>Save, transfer &amp; print</h3><div class="tools"><div class="tool"><h3>JSON backup</h3><p>Full record: players, results, pairings and settings. Best for resuming on another computer.</p><button type="button" class="btn btn-small" data-action="export-json">↓ Export</button></div><div class="tool"><h3>Restore backup</h3><p>Open a previously exported JSON file. It replaces the tournament in this browser.</p><button type="button" class="btn btn-small" data-action="import-json">↑ Import</button></div><div class="tool"><h3>Standings CSV</h3><p>Open in Excel, LibreOffice, or other spreadsheet software.</p><button type="button" class="btn btn-small" data-action="csv-standings">↓ Export</button></div><div class="tool"><h3>Games CSV</h3><p>All boards, rounds, players and results in one file.</p><button type="button" class="btn btn-small" data-action="csv-games">↓ Export</button></div></div><div class="divider"></div><div class="button-row"><button type="button" class="btn btn-small" data-action="print-pairings">▤ Print pairings</button><button type="button" class="btn btn-small" data-action="print-standings">▤ Print standings</button></div></div></aside></div>
+ <div class="info warning" style="margin-top:16px"><strong>Important:</strong> Changes save automatically in this browser (localStorage) and work without internet, but clearing browser data, using private browsing, or changing computers can lose the saved copy. Export a JSON backup after each round.</div>`;
+}
+function addNames(entries){
+ const existing=new Set(tournament.players.map(p=>p.name.toLocaleLowerCase()));let count=0,duplicates=0;
+ const records=[];
+ for(const item of entries){
+   const name=String(typeof item==='string'?item:item.name).trim().replace(/\s+/g,' ');
+   const rating=readRating(typeof item==='string'?null:item.rating);
+   if(!name)continue;
+   if(name.length>120){duplicates++;continue;}
+   const k=name.toLocaleLowerCase();if(existing.has(k)){duplicates++;continue;}
+   existing.add(k);records.push({id:id(),name,active:true,rating});count++;
+ }
+ commit(()=>{tournament.players.push(...records);ui.notice=`Added ${count} player${count===1?'':'s'}.${duplicates?' Skipped '+duplicates+' duplicate or invalid names.':''}`;ui.error=false;});
+}
+function changeResult(roundNum,board,val){const r=tournament.rounds.find(r=>r.number===roundNum);if(!r||!r.pairings[board]||!(val==='clear'||Object.hasOwn(RESULT,val)))return;
+ commit(()=>{r.pairings[board].result=val==='clear'?null:val;ui.notice='';});}
+function preparePrint(kind){
+ const el=document.getElementById('print-area');const now=tournament.rounds.find(r=>r.number===ui.viewingRound)||current();
+ if(kind==='standings'){
+  el.innerHTML=`<h1>${esc(tournament.title)} — Standings</h1><p>${tournament.rounds.length} of ${tournament.totalRounds} rounds created</p><table><thead><tr><th>Rank</th><th>Player</th><th>Rating</th><th>Points</th><th>Buchholz</th><th>W–D–L</th></tr></thead><tbody>${stats().map((p,i)=>`<tr><td>${i+1}</td><td>${esc(p.name)}</td><td>${ratingOf(p)}</td><td>${fmt(p.points)}</td><td>${fmt(p.buchholz)}</td><td>${p.wins}–${p.draws}–${p.losses}</td></tr>`).join('')}</tbody></table><p class="print-footer">Swiss Chess Tournament Manager · Simplified standings</p>`;
+ }else if(now){
+  el.innerHTML=`<h1>${esc(tournament.title)}</h1><p>Round ${now.number} — Pairings · ${new Date().toLocaleDateString('en-GB')}</p><table><thead><tr><th>Board</th><th>White</th><th>Black</th><th>Result / notes</th></tr></thead><tbody>${now.pairings.map((g,i)=>`<tr><td>${i+1}</td><td>${esc(playerName(g.white))} (${ratingOf(player(g.white))})</td><td>${esc(playerName(g.black))} (${ratingOf(player(g.black))})</td><td>${g.result?esc(g.result):'________________'}</td></tr>`).join('')}${now.bye?`<tr><td>Bye</td><td colspan="2">${esc(playerName(now.bye))}</td><td>1 point</td></tr>`:''}</tbody></table><p class="print-footer">Return this page to the organiser to record results.</p>`;
+ }else{toast('Create a round before printing pairings.',true);return;}
+ window.print();
+}
+function dataAction(btn){
+ const act=btn.dataset.action;const round=Number(btn.dataset.round),board=Number(btn.dataset.board),pid=btn.dataset.player;
+ if(act==='dismiss'){ui.notice='';render();return;}
+ if(act==='new-round'){
+  if(tournament.rounds.length>=tournament.totalRounds){toast('All planned rounds have been created.',true);return;}
+  if(current()&&!allDecided(current())){toast('Enter every board result before creating the next round.',true);return;}
+  try{const r=pairRound();commit(()=>{tournament.rounds.push(r);ui.viewingRound=r.number;ui.tab='pairings';ui.notice=`Round ${r.number} created. Good luck!`;ui.error=false;});}catch(e){toast(e.message,true);}return;
+ }
+ if(act==='result'){changeResult(round,board,btn.dataset.result);return;}
+ if(act==='latest-round'){ui.viewingRound=null;ui.tab='pairings';render();return;}
+ if(act==='open-round'){ui.viewingRound=round;ui.tab='pairings';render();return;}
+ if(act==='regenerate'){
+  const r=current();if(!r||r.pairings.some(g=>g.result!==null)){toast('Only a round with no entered results can be re-paired.',true);return;}
+  try{const next=(()=>{tournament.rounds.pop();try{return pairRound();}finally{tournament.rounds.push(r);}})();commit(()=>{tournament.rounds[tournament.rounds.length-1]=next;ui.notice='Round re-paired. All earlier results are unchanged.';ui.error=false;});}catch(e){toast(e.message,true);}return;
+ }
+ if(act==='undo-round'){
+  const r=current();if(!r||r.pairings.some(g=>g.result!==null)){toast('Clear all board results before removing the latest round.',true);return;}
+  if(!confirm('Remove Round '+r.number+' and its pairing (including the automatic bye)?'))return;
+  commit(()=>{tournament.rounds.pop();ui.viewingRound=null;ui.notice='Latest round removed.';ui.error=false;});return;
+ }
+ if(act==='swap'){
+  const a=document.getElementById('swap-a')?.value,b=document.getElementById('swap-b')?.value;
+  const r=current();if(!r||r.pairings.some(g=>g.result!==null)){toast('Swaps are only available before entering any result.',true);return;}
+  if(!a||!b||a===b){toast('Choose two different players to swap.',true);return;}
+  const slots=r.pairings.flatMap((g,i)=>[{i,c:'white',id:g.white},{i,c:'black',id:g.black}]);const u=slots.find(s=>s.id===a),v=slots.find(s=>s.id===b);
+  if(!u||!v){toast('Choose two players from the current round.',true);return;}
+  commit(()=>{r.pairings[u.i][u.c]=b;r.pairings[v.i][v.c]=a;ui.notice='Players swapped. Please check the new pairings.';ui.error=false;});return;
+ }
+ if(act==='bulk-add'){
+  try{const entries=parseBulkPlayers(document.getElementById('bulk-input')?.value||'');if(!entries.length){toast('Paste at least one player name.',true);return;}addNames(entries);}catch(e){toast(e.message,true);}return;
+ }
+ if(act==='edit-player'){ui.editPlayer=pid;render();document.querySelector('[data-edit] input')?.focus();return;}
+ if(act==='toggle-player'){const p=player(pid);if(!p)return;commit(()=>{p.active=!p.active;ui.notice=`${p.name} ${p.active?'rejoined and can play in future rounds':'withdrawn from future rounds'}.`;ui.error=false;});return;}
+ if(act==='delete-player'){const p=player(pid);if(!p)return;if(gamesFor(pid).length||tournament.rounds.some(r=>r.bye===pid)){toast('You cannot remove a player with tournament history. Withdraw them instead.',true);return;}commit(()=>{tournament.players=tournament.players.filter(q=>q.id!==pid);ui.notice=`Removed ${p.name}.`;ui.error=false;});return;}
+ if(act==='export-json'){download(filename()+'-backup.json',JSON.stringify(tournament,null,2),'application/json');toast('Tournament backup downloaded. Keep it somewhere safe.');return;}
+ if(act==='import-json'){document.getElementById('import-file').click();return;}
+ if(act==='csv-standings'){const rows=[['Rank','Player','Rating','Active','Points','Buchholz','Sonneborn-Berger','Wins','Draws','Losses','Byes','Whites','Blacks'],...stats().map((p,i)=>[i+1,p.name,ratingOf(p),p.active?'Yes':'No',p.points,p.buchholz,p.sb,p.wins,p.draws,p.losses,p.byes,p.colours.filter(c=>c==='W').length,p.colours.filter(c=>c==='B').length])];download(filename()+'-standings.csv',makeCsv(rows),'text/csv;charset=utf-8');return;}
+ if(act==='csv-games'){const rows=[['Round','Board','White','Black','Result','White points','Black points'],...tournament.rounds.flatMap(r=>[...r.pairings.map((g,i)=>[r.number,i+1,playerName(g.white),playerName(g.black),g.result||'',g.result?RESULT[g.result][0]:'',g.result?RESULT[g.result][1]:'']),...(r.bye?[[r.number,'Bye',playerName(r.bye),'','Bye',1,0]]:[])])];download(filename()+'-games.csv',makeCsv(rows),'text/csv;charset=utf-8');return;}
+ if(act==='print'||act==='print-pairings'||act==='print-standings'){preparePrint(act==='print-standings'||act==='print'&&ui.tab==='standings'?'standings':'pairings');return;}
+ if(act==='reset'){
+  if(!confirm('Clear the whole tournament from this browser? This cannot be undone unless you have exported a JSON backup.'))return;
+  commit(()=>{tournament=fresh();ui={tab:'players',viewingRound:null,notice:'New tournament created. Add your players to get started.',error:false,editPlayer:null,swapFirst:null};});return;
+ }
+}
+document.addEventListener('click',e=>{
+ const tab=e.target.closest('[data-tab]');if(tab){ui.tab=tab.dataset.tab;ui.notice='';render();return;}
+ const btn=e.target.closest('[data-action]');if(btn)dataAction(btn);
+});
+document.addEventListener('submit',e=>{
+ if(e.target.id==='player-form'){
+  e.preventDefault();const name=e.target.elements.name.value.trim();try{const rating=readRating(e.target.elements.rating.value);if(name)addNames([{name,rating}]);}catch(err){toast(err.message,true);}return;
+ }
+ if(e.target.id==='settings-form'){
+  e.preventDefault();const f=e.target,title=f.elements.title.value.trim(),rounds=Number(f.elements.totalRounds.value);
+  if(!title||rounds<tournament.rounds.length){toast('Check tournament name and number of rounds.',true);return;}
+  commit(()=>{tournament.title=title;tournament.totalRounds=rounds;ui.notice='Tournament settings saved.';ui.error=false;});return;
+ }
+ const f=e.target.closest('form[data-edit]');if(f){e.preventDefault();const p=player(f.dataset.edit);if(!p)return;const name=f.elements.name.value.trim();if(!name){toast('Player name cannot be empty.',true);return;}let rating;try{rating=readRating(f.elements.rating.value);}catch(err){toast(err.message,true);return;}
+  if(tournament.players.some(q=>q.id!==p.id&&q.name.toLocaleLowerCase()===name.toLocaleLowerCase())){toast('A player already has that name.',true);return;}
+  commit(()=>{p.name=name;p.rating=rating;ui.editPlayer=null;ui.notice='Player details updated.';ui.error=false;});
+ }
+});
+document.addEventListener('change',e=>{if(e.target.id==='round-select'){ui.viewingRound=Number(e.target.value);render();}});
+document.getElementById('import-file').addEventListener('change',async e=>{
+ const file=e.target.files?.[0];e.target.value='';if(!file)return;
+ try{if(file.size>10_000_000)throw Error('Backup file is too large.');const data=validate(JSON.parse(await file.text()));if(!confirm('Replace this browser\'s current tournament with the one in '+file.name+'? Export a backup first if needed.'))return;
+  commit(()=>{tournament=data;ui.tab='pairings';ui.viewingRound=null;ui.notice='Tournament restored from backup.';ui.error=false;});
+ }catch(err){toast('Could not import backup: '+err.message,true);}
+});
+render();
+})();
+</script>
+</body>
+</html>
