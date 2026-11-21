@@ -155,107 +155,187 @@ function colourChoice(a,b,rng,board){
 }
 const newRng = seed => () => {seed |= 0;seed=(seed+0x6D2B79F5)|0;let t=Math.imul(seed^(seed>>>15),1|seed);t=(t+Math.imul(t^(t>>>7),61|t))^t;return ((t^(t>>>14))>>>0)/4294967296;};
 const shuffle=(a,rng)=>{const b=a.slice();for(let i=b.length-1;i>0;i--){const j=Math.floor(rng()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;};
+// Edmonds' blossom algorithm: perfect matching in an undirected graph.
+// Each adj[v] holds valid partners in preference order.
+function perfectMatching(adj) {
+  const n=adj.length;
+  if(n%2) return null;
+  const mate=Array(n).fill(-1);
+  function findPath(root) {
+    const parent=Array(n).fill(-1),base=Array.from({length:n},(_,i)=>i);
+    const used=Array(n).fill(false),queue=[root];
+    used[root]=true;
+    function ancestor(v,u){
+      const seen=new Uint8Array(n);
+      while(true){
+        v=base[v];seen[v]=1;
+        if(mate[v]===-1)break;
+        v=parent[mate[v]];
+      }
+      while(true){
+        u=base[u];
+        if(seen[u])return u;
+        if(mate[u]===-1)break;
+        u=parent[mate[u]];
+      }
+      throw Error('Could not locate blossom base.');
+    }
+    function markPath(v,b,child,flower){
+      while(base[v]!==b){
+        flower[base[v]]=flower[base[mate[v]]]=true;
+        parent[v]=child;
+        child=mate[v];
+        v=parent[mate[v]];
+      }
+    }
+    for(let h=0;h<queue.length;h++){
+      const v=queue[h];
+      for(const u of adj[v]){
+        if(base[v]===base[u]||mate[v]===u)continue;
+        if(u===root || (mate[u]!==-1 && parent[mate[u]]!==-1)){
+          const b=ancestor(v,u),flower=Array(n).fill(false);
+          markPath(v,b,u,flower);markPath(u,b,v,flower);
+          for(let j=0;j<n;j++)if(flower[base[j]]){
+            base[j]=b;
+            if(!used[j]){used[j]=true;queue.push(j);}
+          }
+        }else if(parent[u]===-1){
+          parent[u]=v;
+          if(mate[u]===-1){
+            let cur=u;
+            while(cur!==-1){
+              const prev=parent[cur],next=prev===-1?-1:mate[prev];
+              mate[cur]=prev;
+              if(prev!==-1)mate[prev]=cur;
+              cur=next;
+            }
+            return true;
+          }
+          const next=mate[u];
+          used[next]=true;
+          queue.push(next);
+        }
+      }
+    }
+    return false;
+  }
+  for(let i=0;i<n;i++)if(mate[i]===-1)findPath(i);
+  return mate.includes(-1)?null:mate;
+}
+
+// No rematches are permitted by the automatic pairing engine. A complete matching
+// is sought in the graph of players who have NOT previously met. Edmonds'
+// blossom algorithm finds a perfect matching if one exists, even when local
+// swaps/backtracking or greedy pairing would get stuck. Preference scores are
+// optimized separately and never override the no-rematch constraint.
+function noRepeatPairs(roster,previous,rng) {
+  const n=roster.length;
+  const groups=new Map(),seedInfo=new Map();
+  for(const p of roster){
+    if(!groups.has(p.points))groups.set(p.points,[]);
+    groups.get(p.points).push(p);
+  }
+  for(const group of groups.values()){
+    group.sort((a,b)=>ratingOf(b)-ratingOf(a)||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+    const size=group.length,lowerStart=Math.ceil(size/2),half=Math.floor(size/2);
+    group.forEach((p,i)=>seedInfo.set(p.id,{
+      index:i,size,half,desired:i<half?i+lowerStart:i>=lowerStart?i-lowerStart:null,
+      upper:i<half,lower:i>=lowerStart
+    }));
+  }
+  function seedPenalty(a,b){
+    const x=seedInfo.get(a.id),y=seedInfo.get(b.id);
+    if(a.points!==b.points)return Math.min(300,Math.abs(ratingOf(a)-ratingOf(b))/12);
+    if(x.size<2)return 0;
+    const dislocation=(x.desired===null?0:Math.abs(y.index-x.desired))+
+                      (y.desired===null?0:Math.abs(x.index-y.desired));
+    const sameHalf=(x.upper&&y.upper)||(x.lower&&y.lower);
+    return dislocation*65+(sameHalf?2500:0);
+  }
+  const costs=Array.from({length:n},()=>Array(n).fill(Infinity));
+  const options=Array.from({length:n},()=>[]);
+  for(let i=0;i<n;i++)for(let j=i+1;j<n;j++){
+    const a=roster[i],b=roster[j];
+    if(previous.has([a.id,b.id].sort().join('|')))continue;
+    const gap=Math.pow(a.points-b.points,2)*6000;
+    const colour=Math.min(colourPenalty(a,'W')+colourPenalty(b,'B'),colourPenalty(a,'B')+colourPenalty(b,'W'));
+    const cost=gap+seedPenalty(a,b)+colour;
+    costs[i][j]=costs[j][i]=cost;
+    options[i].push(j);options[j].push(i);
+  }
+  if(options.some(a=>a.length===0))return null;
+  let best=null,bestCost=Infinity;
+  // Try several preference orderings. Every result is a guaranteed no-repeat
+  // matching, not an approximation that might leave a player without a partner.
+  for(let trial=0;trial<4;trial++){
+    const jitter=trial===0?0:trial*28;
+    const adjacency=options.map((list,i)=>list.map(j=>({j,score:costs[i][j]+rng()*jitter}))
+      .sort((a,b)=>a.score-b.score||a.j-b.j).map(x=>x.j));
+    const mate=perfectMatching(adjacency);
+    if(!mate)return null; // No complete no-repeat matching is mathematically possible.
+    let pairs=[];
+    for(let i=0;i<n;i++)if(i<mate[i])pairs.push([i,mate[i]]);
+    // Improve score grouping, rating seeds and colours by exchanging TWO
+    // boards only when BOTH resulting opponents are still new.
+    for(let turn=0;turn<Math.min(70,n*2);turn++){
+      let gain=0,swap=null;
+      for(let i=0;i<pairs.length;i++)for(let j=i+1;j<pairs.length;j++){
+        const [a,b]=pairs[i],[c,d]=pairs[j],old=costs[a][b]+costs[c][d];
+        const cost1=costs[a][c]+costs[b][d],cost2=costs[a][d]+costs[b][c];
+        if(Number.isFinite(cost1)&&old-cost1>gain+0.01){gain=old-cost1;swap=[i,j,1];}
+        if(Number.isFinite(cost2)&&old-cost2>gain+0.01){gain=old-cost2;swap=[i,j,2];}
+      }
+      if(!swap)break;
+      const [i,j,kind]=swap,[a,b]=pairs[i],[c,d]=pairs[j];
+      if(kind===1){pairs[i]=[a,c];pairs[j]=[b,d];}
+      else{pairs[i]=[a,d];pairs[j]=[b,c];}
+    }
+    const total=pairs.reduce((sum,[i,j])=>sum+costs[i][j],0);
+    if(total<bestCost){bestCost=total;best=pairs;}
+  }
+  return best.map(([i,j])=>[roster[i],roster[j]]);
+}
 function pairRound(){
   const number=tournament.rounds.length+1;
-  // Tournament points rank players first; ratings rank players within each score group.
+  // Tournament points take priority; rating ranks players within each score group.
   const rank=stats().filter(p=>p.active).sort((a,b)=>
-    b.points-a.points || ratingOf(b)-ratingOf(a) || a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+    b.points-a.points||ratingOf(b)-ratingOf(a)||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
   if(rank.length<2)throw Error('At least two active players are needed.');
   const rng=newRng((Date.now()+nonce++*15871)|0);
   const ratingSeeded=number===1&&rank.some(p=>ratingOf(p)>0);
-  let bye=null;
-  if(rank.length%2){
-    // Avoid repeat byes, then give them to a low-scoring, low-rated player.
-    // Ratings of zero are lowest; this also applies to subsequent rounds.
-    const ascending=rank.slice().sort((a,b)=>
-      a.byes-b.byes || a.points-b.points || ratingOf(a)-ratingOf(b) || a.buchholz-b.buchholz || b.name.localeCompare(a.name));
-    bye=ascending[0].id;
-  }
-  const roster=rank.filter(p=>p.id!==bye);
-  let raw=[];
-  if(number===1){
-    if(ratingSeeded){
-      const seeded=roster.slice().sort((a,b)=>ratingOf(b)-ratingOf(a)||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
-      // Dutch-style top-half versus bottom-half seeding: #1 v #(N/2+1), #2 v #(N/2+2), etc.
-      const half=seeded.length/2;
-      for(let i=0;i<half;i++)raw.push([seeded[i],seeded[i+half]]);
+  const previous=new Set(tournament.rounds.flatMap(r=>r.pairings.map(g=>
+    [g.white,g.black].sort().join('|'))));
+  // Try each eligible bye in priority order, so a different bye can be picked
+  // if the preferred recipient would make a no-repeat round impossible.
+  const byeChoices=rank.length%2 ? rank.slice().sort((a,b)=>
+    a.byes-b.byes||a.points-b.points||ratingOf(a)-ratingOf(b)||a.buchholz-b.buchholz||b.name.localeCompare(a.name)) : [null];
+  let bye=null,raw=null;
+  for(const choice of byeChoices){
+    const roster=rank.filter(p=>p.id!==choice?.id);
+    let proposal;
+    if(number===1){
+      if(ratingSeeded){
+        const seeded=roster.slice().sort((a,b)=>ratingOf(b)-ratingOf(a)||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
+        const half=seeded.length/2;
+        proposal=Array.from({length:half},(_,i)=>[seeded[i],seeded[i+half]]);
+      }else{
+        const shuffled=shuffle(roster,rng);
+        proposal=Array.from({length:roster.length/2},(_,i)=>[shuffled[i*2],shuffled[i*2+1]]);
+      }
     }else{
-      const shuffled=shuffle(roster,rng);
-      for(let i=0;i<shuffled.length;i+=2)raw.push([shuffled[i],shuffled[i+1]]);
+      proposal=noRepeatPairs(roster,previous,rng);
     }
-  }else{
-    // In each score group, use the same top-half versus bottom-half rating
-    // seeding as Round 1. Allow deviations to avoid rematches and improve colour.
-    // The middle seed of an odd-sized group can float to a neighbouring group.
-    const seedInfo=new Map();
-    const groups=new Map();
-    for(const p of roster){
-      if(!groups.has(p.points))groups.set(p.points,[]);
-      groups.get(p.points).push(p);
-    }
-    for(const group of groups.values()){
-      group.sort((a,b)=>ratingOf(b)-ratingOf(a)||a.name.localeCompare(b.name,undefined,{numeric:true,sensitivity:'base'}));
-      const size=group.length, lowerStart=Math.ceil(size/2),half=Math.floor(size/2);
-      group.forEach((p,i)=>seedInfo.set(p.id,{
-        index:i,size,half,
-        desired:i<half?i+lowerStart:i>=lowerStart?i-lowerStart:null,
-        upper:i<half,lower:i>=lowerStart
-      }));
-    }
-    const seedPenalty=(a,b)=>{
-      const x=seedInfo.get(a.id),y=seedInfo.get(b.id);
-      if(a.points!==b.points){
-        // For necessary score-group floaters, use ratings as a tie-breaker.
-        return Math.min(300,Math.abs(ratingOf(a)-ratingOf(b))/12);
-      }
-      if(x.size<2)return 0;
-      const dislocation=(x.desired===null?0:Math.abs(y.index-x.desired))+
-                         (y.desired===null?0:Math.abs(x.index-y.desired));
-      const sameHalf=(x.upper&&y.upper)||(x.lower&&y.lower);
-      return dislocation*65+(sameHalf?2500:0);
-    };
-    const previous=new Set(tournament.rounds.flatMap(r=>r.pairings.map(g=>
-      [g.white,g.black].sort().join('|'))));
-    const baseScore=(a,b)=>{
-      const repeat=previous.has([a.id,b.id].sort().join('|'))?1000000:0;
-      const pointGap=Math.pow(a.points-b.points,2)*6000;
-      const color=Math.min(colourPenalty(a,'W')+colourPenalty(b,'B'),colourPenalty(a,'B')+colourPenalty(b,'W'));
-      return repeat+pointGap+seedPenalty(a,b)+color;
-    };
-    const totalCost=pairs=>pairs.reduce((s,[a,b])=>s+baseScore(a,b),0);
-    let best=null,bestCost=Infinity;
-    // A greedy matching followed by two-board exchanges; multiple starts help avoid rematches.
-    for(let trial=0;trial<Math.min(14,Math.max(7,Math.ceil(roster.length/5)));trial++){
-      let remaining=roster.slice(),pairs=[];
-      while(remaining.length){
-        const first=remaining.shift();
-        const choices=remaining.map((p,i)=>({i,score:baseScore(first,p)+rng()*(trial===0?0.2:10+trial*3)})).sort((a,b)=>a.score-b.score);
-        const chosen=choices[0].i;
-        pairs.push([first,remaining.splice(chosen,1)[0]]);
-      }
-      // Exchange seats between two boards while decreasing the pairing cost.
-      for(let turn=0;turn<Math.min(75,roster.length*2);turn++){
-        let gain=0,which=null;
-        for(let i=0;i<pairs.length;i++)for(let j=i+1;j<pairs.length;j++){
-          const [a,b]=pairs[i],[c,d]=pairs[j];const old=baseScore(a,b)+baseScore(c,d);
-          const c1=baseScore(a,c)+baseScore(b,d);
-          const c2=baseScore(a,d)+baseScore(b,c);
-          const improvement1=old-c1,improvement2=old-c2;
-          if(improvement1>gain+0.01){gain=improvement1;which=[i,j,1];}
-          if(improvement2>gain+0.01){gain=improvement2;which=[i,j,2];}
-        }
-        if(!which)break;
-        const [i,j,variant]=which;const [a,b]=pairs[i],[c,d]=pairs[j];
-        if(variant===1){pairs[i]=[a,c];pairs[j]=[b,d];}else{pairs[i]=[a,d];pairs[j]=[b,c];}
-      }
-      const cost=totalCost(pairs);
-      if(cost<bestCost){bestCost=cost;best=pairs;}
-      if(bestCost<30&&trial>=3)break;
-    }
-    raw=best||[];
+    if(proposal){bye=choice?.id||null;raw=proposal;break;}
   }
-  if(number!==1)raw.sort(([a,b],[c,d])=> (c.points+d.points)-(a.points+b.points) || Math.min(orderIndex(a.id,rank),orderIndex(b.id,rank))-Math.min(orderIndex(c.id,rank),orderIndex(d.id,rank)));
-  const pairings=raw.map(([a,b],i)=>{const [white,black]=number===1?(i%2===0?[a.id,b.id]:[b.id,a.id]):colourChoice(a,b,rng,i);return {white,black,result:null};});
+  if(!raw)throw Error('No complete round without repeat opponents is possible with the current active players and earlier games. Consider changing the active roster, or reducing the number of rounds. No pairings were changed.');
+  if(number!==1)raw.sort(([a,b],[c,d])=>
+    (c.points+d.points)-(a.points+b.points)||
+    Math.min(orderIndex(a.id,rank),orderIndex(b.id,rank))-
+    Math.min(orderIndex(c.id,rank),orderIndex(d.id,rank)));
+  const pairings=raw.map(([a,b],i)=>{
+    const [white,black]=number===1?(i%2===0?[a.id,b.id]:[b.id,a.id]):colourChoice(a,b,rng,i);
+    return {white,black,result:null};
+  });
   return {number,pairings,bye,seeding:number===1?(ratingSeeded?'rating':'random'):'score-rating',createdAt:new Date().toISOString()};
 }
 function orderIndex(id,rank){const n=rank.findIndex(p=>p.id===id);return n<0?999:n;}
@@ -286,7 +366,7 @@ function pairingsHtml(table,now,complete){
  ${isLatest?`<div class="button-row" style="margin-top:16px">${complete&&now.number<tournament.totalRounds?`<button type="button" class="btn btn-primary" data-action="new-round">Create Round ${now.number+1} →</button>`:''}${complete&&now.number>=tournament.totalRounds?'<span class="pill">🏆 All planned rounds complete</span>':''}${!decided?`<button type="button" class="btn" data-action="regenerate">↻ Re-pair this round</button><button type="button" class="btn btn-danger" data-action="undo-round">Remove this round</button>`:''}</div>`:''}
  ${isLatest&&complete&&now.number<tournament.totalRounds?'<p class="sm muted">All results are entered. Review them before creating the next round.</p>':''}
  ${!isLatest?'<div class="button-row" style="margin-top:14px"><button type="button" class="btn" data-action="latest-round">Go to latest round →</button></div>':''}
- ${isLatest&&!decided?`<details style="margin-top:20px"><summary class="sm" style="cursor:pointer;font-weight:800;color:#4c7970">Manual pairing adjustment (optional)</summary><div class="panel panel-soft" style="margin-top:10px"><p class="sm muted">Choose two players to exchange their places on the boards. Use this before recording any results.</p><div class="field-grid"><div class="field"><label for="swap-a">First player</label><select class="selectinput" id="swap-a"><option value="">Choose player</option>${viewing.pairings.flatMap(g=>[g.white,g.black]).map(pid=>`<option value="${esc(pid)}">${esc(playerName(pid))}</option>`).join('')}</select></div><div class="field"><label for="swap-b">Second player</label><select class="selectinput" id="swap-b"><option value="">Choose player</option>${viewing.pairings.flatMap(g=>[g.white,g.black]).map(pid=>`<option value="${esc(pid)}">${esc(playerName(pid))}</option>`).join('')}</select></div></div><button type="button" style="margin-top:11px" class="btn btn-small" data-action="swap">Swap places</button><p class="xs muted">Manual changes can cause repeat opponents or less balanced colour assignments.</p></div></details>`:''}
+ ${isLatest&&!decided?`<details style="margin-top:20px"><summary class="sm" style="cursor:pointer;font-weight:800;color:#4c7970">Manual pairing adjustment (optional)</summary><div class="panel panel-soft" style="margin-top:10px"><p class="sm muted">Choose two players to exchange their places on the boards. Use this before recording any results.</p><div class="field-grid"><div class="field"><label for="swap-a">First player</label><select class="selectinput" id="swap-a"><option value="">Choose player</option>${viewing.pairings.flatMap(g=>[g.white,g.black]).map(pid=>`<option value="${esc(pid)}">${esc(playerName(pid))}</option>`).join('')}</select></div><div class="field"><label for="swap-b">Second player</label><select class="selectinput" id="swap-b"><option value="">Choose player</option>${viewing.pairings.flatMap(g=>[g.white,g.black]).map(pid=>`<option value="${esc(pid)}">${esc(playerName(pid))}</option>`).join('')}</select></div></div><button type="button" style="margin-top:11px" class="btn btn-small" data-action="swap">Swap places</button><p class="xs muted">Manual changes cannot repeat opponents, but can affect score grouping or colour balance.</p></div></details>`:''}
  </section><aside class="stack">${leaderboardHtml(table)}${helpHtml()}</aside></div>`;
 }
 function gameHtml(g,i,round){
@@ -296,7 +376,7 @@ function gameHtml(g,i,round){
 function leaderboardHtml(table){
  return `<div class="panel panel-soft"><div class="section-heading" style="margin-bottom:3px"><div><h2>Top of the table</h2><p>Live tournament scores</p></div></div>${table.length?table.slice(0,7).map((p,i)=>`<div class="mini-standing"><span class="ranknum">${i+1}</span><span class="nm">${esc(p.name)}${!p.active?' <span class="muted xs">(out)</span>':''}</span><span class="score">${fmt(p.points)} <small>pt${p.points===1?'':'s'}</small></span></div>`).join(''):'<p class="sm muted">Players will appear here when added.</p>'}<button type="button" class="btn btn-small" style="width:100%;margin-top:14px" data-tab="standings">View full standings →</button></div>`;
 }
-function helpHtml(){return `<div class="panel"><h3>How the pairings work</h3><p class="sm muted" style="margin-top:0">In Round 1, players are ranked by rating and the top half plays the bottom half (for 100 players: seed 1 vs 51, seed 2 vs 52). If all ratings are 0, Round 1 is shuffled. In every later round, tournament points determine score groups, and ratings seed the top half against the bottom half within each group. The app also tries to avoid rematches, balance colours, and rotate byes. A missing rating counts as 0. Standings are ranked by tournament results, not ratings.</p><div class="divider" style="margin:12px 0"></div><p class="sm" style="margin:0"><strong>Scoring:</strong> win 1 · draw ½ · loss 0 · bye 1</p><p class="sm muted" style="margin:10px 0 0">With an odd number of players, a player with fewest prior byes, lower points and lower rating is chosen first. Occasionally a repeat pairing is unavoidable.</p></div>`;}
+function helpHtml(){return `<div class="panel"><h3>How the pairings work</h3><p class="sm muted" style="margin-top:0">In Round 1, players are ranked by rating and the top half plays the bottom half (for 100 players: seed 1 vs 51, seed 2 vs 52). If all ratings are 0, Round 1 is shuffled. In every later round, tournament points determine score groups, and ratings seed the top half against the bottom half within each group. The app prevents rematches when generating rounds, while balancing colours and rotating byes where possible. A missing rating counts as 0. Standings are ranked by tournament results, not ratings.</p><div class="divider" style="margin:12px 0"></div><p class="sm" style="margin:0"><strong>Scoring:</strong> win 1 · draw ½ · loss 0 · bye 1</p><p class="sm muted" style="margin:10px 0 0">With an odd number of players, the app favours those with fewest prior byes, lower points and lower ratings. The automatic pairing search never repeats opponents: if no complete no-repeat round exists, it shows an explanation instead of creating repeat games.</p></div>`;}
 function standingsHtml(table){
  return `<div class="section-heading"><div><h2>Standings</h2><p>Sorted by points, Buchholz, wins, then Sonneborn–Berger.</p></div><div class="button-row"><button type="button" class="btn btn-small" data-action="csv-standings">↓ Export CSV</button><button type="button" class="btn btn-small" data-action="print-standings">▤ Print</button></div></div>
  ${!table.length?'<div class="empty"><h3>No players registered</h3><p>Add players to see your standings.</p><button class="btn btn-primary" data-tab="players">Add players</button></div>':`<div class="data-table-wrap"><table class="data-table"><thead><tr><th>#</th><th>Player</th><th class="num">Rating</th><th class="num">Points</th><th class="num">Buchholz</th><th class="num">SB</th><th class="num">W–D–L</th><th class="num">Bye</th><th class="num">W/B</th></tr></thead><tbody>${table.map((p,i)=>`<tr><td class="bold">${i+1}</td><td class="bold ${p.active?'':'inactive'}">${esc(p.name)} ${p.active?'':'<span class="xs muted">(withdrawn)</span>'}</td><td class="num">${ratingOf(p)}</td><td class="num bold">${fmt(p.points)}</td><td class="num">${fmt(p.buchholz)}</td><td class="num">${fmt(p.sb)}</td><td class="num">${p.wins}–${p.draws}–${p.losses}</td><td class="num">${p.byes}</td><td class="num">${p.colours.filter(c=>c==='W').length}/${p.colours.filter(c=>c==='B').length}</td></tr>`).join('')}</tbody></table></div>`}
@@ -310,7 +390,7 @@ Sam Patel, 1430
 Jamie Jones
 …"></textarea><div class="button-row" style="margin-top:10px"><button type="button" class="btn btn-small" data-action="bulk-add">+ Add players</button></div><p class="xs muted" style="margin:10px 0 0">Ratings are whole numbers from 0 to 4000. Leave blank for rating 0. Ratings are used to seed every round.</p></div>
  <div class="panel" style="margin-top:16px"><div class="section-heading" style="margin-bottom:12px"><div><h2>Registered players</h2><p>${tournament.players.length} total · ${tournament.players.filter(p=>ratingOf(p)>0).length} above 0</p></div></div>${!tournament.players.length?'<p class="sm muted">No names added yet.</p>':`<div class="data-table-wrap"><table class="data-table"><thead><tr><th>Player</th><th class="num">Rating</th><th>Status</th><th>Actions</th></tr></thead><tbody>${tournament.players.map(p=>`<tr><td>${ui.editPlayer===p.id?`<form class="editrow" data-edit="${esc(p.id)}" id="edit-${esc(p.id)}"><input name="name" class="textinput" aria-label="Player name" value="${esc(p.name)}" maxlength="120" required><input type="number" name="rating" aria-label="Optional rating" class="textinput" min="0" max="4000" step="1" value="${ratingOf(p)}" placeholder="0" style="max-width:120px"><button type="submit" class="btn btn-tiny btn-primary">Save</button></form>`:`<strong>${esc(p.name)}</strong>`}</td><td class="num">${ui.editPlayer===p.id?'Editing':ratingOf(p)}</td><td><span class="status-dot ${p.active?'':'off'}"></span>${p.active?'Active':'Out'}</td><td><div class="table-actions"><button type="button" class="btn btn-tiny" data-action="edit-player" data-player="${esc(p.id)}">Edit</button><button type="button" class="btn btn-tiny" data-action="toggle-player" data-player="${esc(p.id)}">${p.active?'Withdraw':'Rejoin'}</button>${!gamesFor(p.id).length&&!tournament.rounds.some(r=>r.bye===p.id)?`<button type="button" class="btn btn-tiny btn-danger" data-action="delete-player" data-player="${esc(p.id)}">Remove</button>`:''}</div></td></tr>`).join('')}</tbody></table></div>`}</div>
- </section><aside class="stack"><div class="panel"><h3>Ratings and seeding</h3><p class="sm muted">Round 1 uses rating seeds: top half vs bottom half. With 100 players, seed 1 faces seed 51, seed 2 faces seed 52, and so on. If every rating is 0, Round 1 is random.</p><p class="sm muted">In later rounds, players are grouped by tournament points and seeded by rating within each score group. The higher-rated half plays the lower-rated half when possible, while the app also avoids repeat opponents and balances colours. Missing ratings count as <strong>0</strong>; equal ratings use player names as a tie-break for pairing order. Ratings do not add points to the standings.</p><p class="sm muted">A withdrawn player keeps existing scores but will not be paired in future rounds. Changes to player names or ratings do not alter an already-created round. You can edit ratings at any time.</p><p class="sm muted">${roundsStarted?'Late entrants begin with 0 points.':'You can remove players before their first game.'}</p></div>${helpHtml()}</aside></div>`;
+ </section><aside class="stack"><div class="panel"><h3>Ratings and seeding</h3><p class="sm muted">Round 1 uses rating seeds: top half vs bottom half. With 100 players, seed 1 faces seed 51, seed 2 faces seed 52, and so on. If every rating is 0, Round 1 is random.</p><p class="sm muted">In later rounds, players are grouped by tournament points and seeded by rating within each score group. The higher-rated half plays the lower-rated half when possible, while the app rules out repeat opponents and balances colours where possible. Missing ratings count as <strong>0</strong>; equal ratings use player names as a tie-break for pairing order. Ratings do not add points to the standings.</p><p class="sm muted">A withdrawn player keeps existing scores but will not be paired in future rounds. Changes to player names or ratings do not alter an already-created round. You can edit ratings at any time.</p><p class="sm muted">${roundsStarted?'Late entrants begin with 0 points.':'You can remove players before their first game.'}</p></div>${helpHtml()}</aside></div>`;
 }
 function historyHtml(){
  return `<div class="section-heading"><div><h2>Round history</h2><p>Review previous pairings. To correct a result, open its round.</p></div><button type="button" class="btn btn-small" data-action="csv-games">↓ All games CSV</button></div>${!tournament.rounds.length?'<div class="empty"><h3>No rounds played yet</h3><p>Pair the first round to start your tournament history.</p><button class="btn btn-primary" data-tab="pairings">Go to pairings</button></div>':tournament.rounds.map(r=>`<div class="history-round"><div class="history-head"><strong>Round ${r.number} <span class="pill ${allDecided(r)?'':'pill-amber'}">${allDecided(r)?'Complete':'In progress'}</span></strong><button type="button" class="btn btn-small" data-action="open-round" data-round="${r.number}">View / edit results</button></div><div class="history-body">${r.pairings.map((g,i)=>`<div class="hist-game"><span class="hist-name"><span class="muted">Board ${i+1} ·</span> ${esc(playerName(g.white))} – ${esc(playerName(g.black))}</span><span class="hist-score">${g.result===null?'Not entered':esc(g.result)}</span></div>`).join('')}${r.bye?`<div class="hist-game"><span class="hist-name">${esc(playerName(r.bye))} · Bye</span><span class="hist-score">1 point</span></div>`:''}</div></div>`).join('')}`;
@@ -372,7 +452,13 @@ function dataAction(btn){
   if(!a||!b||a===b){toast('Choose two different players to swap.',true);return;}
   const slots=r.pairings.flatMap((g,i)=>[{i,c:'white',id:g.white},{i,c:'black',id:g.black}]);const u=slots.find(s=>s.id===a),v=slots.find(s=>s.id===b);
   if(!u||!v){toast('Choose two players from the current round.',true);return;}
-  commit(()=>{r.pairings[u.i][u.c]=b;r.pairings[v.i][v.c]=a;ui.notice='Players swapped. Please check the new pairings.';ui.error=false;});return;
+  const proposed=r.pairings.map(g=>({...g}));
+  proposed[u.i][u.c]=b;proposed[v.i][v.c]=a;
+  if(proposed.some(g=>tournament.rounds.slice(0,-1).some(old=>old.pairings.some(h=>
+      (h.white===g.white&&h.black===g.black)||(h.white===g.black&&h.black===g.white))))){
+    toast('This swap would repeat an earlier pairing. Choose a different adjustment.',true);return;
+  }
+  commit(()=>{r.pairings=proposed;ui.notice='Players swapped. No previous opponents are repeated.';ui.error=false;});return;
  }
  if(act==='bulk-add'){
   try{const entries=parseBulkPlayers(document.getElementById('bulk-input')?.value||'');if(!entries.length){toast('Paste at least one player name.',true);return;}addNames(entries);}catch(e){toast(e.message,true);}return;
